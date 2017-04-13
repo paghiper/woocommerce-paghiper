@@ -5,10 +5,12 @@
  * Description: PagHiper é um gateway de pagamentos brasileiro. Este plugin o integra ao WooCommerce.
  * Author: PagHiper
  * Author URI: https://www.paghiper.com
- * Version: 1.1
+ * Version: 1.0
  * License: GPLv2 or later
  * Text Domain: woocommerce-paghiper
  * Domain Path: /languages/
+ * GitHub Plugin URI: paghiper/WooCommerce
+ * GitHub Plugin URI: https://github.com/paghiper/WooCommerce
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -55,7 +57,6 @@ class WC_Paghiper {
 
 			add_filter( 'woocommerce_payment_gateways', array( $this, 'add_gateway' ) );
 			add_action( 'init', array( __CLASS__, 'add_paghiper_endpoint' ) );
-			add_action( 'init', array( $this, 'github_plugin_updater_test_init' ) );
 			add_filter( 'template_include', array( $this, 'paghiper_template' ), 9999 );
 			add_action( 'woocommerce_view_order', array( $this, 'pending_payment_message' ) );
 			add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( $this, 'plugin_action_links' ) );
@@ -107,27 +108,6 @@ class WC_Paghiper {
 		include_once 'includes/wc-retorno-paghiper.php';
 	}
 
-	private function github_plugin_updater_test_init() {
-		include_once 'updater.php';
-		define( 'WP_GITHUB_FORCE_UPDATE', true );
-		if ( is_admin() ) { // note the use of is_admin() to double check that this is happening in the admin
-			$config = array(
-				'slug' => plugin_basename( __FILE__ ),
-				'proper_folder_name' => 'WooCommerce',
-				'api_url' => 'https://api.github.com/repos/paghiper/WooCommerce',
-				'raw_url' => 'https://raw.github.com/paghiper/WooCommerce/master',
-				'github_url' => 'https://github.com/paghiper/WooCommerce',
-				'zip_url' => 'https://github.com/paghiper/WooCommerce/archive/master.zip',
-				'sslverify' => true,
-				'requires' => '2.2.0',
-				'tested' => '4.3.9',
-				'readme' => 'README.md',
-				'access_token' => '67ae264acaf824ba734d760c16cdcec2a1461cc1',
-			);
-			new WP_GitHub_Updater( $config );
-		}
-	}
-
 	/**
 	 * Includes.
 	 */
@@ -153,6 +133,19 @@ class WC_Paghiper {
 	 */
 	public static function add_paghiper_endpoint() {
 		add_rewrite_endpoint( 'paghiper', EP_PERMALINK | EP_ROOT );
+
+
+		if ( is_admin() ) {		
+			require 'plugin-update-checker/plugin-update-checker.php';
+			$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
+				'https://github.com/paghiper/woocommerce-paghiper/',
+				__FILE__,
+				'woocommerce-paghiper'
+			);
+			$myUpdateChecker->setAuthentication('6c76b821ce3d8bcbe7780ab03ab4a73d6ae047d5');
+		}
+
+
 	}
 
 	/**

@@ -19,7 +19,7 @@ class WC_Paghiper_Admin {
 		add_action( 'save_post', array( $this, 'save' ) );
 
 		// Update.
-		add_action( 'admin_init', array( $this, 'update' ), 5 );
+		//add_action( 'admin_init', array( $this, 'update' ), 5 );
 	}
 
 	/**
