@@ -119,13 +119,13 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 
 		$last = array(
 			'extra_details' => array(
-				'title' => __( 'Optional Data', 'woocommerce-paghiper' ),
+				'title' => __( 'Configurações extra', 'woocommerce-paghiper' ),
 				'type'  => 'title'
 			),
 			'checkout-transparente' => array(
 				'title'   => __( 'Habilitar checkout transparente?', 'woocommerce-paghiper' ),
 				'type'    => 'checkbox',
-				'label'   => __( 'Ativar/Desativar', 'woocommerce-paghiper' ),
+				'label'   => __( 'Exibe o boleto banário dentro do seu site, ao invés de redirecionar ao site da PagHiper. Ativar/Desativar', 'woocommerce-paghiper' ),
 				'default' => 'yes'
 			),
 			'exibir-frase-boleto' => array(
