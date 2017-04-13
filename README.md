@@ -1,6 +1,6 @@
-# WHMCS - Módulo de boleto PagHiper 
+# WooCommerce - Módulo de boleto PagHiper 
 
-Permite a emissão de boletos e integração do gateway da Paghiper ao seu WHMCS.
+Permite a emissão de boletos e integração do gateway da Paghiper ao seu WooCommerce.
 Este módulo implementa emissão de boletos com retorno automático.
 
 * **Versão mais Recente:** 1.0
