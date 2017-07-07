@@ -11,19 +11,52 @@ function valid_paghiper_ipn_request($return, $order_no) {
     $settings               = get_option( 'woocommerce_paghiper_settings', array() );
     $order_status           = $order->get_status();
     $creditDate             = (string) $return['dataCredito'];
-    $formattedCreditDate    = date("d/m/Y", strtotime($fromMYSQL));
-
-    //Serialize the array.
-    //$serialized = serialize($array);
-     
-    //Save the serialized array to a text file.
-    //file_put_contents('serialized.txt', $serialized);
+    $formattedCreditDate    = date("d/m/Y", strtotime($creditDate));
 
     // Trata os retornos
 
-    $statuses = array('wc-processing', 'wc-completed', 'wc-refunded');
-    if(!strpos( $order_status, $statuses )) {
+    // Primeiro checa se o pedido ja foi pago.
+    $statuses = array('wc-processing', 'wc-completed');
+    $already_paid = (in_array( $order_status, $statuses )) ? true : false;
 
+    if($already_paid) {
+        // Se sim, os próximos Status só podem ser Completo, Disputa ou Estornado
+        switch ( $return['status'] ) {
+            case "Completo" :
+                $order->add_order_note( __( 'PagHiper: Pagamento completo. O valor ja se encontra disponível para saque.' , 'woocommerce-paghiper' ) );
+                break;
+            case "Disputa" :
+                $order->update_status( 'on-hold', __( 'PagHiper: Pagamento em disputa. Para responder, faça login na sua conta Paghiper e procure pelo número da transação.', 'woocommerce-paghiper' ) );
+                break;
+        }
+    } else {
+        // Se não, os status podem ser Cancelado, Aguardando ou Aprovado
+        switch ( $return['status'] ) {
+            case "Aguardando" :
+                $order->update_status( 'on-hold', __( 'PagHiper: Boleto gerado, aguardando pagamento.', 'woocommerce-paghiper' ) );
+                add_post_meta( $order_no, 'PaghiperidTransacao', (string) $return['idTransacao'], true );
+                add_post_meta( $order_no, 'PaghiperurlBoleto', (string) $return['urlPagamento'], true );
+                break;
+            case "Cancelado" :
+                    if($settings['cancelar-pedidos'] == true) {
+                        $order->update_status( 'cancelled', __( 'PagHiper: Boleto Cancelado.', 'woocommerce-paghiper' ) );
+                    } else {
+                        $order->update_status( 'pending', __( 'PagHiper: Boleto Cancelado.', 'woocommerce-paghiper' ) );
+                    }
+                break;
+            case "Aprovado" :
+                $order->add_order_note( sprintf( __( 'PagHiper: Pagamento compensado. O valor estará disponível no dia <strong>%s</strong>.', 'woocommerce-paghiper' ), (string) $formattedCreditDate ) );
+
+                // For WooCommerce 2.2 or later.
+                add_post_meta( $order_no, '_transaction_id', (string) $return['idTransacao'], true );
+
+                // Changing the order for processing and reduces the stock.
+                $order->payment_complete();
+                break;
+            case "Estornado" :
+                $order->update_status( 'refunded', __( 'PagHiper: Pagamento estornado. O valor foi ja devolvido ao cliente. Para mais informações, entre em contato com a equipe de atendimento Paghiper.' , 'woocommerce-paghiper', 'woocommerce-paghiper' ) );
+                break;
+        }
     }
 
     switch ( $return['status'] ) {
@@ -166,7 +199,7 @@ function check_ipn_response() {
             );
         valid_paghiper_ipn_request( $data, intval( $idPlataforma ) );
         //Executa a query para armazenar as informações no banco de dados
-    	
+        
     } else {
         
         // SE O POST FOR NEGADO, ESSA AREA SERA HABILITADA    
