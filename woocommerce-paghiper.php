@@ -29,7 +29,7 @@ class WC_Paghiper {
 	 *
 	 * @var string
 	 */
-	const VERSION = '1.5.3';
+	const VERSION = '1.1.1';
 
 	/**
 	 * Instance of this class.
