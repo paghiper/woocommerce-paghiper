@@ -27,13 +27,19 @@ function valid_paghiper_ipn_request($return, $order_no) {
                 break;
             case "Disputa" :
                 $order->update_status( 'on-hold', __( 'PagHiper: Pagamento em disputa. Para responder, faça login na sua conta Paghiper e procure pelo número da transação.', 'woocommerce-paghiper' ) );
+                // increase_order_stock( $order );
                 break;
         }
     } else {
         // Se não, os status podem ser Cancelado, Aguardando ou Aprovado
         switch ( $return['status'] ) {
             case "Aguardando" :
-                $order->update_status( 'on-hold', __( 'PagHiper: Boleto gerado, aguardando pagamento.', 'woocommerce-paghiper' ) );
+                if($order_status !== "wc-on-hold") {
+                    $order->update_status( 'on-hold', __( 'Boleto PagHiper: Novo boleto gerado. Aguardando compensação.', 'woocommerce-paghiper' ) );
+                } else {
+                    $order->add_order_note( __( 'PagHiper: Boleto gerado, aguardando compensação.' , 'woocommerce-paghiper' ) );
+                }
+                
                 add_post_meta( $order_no, 'PaghiperidTransacao', (string) $return['idTransacao'], true );
                 add_post_meta( $order_no, 'PaghiperurlBoleto', (string) $return['urlPagamento'], true );
                 break;
@@ -43,6 +49,7 @@ function valid_paghiper_ipn_request($return, $order_no) {
                     } else {
                         $order->update_status( 'pending', __( 'PagHiper: Boleto Cancelado.', 'woocommerce-paghiper' ) );
                     }
+                    //increase_order_stock( $order );
                 break;
             case "Aprovado" :
                 $order->add_order_note( sprintf( __( 'PagHiper: Pagamento compensado. O valor estará disponível no dia <strong>%s</strong>.', 'woocommerce-paghiper' ), (string) $formattedCreditDate ) );
@@ -57,39 +64,6 @@ function valid_paghiper_ipn_request($return, $order_no) {
                 $order->update_status( 'refunded', __( 'PagHiper: Pagamento estornado. O valor foi ja devolvido ao cliente. Para mais informações, entre em contato com a equipe de atendimento Paghiper.' , 'woocommerce-paghiper', 'woocommerce-paghiper' ) );
                 break;
         }
-    }
-
-    switch ( $return['status'] ) {
-        case "Aguardando" :
-            $order->update_status( 'on-hold', __( 'PagHiper: Boleto gerado, aguardando pagamento.', 'woocommerce-paghiper' ) );
-            add_post_meta( $order_no, 'PaghiperidTransacao', (string) $return['idTransacao'], true );
-            add_post_meta( $order_no, 'PaghiperurlBoleto', (string) $return['urlPagamento'], true );
-            break;
-        case "Cancelado" :
-                if($settings['cancelar-pedidos'] == true) {
-                    $order->update_status( 'cancelled', __( 'PagHiper: Boleto Cancelado.', 'woocommerce-paghiper' ) );
-                } else {
-                    $order->update_status( 'pending', __( 'PagHiper: Boleto Cancelado.', 'woocommerce-paghiper' ) );
-                }
-            break;
-        case "Aprovado" :
-            $order->add_order_note( sprintf( __( 'PagHiper: Pagamento compensado. O valor estará disponível no dia <strong>%s</strong>.', 'woocommerce-paghiper' ), (string) $formattedCreditDate ) );
-
-            // For WooCommerce 2.2 or later.
-            add_post_meta( $order_no, '_transaction_id', (string) $return['idTransacao'], true );
-
-            // Changing the order for processing and reduces the stock.
-            $order->payment_complete();
-            break;
-        case "Completo" :
-            $order->add_order_note( __( 'PagHiper: Pagamento completo. O valor ja se encontra disponível para saque.' , 'woocommerce-paghiper' ) );
-            break;
-        case "Disputa" :
-            $order->update_status( 'on-hold', __( 'PagHiper: Pagamento em disputa. Para responder, faça login na sua conta Paghiper e procure pelo número da transação.', 'woocommerce-paghiper' ) );
-            break;
-        case "Estornado" :
-            $order->update_status( 'refunded', __( 'PagHiper: Pagamento estornado. O valor foi ja devolvido ao cliente. Para mais informações, entre em contato com a equipe de atendimento Paghiper.' , 'woocommerce-paghiper', 'woocommerce-paghiper' ) );
-            break;
     }
 }
 
@@ -139,6 +113,9 @@ function check_ipn_response() {
         foreach($_POST as $k => $v) {
             $post_completo[$k] = $v;
         }
+
+        //TODO
+        // Fazer um método de log para gravar esses dados
 
         //Serialize the array.
         $serialized = serialize($post_completo);
@@ -207,4 +184,70 @@ function check_ipn_response() {
         
 
     }
-} ?>
+} 
+
+
+/**
+ * Increase order stock.
+ *
+ * @param int $order_id Order ID.
+ */
+function increase_order_stock( $order ) {
+    if ( 'yes' === get_option( 'woocommerce_manage_stock' ) && $order && 0 < count( $order->get_items() ) ) {
+        foreach ( $order->get_items() as $item ) {
+            // Support for WooCommerce 2.7.
+            if ( is_callable( array( $item, 'get_id' ) ) ) {
+                $product_id = $item->get_id();
+            } else {
+                $product_id = $item['product_id'];
+            }
+            if ( 0 < $product_id ) {
+                $product = $order->get_product_from_item( $item );
+                if ( $product && $product->exists() && $product->managing_stock() ) {
+                    // Support for WooCommerce 3.0.
+                    if ( is_callable( array( $product, 'get_stock_quantity' ) ) ) {
+                        $old_stock = $product->get_stock_quantity();
+                    } else {
+                        $old_stock = $product->stock;
+                    }
+                    // Support for WooCommerce 2.7.
+                    if ( is_callable( array( $item, 'get_quantity' ) ) ) {
+                        $quantity = apply_filters( 'woocommerce_order_item_quantity', $item->get_quantity(), $order, $item );
+                    } else {
+                        $quantity = apply_filters( 'woocommerce_order_item_quantity', $item['qty'], $order, $item );
+                    }
+                    if (function_exists('wc_update_product_stock')) {
+                        $new_stock = wc_update_product_stock( $product, $quantity, 'increase' );
+                    } else {
+                        $new_stock = $product->increase_stock( $quantity );
+                    }
+                    $item_name = $product->get_sku() ? $product->get_sku() : $item['product_id'];
+                    if ( ! empty( $item['variation_id'] ) ) {
+                        $order->add_order_note( sprintf( __( 'Item %1$s variation #%2$s stock increased from %3$s to %4$s.', 'reduce-stock-of-manual-orders-for-woocommerce' ), $item_name, $item['variation_id'], $old_stock, $new_stock ) );
+                    } else {
+                        $order->add_order_note( sprintf( __( 'Item %1$s stock increased from %2$s to %3$s.', 'reduce-stock-of-manual-orders-for-woocommerce' ), $item_name, $old_stock, $new_stock ) );
+                    }
+                    $this->set_stock_reduced( $order_id, false );
+                }
+            }
+        }
+    }
+}
+
+
+
+function get_filters_for( $hook = '' ) {
+    global $wp_filter;
+    if( empty( $hook ) || !isset( $wp_filter[$hook] ) )
+        return;
+
+    return $wp_filter[$hook];
+}
+
+if( current_user_can('editor') || current_user_can('administrator') ) {
+    global $wp_filter;
+echo "<pre>" . print_r($wp_filter, true) . "</pre>";
+}
+
+
+?>
