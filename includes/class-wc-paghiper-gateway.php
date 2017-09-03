@@ -155,14 +155,6 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 	public function process_payment( $order_id ) {
 		$order = new WC_Order( $order_id );
 
-		// Mark as on-hold (we're awaiting the ticket).
-		$order->update_status( 'on-hold', __( 'Boleto PagHiper: Aguardando cliente acessar o boleto.', 'woocommerce-paghiper' ) );
-
-		// Gera um boleto e guarda os dados, pra reutilizarmos.
-
-		// Generates ticket data.
-		$this->generate_paghiper_data( $order );
-
 		// Reduce stock levels.
 		// Support for WooCommerce 2.7.
 		if ( 'on-hold' !== $order->status) {
@@ -172,6 +164,14 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 				$order->reduce_order_stock();
 			}
 		}
+
+		// Mark as on-hold (we're awaiting the ticket).
+		$order->update_status( 'on-hold', __( 'Boleto PagHiper: Aguardando cliente acessar o boleto.', 'woocommerce-paghiper' ) );
+
+		// Gera um boleto e guarda os dados, pra reutilizarmos.
+
+		// Generates ticket data.
+		$this->generate_paghiper_data( $order );
 
 		if ( defined( 'WC_VERSION' ) && version_compare( WC_VERSION, '2.1', '>=' ) ) {
 			WC()->cart->empty_cart();
