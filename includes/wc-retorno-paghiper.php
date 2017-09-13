@@ -235,19 +235,4 @@ function increase_order_stock( $order ) {
 }
 
 
-
-function get_filters_for( $hook = '' ) {
-    global $wp_filter;
-    if( empty( $hook ) || !isset( $wp_filter[$hook] ) )
-        return;
-
-    return $wp_filter[$hook];
-}
-
-if( current_user_can('editor') || current_user_can('administrator') ) {
-    global $wp_filter;
-echo "<pre>" . print_r($wp_filter, true) . "</pre>";
-}
-
-
 ?>
