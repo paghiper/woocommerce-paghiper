@@ -16,7 +16,7 @@ function valid_paghiper_ipn_request($return, $order_no) {
     // Trata os retornos
 
     // Primeiro checa se o pedido ja foi pago.
-    $statuses = array('wc-processing', 'wc-completed');
+    $statuses = ((strpos($order_status, 'wc-') === FALSE) ? array('processing', 'completed') : array('wc-processing', 'wc-completed'));
     $already_paid = (in_array( $order_status, $statuses )) ? true : false;
 
     if($already_paid) {
