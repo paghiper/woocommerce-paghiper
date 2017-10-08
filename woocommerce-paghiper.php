@@ -9,8 +9,8 @@
  * License: GPLv2 or later
  * Text Domain: woocommerce-paghiper
  * Domain Path: /languages/
- * GitHub Plugin URI: paghiper/WooCommerce
- * GitHub Plugin URI: https://github.com/paghiper/WooCommerce
+ * GitHub Plugin URI: paghiper/woocommerce-paghiper/
+ * GitHub Plugin URI: https://github.com/paghiper/woocommerce-paghiper/
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -142,7 +142,6 @@ class WC_Paghiper {
 				__FILE__,
 				'woocommerce-paghiper'
 			);
-			$myUpdateChecker->setAuthentication('6c76b821ce3d8bcbe7780ab03ab4a73d6ae047d5');
 		}
 
 
