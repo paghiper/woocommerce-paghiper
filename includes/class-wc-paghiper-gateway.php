@@ -81,21 +81,21 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 				'default' => 'yes'
 			),
 			'title' => array(
-				'title'       => __( 'Title', 'woocommerce-paghiper' ),
+				'title'       => __( 'Título', 'woocommerce-paghiper' ),
 				'type'        => 'text',
-				'description' => __( 'This controls the title which the user sees during checkout.', 'woocommerce-paghiper' ),
+				'description' => __( 'Esse campo controla o título da seção que o usuário vê durante o checkout.', 'woocommerce-paghiper' ),
 				'desc_tip'    => true,
 				'default'     => __( 'Boleto Bancário', 'woocommerce-paghiper' )
 			),
 			'description' => array(
-				'title'       => __( 'Description', 'woocommerce-paghiper' ),
+				'title'       => __( 'Descrição', 'woocommerce-paghiper' ),
 				'type'        => 'textarea',
-				'description' => __( 'This controls the description which the user sees during checkout.', 'woocommerce-paghiper' ),
+				'description' => __( 'Esse campo controla o texto da seção que o usuário vê durante o checkout.', 'woocommerce-paghiper' ),
 				'desc_tip'    => true,
 				'default'     => __( 'Pay with Banking Ticket', 'woocommerce-paghiper' )
 			),
 			'paghiper_details' => array(
-				'title' => __( 'Ticket Details', 'woocommerce-paghiper' ),
+				'title' => __( 'Configurações do PagHiper Boleto Bancário', 'woocommerce-paghiper' ),
 				'type'  => 'title'
 			),
 			'email' => array(
@@ -125,7 +125,7 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 			'checkout-transparente' => array(
 				'title'   => __( 'Habilitar checkout transparente?', 'woocommerce-paghiper' ),
 				'type'    => 'checkbox',
-				'label'   => __( 'Exibe o boleto banário dentro do seu site, ao invés de redirecionar ao site da PagHiper. Ativar/Desativar', 'woocommerce-paghiper' ),
+				'label'   => __( 'Exibe o boleto bancário dentro do seu site, ao invés de redirecionar ao site da PagHiper. Ativar/Desativar', 'woocommerce-paghiper' ),
 				'default' => 'yes'
 			),
 			'exibir-frase-boleto' => array(
@@ -258,7 +258,7 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 
 		$html .= '<br />' . sprintf( '<a class="button" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Pagar o Boleto &rarr;', 'woocommerce-paghiper' ) ) . '<br />';
 
-		$html .= '<strong style="font-size: 0.8em">' . sprintf( __( 'Validity of the Ticket: %s.', 'woocommerce-paghiper' ), date( 'd/m/Y', time() + ( absint( $this->paghiper_time ) * 86400 ) ) ) . '</strong>';
+		$html .= '<strong style="font-size: 0.8em">' . sprintf( __( 'Data de Vencimento: %s.', 'woocommerce-paghiper' ), date( 'd/m/Y', time() + ( absint( $this->paghiper_time ) * 86400 ) ) ) . '</strong>';
 
 		$html .= '</p>';
 
