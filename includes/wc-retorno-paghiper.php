@@ -174,7 +174,7 @@ function check_ipn_response() {
             'dataCredito' => $dataCredito,
             'status' => $status
             );
-        valid_paghiper_ipn_request( $data, intval( $idPlataforma ) );
+        valid_paghiper_ipn_request( $data, trim(str_replace('#', '', $idPlataforma ) ) );
         //Executa a query para armazenar as informações no banco de dados
         
     } else {
