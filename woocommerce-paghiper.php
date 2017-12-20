@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: WooCommerce Boleto PagHiper
- * Plugin URI: https://github.com/paghiper/WooCommerce
+ * Plugin URI: https://github.com/paghiper/woocommerce-paghiper/
  * Description: PagHiper é um gateway de pagamentos brasileiro. Este plugin o integra ao WooCommerce.
  * Author: PagHiper
  * Author URI: https://www.paghiper.com
- * Version: 1.2.4.1
+ * Version: 1.2.4.2
  * License: GPLv2 or later
  * Text Domain: woocommerce-paghiper
  * Domain Path: /languages/
@@ -29,7 +29,7 @@ class WC_Paghiper {
 	 *
 	 * @var string
 	 */
-	const VERSION = '1.2.4.1';
+	const VERSION = '1.2.4.2';
 
 	/**
 	 * Instance of this class.
