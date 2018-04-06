@@ -27,14 +27,15 @@ function valid_paghiper_ipn_request($return, $order_no) {
                 break;
             case "Disputa" :
                 $order->update_status( 'on-hold', __( 'PagHiper: Pagamento em disputa. Para responder, faça login na sua conta Paghiper e procure pelo número da transação.', 'woocommerce-paghiper' ) );
-                // increase_order_stock( $order );
+                if($settings['incrementar-estoque'] == true)
+                    increase_order_stock( $order );
                 break;
         }
     } else {
         // Se não, os status podem ser Cancelado, Aguardando ou Aprovado
         switch ( $return['status'] ) {
             case "Aguardando" :
-                if($order_status !== "wc-on-hold") {
+                if( strpos($order_status, "on-hold") === FALSE ) {
                     $order->update_status( 'on-hold', __( 'Boleto PagHiper: Novo boleto gerado. Aguardando compensação.', 'woocommerce-paghiper' ) );
                 } else {
                     $order->add_order_note( __( 'PagHiper: Boleto gerado, aguardando compensação.' , 'woocommerce-paghiper' ) );
@@ -49,7 +50,8 @@ function valid_paghiper_ipn_request($return, $order_no) {
                     } else {
                         $order->update_status( 'pending', __( 'PagHiper: Boleto Cancelado.', 'woocommerce-paghiper' ) );
                     }
-                    increase_order_stock( $order, $settings );
+                    if($settings['incrementar-estoque'] == true)
+                        increase_order_stock( $order );
                 break;
             case "Aprovado" :
                 $order->add_order_note( sprintf( __( 'PagHiper: Pagamento compensado. O valor estará disponível no dia <strong>%s</strong>.', 'woocommerce-paghiper' ), (string) $formattedCreditDate ) );
@@ -174,7 +176,7 @@ function check_ipn_response() {
             'dataCredito' => $dataCredito,
             'status' => $status
             );
-        valid_paghiper_ipn_request( $data, trim(str_replace('#', '', $idPlataforma ) ) );
+        valid_paghiper_ipn_request( $data, intval( $idPlataforma ) );
         //Executa a query para armazenar as informações no banco de dados
         
     } else {
@@ -192,8 +194,8 @@ function check_ipn_response() {
  *
  * @param int $order_id Order ID.
  */
-function increase_order_stock( $order, $settings ) {
-    if ( 'yes' === get_option( 'woocommerce_manage_stock' ) && $settings['incrementar-estoque'] == true && $order && 0 < count( $order->get_items() ) ) {
+function increase_order_stock( $order ) {
+    if ( 'yes' === get_option( 'woocommerce_manage_stock' ) && $order && 0 < count( $order->get_items() ) ) {
         foreach ( $order->get_items() as $item ) {
             // Support for WooCommerce 2.7.
             if ( is_callable( array( $item, 'get_id' ) ) ) {
@@ -223,9 +225,9 @@ function increase_order_stock( $order, $settings ) {
                     }
                     $item_name = $product->get_sku() ? $product->get_sku() : $item['product_id'];
                     if ( ! empty( $item['variation_id'] ) ) {
-                        $order->add_order_note( sprintf( __( 'Item %1$s variation #%2$s stock increased from %3$s to %4$s.', 'reduce-stock-of-manual-orders-for-woocommerce' ), $item_name, $item['variation_id'], $old_stock, $new_stock ) );
+                        $order->add_order_note( sprintf( __( 'PagHiper: Produto %1$s, variação #%2$s foi devolvido no estoque (Haviam %3$s unidades, agora são %4$s).', 'woocommerce-paghiper' ), $item_name, $item['variation_id'], $old_stock, $new_stock ) );
                     } else {
-                        $order->add_order_note( sprintf( __( 'Item %1$s stock increased from %2$s to %3$s.', 'reduce-stock-of-manual-orders-for-woocommerce' ), $item_name, $old_stock, $new_stock ) );
+                        $order->add_order_note( sprintf( __( 'PagHiper: Produto %1$s foi devolvido ao estoque (Haviam %2$s unidades, agora são %3$s).', 'woocommerce-paghiper' ), $item_name, $old_stock, $new_stock ) );
                     }
                     $this->set_stock_reduced( $order_id, false );
                 }

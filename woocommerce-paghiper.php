@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: WooCommerce Boleto PagHiper
- * Plugin URI: https://github.com/paghiper/WooCommerce
+ * Plugin URI: https://github.com/paghiper/woocommerce-paghiper/
  * Description: PagHiper é um gateway de pagamentos brasileiro. Este plugin o integra ao WooCommerce.
- * Author: PagHiper
+ * Author: Henrique Cruz, PagHiper
  * Author URI: https://www.paghiper.com
- * Version: 1.2.4.1
+ * Version: 1.2.5
  * License: GPLv2 or later
  * Text Domain: woocommerce-paghiper
  * Domain Path: /languages/
@@ -29,7 +29,7 @@ class WC_Paghiper {
 	 *
 	 * @var string
 	 */
-	const VERSION = '1.2.4.1';
+	const VERSION = '1.2.5';
 
 	/**
 	 * Instance of this class.
@@ -211,12 +211,12 @@ class WC_Paghiper {
 
 		if ( 'on-hold' === $order->status && 'paghiper' == $order->payment_method ) {
 			$html = '<div class="woocommerce-info">';
-			$html .= sprintf( '<a class="button" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Pay the Ticket &rarr;', 'woocommerce-paghiper' ) );
+			$html .= sprintf( '<a class="button" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Visualizar boleto &rarr;', 'woocommerce-paghiper' ) );
 
-			$message = sprintf( __( '%sAttention!%s Not registered the payment the docket for this product yet.', 'woocommerce-paghiper' ), '<strong>', '</strong>' ) . '<br />';
-			$message .= __( 'Please click the following button and pay the Ticket in your Internet Banking.', 'woocommerce-paghiper' ) . '<br />';
-			$message .= __( 'If you prefer, print and pay at any bank branch or lottery retailer.', 'woocommerce-paghiper' ) . '<br />';
-			$message .= __( 'Ignore this message if the payment has already been made​​.', 'woocommerce-paghiper' ) . '<br />';
+			$message = sprintf( __( '%sAtenção!%s Ainda não registramos o pagamento deste pedido.', 'woocommerce-paghiper' ), '<strong>', '</strong>' ) . '<br />';
+			$message .= __( 'Por favor clique no botão ao lado e pague o boleto pelo seu Internet Banking.', 'woocommerce-paghiper' ) . '<br />';
+			$message .= __( 'Caso preferir, você pode imprimir e pagá-lo em qualquer agência bancária ou casa lotérica.', 'woocommerce-paghiper' ) . '<br />';
+			$message .= __( 'Ignore esta mensagem caso ja tenha efetuado o pagamento. O pedido será atualizado assim que houver a compensação.', 'woocommerce-paghiper' ) . '<br />';
 
 			$html .= apply_filters( 'wcpaghiper_pending_payment_message', $message, $order );
 

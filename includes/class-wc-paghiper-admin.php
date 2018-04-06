@@ -28,7 +28,7 @@ class WC_Paghiper_Admin {
 	public function register_metabox() {
 		add_meta_box(
 			'paghiper-boleto',
-			__( 'Paghiper Ticket', 'woocommerce-paghiper' ),
+			__( 'Boleto Bancário - PagHiper', 'woocommerce-paghiper' ),
 			array( $this, 'metabox_content' ),
 			'shop_order',
 			'side',
@@ -58,14 +58,14 @@ class WC_Paghiper_Admin {
 				$settings                   = get_option( 'woocommerce_paghiper_settings', array() );
 				$paghiper_time                = isset( $settings['paghiper_time'] ) ? absint( $settings['paghiper_time'] ) : 5;
 				$data                       = array();
-				$data['data_vencimento']    = date( 'd/m/Y', time() + ( $paghiper_time * 86400 ) );
+				$data['data_vencimento']    = date( 'Y-m-d', time() + ( $paghiper_time * 86400 ) );
 
 				update_post_meta( $post->ID, 'wc_paghiper_data', $data );
 
 				$paghiper_data['data_vencimento'] = $data['data_vencimento'];
 			}
 
-			$html = '<p><strong>' . __( 'Data de Vencimento:', 'woocommerce-paghiper' ) . '</strong> ' . $paghiper_data['data_vencimento'] . '</p>';
+			$html = '<p><strong>' . __( 'Data de Vencimento:', 'woocommerce-paghiper' ) . '</strong> ' . date('d/m/Y', strtotime($paghiper_data['data_vencimento'])) . '</p>';
 			$html .= '<p><strong>' . __( 'URL:', 'woocommerce-paghiper' ) . '</strong> <a target="_blank" href="' . esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ) . '">' . __( 'Visualizar boleto', 'woocommerce-paghiper' ) . '</a></p>';
 
 			$html .= '<p style="border-top: 1px solid #ccc;"></p>';
@@ -106,7 +106,9 @@ class WC_Paghiper_Admin {
 		if ( isset( $_POST['wcpaghiper_expiration_date'] ) && ! empty( $_POST['wcpaghiper_expiration_date'] ) ) {
 			// Gets ticket data.
 			$paghiper_data = get_post_meta( $post_id, 'wc_paghiper_data', true );
-			$paghiper_data['data_vencimento'] = sanitize_text_field( $_POST['wcpaghiper_expiration_date'] );
+			$data = DateTime::createFromFormat('d/m/Y', sanitize_text_field( $_POST['wcpaghiper_expiration_date'] ));
+			$paghiper_data['data_vencimento'] = $data->format( 'Y-m-d' );
+
 
 			// Update ticket data.
 			update_post_meta( $post_id, 'wc_paghiper_data', $paghiper_data );
@@ -136,7 +138,7 @@ class WC_Paghiper_Admin {
 			$mailer = $woocommerce->mailer();
 		}
 
-		$subject = sprintf( __( 'New expiration date for the paghiper your order %s', 'woocommerce-paghiper' ), $order->get_order_number() );
+		$subject = sprintf( __( 'O boleto do seu pedido foi atualizado (%s)', 'woocommerce-paghiper' ), $order->get_order_number() );
 
 		// Mail headers.
 		$headers = array();

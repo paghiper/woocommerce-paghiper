@@ -22,22 +22,82 @@ Este módulo implementa emissão de boletos com retorno automático.
 
 5. Configure a quantidade de dias que deseja dar de prazo no vencimento e ative o checkout transparente.
 
-Se tiver dúvidas sobre esse processo, acesse nosso [guia de configuração de plugin](https://github.com/paghiper/whmcs/wiki/Configurando-o-plugin-no-seu-WHMCS)
+Se tiver dúvidas sobre esse processo, acesse nosso [guia de configuração de plugin](https://github.com/paghiper/woocommerce-paghiper/wiki/Configurando-o-plugin-no-seu-WHMCS)
 
 
 # Suporte
 
-Para questões relacionadas a integração e plugin, acesse o [forum de suporte no Github](https://github.com/paghiper/whmcs/issues);
+Para questões relacionadas a integração e plugin, acesse o [forum de suporte no Github](https://github.com/paghiper/woocommerce-paghiper/issues);
 Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa [central de atendimento](https://www.paghiper.com/atendimento/).
 
 # Changelog
 
 ## Planejado para a próxima versão
 
-* Reutilização de boletos ao invés de emitir um novo a cada acesso
 * Emissão antecipada de boletos (automaticamente, no momento da criação do pedido)
 * Disponibilização de linha digitável no painel e e-mails de cobrança/fatura
+* Boleto PDF anexado nos e-mails do pedido
+* Implementação da API HTTP do Wordpress, para melhoria de performance e padronização
+* Lançamento no repositório oficial do WP, permitindo instalação direto pelo painel
+* Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
+* Implementação de funcionalidade de boleto parcelado
 
+## 1.2.5 - 2018/04/06
+
+* MELHORIA: Re-utilização de boletos emitidos
+* MELHORIA: Telas de status do pedido (Pago, Aguardando e Cancelado), caso o cliente acesse o boleto diretamente, depois da data de vencimento (evitando confusão por parte dos clientes).
+* Fix: Não é mais possível que o cliente faça re-emitissão de boletos cancelados, a não ser que o lojista mude a data de vencimento pelo painel.
+* Fix: Strings não-traduzidas e melhorias no texto dos avisos
+* BUGFIX: Inconsistência na data de vencimento, caso a data seja mais de 25 dias da data atual
+
+## 1.2.4.2 - 2017/12/20
+
+* BUGFIX: ID do Pedido inconsistente
+Caso: Comportamento inconsistente na função intval()
+A função pode retornar o ID do pedido com um espaço na frente, em alguns casos.
+
+## 1.2.4.1 - 2017/10/10
+
+* Corridos detalhes relacionados a texto e tradução.
+
+## 1.2.4 - 2017/10/08
+
+* Melhorias no sistema de atualização e tradução de algumas strings.
+
+## 1.2.3.1 - 2017/09/15
+
+* Fix: Corrige eventual problema com cancelamento de pedidos com boletos já pagos.
+
+## 1.2.3 - 2017/09/13
+
+* Fix: Hooks eram mostrados ao ativar o plug-in.
+
+## 1.2.2 - 2017/09/03
+
+* Fix: Baixa do estoque só acontecia em boletos com status diferentes de "Aguardando"
+* ESTABILIDADE: Suporte a baixa de estoque no WC em versões inferiores a 2.7
+
+## 1.2.1 - 2017/08/31
+
+* Melhoria: Incremento de estoque no cancelamento de boletos. Ficará para uso disponível na próxima versão.
+* Melhoria: Pedidos a partir de agora ficam "Aguardando" quando o cliente escolhe boleto PagHiper.
+* Fix: E-mails só eram enviados quando o cliente acessava o boleto pela primeira vez
+* ESTABILIDADE: Baixa do estoque acontecia quantas vezes o cliente acessava o boleto
+
+## 1.2 - 2017/07/07
+
+* Correção de bugs e estabiliadade do plug-in
+* BUG: Data de crédito ficava indefinida na compensação do boleto
+* BUG: Pedido podia ser marcado como "Aguardando" ou "Cancelado", caso o cliente gerasse mais de uma fatura e não pagasse a mais recente.
+* ESTABILIDADE: Implementação de lógica para impedir que boletos não pagos alterem status de pedidos ja aprovados.
+
+## 1.1.1 - 2017/07/07
+
+* Atualização no updater
+
+## 1.1 - 2017/04/13
+
+* Repositório renomeado
 
 ## 1.0 - 2017/04/13
 

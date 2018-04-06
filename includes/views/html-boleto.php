@@ -66,8 +66,6 @@ if ( isset( $boleto_code ) ) {
 				'country'    => $order->billing_country
 			);
 
-			//print_r($order);
-
 			if ( defined( 'WC_VERSION' ) && version_compare( WC_VERSION, '2.1', '>=' ) ) {
 				$address = WC()->countries->get_formatted_address( $address_fields );
 			} else {
@@ -97,7 +95,7 @@ if ( isset( $boleto_code ) ) {
 				$data['endereco2'] = '';
 			}
 
-			$dadosboleto = apply_filters( 'wcboleto_data', $data, $order );
+			$dadosboleto = apply_filters( 'paghiper_data', $data, $order );
 
 			// Include bank templates.
 			include WC_Paghiper::get_plugin_path() . 'includes/paghiper/layout.php';

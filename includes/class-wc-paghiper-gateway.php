@@ -92,7 +92,7 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 				'type'        => 'textarea',
 				'description' => __( 'Esse campo controla o texto da seção que o usuário vê durante o checkout.', 'woocommerce-paghiper' ),
 				'desc_tip'    => true,
-				'default'     => __( 'Pay with Banking Ticket', 'woocommerce-paghiper' )
+				'default'     => __( 'Pagar com Boleto Bancário', 'woocommerce-paghiper' )
 			),
 			'paghiper_details' => array(
 				'title' => __( 'Configurações do PagHiper Boleto Bancário', 'woocommerce-paghiper' ),
@@ -111,7 +111,7 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 			'paghiper_time' => array(
 				'title'       => __( 'Dias úteis para o vencimento', 'woocommerce-paghiper' ),
 				'type'        => 'text',
-				'description' => __( 'Número de dias úteis para calcular a data de vencimento do boelto.', 'woocommerce-paghiper' ),
+				'description' => __( 'Número de dias úteis para calcular a data de vencimento do boleto.', 'woocommerce-paghiper' ),
 				'desc_tip'    => true,
 				'default'     => 5
 			)
@@ -126,6 +126,12 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 				'title'   => __( 'Habilitar checkout transparente?', 'woocommerce-paghiper' ),
 				'type'    => 'checkbox',
 				'label'   => __( 'Exibe o boleto bancário dentro do seu site, ao invés de redirecionar ao site da PagHiper. Ativar/Desativar', 'woocommerce-paghiper' ),
+				'default' => 'yes'
+			),
+			'incrementar-estoque' => array(
+				'title'   => __( 'Restituir estoque, caso o pedido seja cancelado?', 'woocommerce-paghiper' ),
+				'type'    => 'checkbox',
+				'label'   => __( 'O plug-in subtrai os itens comprados no pedido por padrão. Essa opção os incrementa de volta, caso o pedido seja cancelado. Ativar/Desativar', 'woocommerce-paghiper' ),
 				'default' => 'yes'
 			),
 			'exibir-frase-boleto' => array(
@@ -220,15 +226,12 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 	 * @param  object $order Order object.
 	 */
 	public function generate_paghiper_data( $order ) {
+
+		//TODO
+		// Emitir boleto aqui e inserir filtro para anexar boleto PDF
 		// Ticket data.
 		$data                       = array();
-		$data['nosso_numero']       = apply_filters( 'wcpaghiper_our_number', $order->id );
-		$data['numero_documento']   = apply_filters( 'wcpaghiper_document_number', $order->id );
-		$data['data_vencimento']    = date( 'd/m/Y', time() + ( absint( $this->paghiper_time ) * 86400 ) );
-		$data['data_documento']     = date( 'd/m/Y' );
-		$data['data_processamento'] = date( 'd/m/Y' );
-
-
+		$data['data_vencimento']    = date( 'Y-m-d', time() + ( absint( $this->paghiper_time ) * 86400 ) );
 
 		update_post_meta( $order->id, 'wc_paghiper_data', $data );
 	}
