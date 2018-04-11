@@ -7,7 +7,7 @@ Este módulo implementa emissão de boletos com retorno automático.
 * **Requer WooCommerce** versão mínima 2.2.0
 * **Requer Wordpress** preferencialmente atualizado
 * **Requisitos:** PHP >= 5.2.0, cURL ativado.
-* **Compatibilidade:** Wordpress 7.1.2, PHP 7.x, HHVM. Integrado diretamente ao Wordpress usando WC_API
+* **Compatibilidade:** Wordpress 4.9.x, Woocommerce 3.3.x, PHP 7.x, HHVM. Integrado diretamente ao Wordpress usando WC_API
 
 
 # Como Instalar
