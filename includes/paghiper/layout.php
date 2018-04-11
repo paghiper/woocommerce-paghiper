@@ -126,8 +126,6 @@ if(empty($order_data["dataVencimento"])) {
 
     $different_total = ( $order->get_total() == $order_data['valorTotal'] ? NULL : TRUE );
     $different_due_date = ( $dadosboleto["dataVencimento"] == $dadosboleto["data_vencimento"] ? NULL : TRUE );
-
-    echo $dias_vencimento;
 }
 
 
