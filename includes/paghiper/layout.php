@@ -115,13 +115,19 @@ $dadosboleto,$data,$order,$settings,$novoVcto = NULL) {
 
 
 if(empty($order_data["dataVencimento"])) {
-      $order_date = DateTime::createFromFormat('Y-m-d', strtok($order->order_date, ' '));
-      $data_vencimento = DateTime::createFromFormat('Y-m-d', $order_data["data_vencimento"]);
-      $dias_vencimento = $data_vencimento->diff($order_date)->format("%r%a");
+    $order_date = DateTime::createFromFormat('Y-m-d', strtok($order->order_date, ' '));
+    $data_vencimento = DateTime::createFromFormat('Y-m-d', $order_data["data_vencimento"]);
+    $dias_vencimento = $order_date->diff($data_vencimento)->format("%r%a");
 } else {
     $vctoBoleto = DateTime::createFromFormat('Y-m-d', $order_data["dataVencimento"]);
     $vctoBanco = DateTime::createFromFormat('Y-m-d', $order_data["data_vencimento"]);
-    $dias_vencimento = (int) $vctoBanco->diff($vctoBoleto)->format("%r%a");
+    $todayDate = new \DateTime();
+    $dias_vencimento = (int) $todayDate->diff($vctoBoleto)->format("%r%a");
+
+    $different_total = ( $order->get_total() == $order_data['valorTotal'] ? NULL : TRUE );
+    $different_due_date = ( $dadosboleto["dataVencimento"] == $dadosboleto["data_vencimento"] ? NULL : TRUE );
+
+    echo $dias_vencimento;
 }
 
 
@@ -132,14 +138,14 @@ if($order->has_status( 'processing' )) {
   $message = 'Recebemos seu pagamento! Você pode acompanhar a evolução do seu pedido pelo seu painel de cliente.';
   echo print_screen($ico, $title, $message);
   exit();
-} else {
-  if($dias_vencimento <= 3 && $dias_vencimento > 0) {
+} elseif( !$different_due_date ) {
+  if($dias_vencimento >= -3 && $dias_vencimento < 0) {
     $ico = 'boleto-waiting.png';
     $title = 'Por favor, aguarde!';
     $message = 'Este boleto venceu. Caso ja tenha efetuado o pagamento, aguarde o prazo de baixa bancária.';
     echo print_screen($ico, $title, $message);
     exit();
-  } elseif($dias_vencimento > 3) {
+  } elseif( $dias_vencimento < -3 ) {
     $ico = 'boleto-cancelled.png';
     $title = 'Boleto Vencido!';
     $message = 'Este boleto venceu e foi cancelado. Por favor, efetue seu pedido novamente.';
@@ -148,7 +154,9 @@ if($order->has_status( 'processing' )) {
   }
 }
 
-if($dadosboleto["dataVencimento"] !== $dadosboleto["data_vencimento"]) {
+
+
+if( $different_due_date === TRUE || $different_total == TRUE ) {
     // Checa se data de vencimento é menor que hoje e se é possível solicitar boleto após o vencimento
     // Solicita um boleto novo caso a data do banco seja diferente da do boleto.
     echo httpPost("https://www.paghiper.com/checkout/",$dadosboleto,$data,$order,$settings);
@@ -156,6 +164,8 @@ if($dadosboleto["dataVencimento"] !== $dadosboleto["data_vencimento"]) {
     // Temos um boleto ja emitido com data de vencimento válida, só pegamos uma cópia
     echo get_remote_content($dadosboleto['urlPagamento']);
 }
+
+
 
 
 function get_remote_content($url) {
