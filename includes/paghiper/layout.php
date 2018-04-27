@@ -118,6 +118,7 @@ if(empty($order_data["dataVencimento"])) {
     $order_date = DateTime::createFromFormat('Y-m-d', strtok($order->order_date, ' '));
     $data_vencimento = DateTime::createFromFormat('Y-m-d', $order_data["data_vencimento"]);
     $dias_vencimento = $order_date->diff($data_vencimento)->format("%r%a");
+    $new_request = TRUE;
 } else {
     $vctoBoleto = DateTime::createFromFormat('Y-m-d', $order_data["dataVencimento"]);
     $vctoBanco = DateTime::createFromFormat('Y-m-d', $order_data["data_vencimento"]);
@@ -154,7 +155,7 @@ if($order->has_status( 'processing' )) {
 
 
 
-if( $different_due_date === TRUE || $different_total == TRUE ) {
+if( $different_due_date === TRUE || $different_total === TRUE || $new_request === TRUE) {
     // Checa se data de vencimento é menor que hoje e se é possível solicitar boleto após o vencimento
     // Solicita um boleto novo caso a data do banco seja diferente da do boleto.
     echo httpPost("https://www.paghiper.com/checkout/",$dadosboleto,$data,$order,$settings);

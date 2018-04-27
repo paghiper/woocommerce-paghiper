@@ -42,6 +42,10 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
 * Implementação de funcionalidade de boleto parcelado
 
+## 1.2.5.3 - 2018/04/27
+
+* BUGFIX: Melhoria na lógica de exibição das telas de status, caso a data de vencimento do boleto ja tenha passado
+
 ## 1.2.5 - 2018/04/06
 
 * MELHORIA: Re-utilização de boletos emitidos
