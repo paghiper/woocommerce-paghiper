@@ -26,7 +26,7 @@ $dadosboleto,$data,$order,$settings,$novoVcto = NULL) {
        "email_loja" => $settings['email'],
 
        // Para controle interno apenas, favor não remover.
-       "idPartners" => 'D1J0M5GD',
+       "idPartners" => 'H1IGV3CZ',
 
        // Informações opcionais
        "urlRetorno" => $wp_api_url,
@@ -64,7 +64,6 @@ $dadosboleto,$data,$order,$settings,$novoVcto = NULL) {
 
     $paghiper_data["api"] = "json";
     $paghiper_data["pagamento"]  = "pagamento";
-
     
    //create name value pairs seperated by &
    foreach($paghiper_data as $k => $v) 
@@ -90,7 +89,14 @@ $dadosboleto,$data,$order,$settings,$novoVcto = NULL) {
 
 
     $output = json_decode($request, true);
+
+    if(!$output) {
+      echo $request;
+      exit();
+    }
+
     $transacao = reset($output["transacao"]);
+
 
     if(!empty($transacao) && validate_transacion($transacao)) {
       $data = array(
