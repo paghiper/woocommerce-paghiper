@@ -204,7 +204,7 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 	 * @return string Thank You message.
 	 */
 	public function thankyou_page() {
-		$html = '<div class="woocommerce-message">';
+		$html = '<div class="woocommerce-message paghiper-thankyou-notice">';
 		$html .= sprintf( '<a class="button" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $_GET['key'] ) ), __( 'Pagar o Boleto &rarr;', 'woocommerce-paghiper' ) );
 
 		$message = sprintf( __( '%sAtenção!%s Você NÃO vai receber o boleto pelos Correios.', 'woocommerce-paghiper' ), '<strong>', '</strong>' ) . '<br />';
