@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 
 	/**
-	 * Initialize the gateway actions.
+	 * Construtor do gateway. Inicializamos via __construct()
 	 */
 	public function __construct() {
 		$this->id                 = 'paghiper';
@@ -20,16 +20,19 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 		$this->method_title       = __( 'Boleto PagHiper', 'woocommerce-paghiper' );
 		$this->method_description = __( 'Ativa a emissão e recebimento de boletos via PagHiper.', 'woocommerce-paghiper' );
 
-		// Load the settings.
+		// Carrega as configurações
 		$this->init_form_fields();
 		$this->init_settings();
 
-		// Define user settings variables.
+		// Define as variáveis que vamos usar e popula com os dados de configuração
 		$this->title       = $this->get_option( 'title' );
 		$this->description = $this->get_option( 'description' );
 		$this->paghiper_time = $this->get_option( 'paghiper_time' );
 
-		// Actions.
+		// Ativa os logs
+		$this->log = wc_paghiper_initialize_log( $this->get_option( 'debug' ) );
+
+		// Ações
 		add_action( 'woocommerce_thankyou_paghiper', array( $this, 'thankyou_page' ) );
 		add_action( 'woocommerce_email_after_order_table', array( $this, 'email_instructions' ), 10, 2 );
 		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
@@ -65,6 +68,18 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 	 */
 	public function admin_options() {
 		include 'views/html-admin-page.php';
+	}
+
+	/**
+	 * Get log.
+	 *
+	 * @return string
+	 */
+	protected function get_log_view() {
+		if ( defined( 'WC_VERSION' ) && version_compare( WC_VERSION, '2.2', '>=' ) ) {
+			return '<a href="' . esc_url( admin_url( 'admin.php?page=wc-status&tab=logs&log_file=' . esc_attr( $this->id ) . '-' . sanitize_file_name( wp_hash( $this->id ) ) . '.log' ) ) . '">' . __( 'System Status &gt; Logs', 'woocommerce-paghiper' ) . '</a>';
+		}
+		return '<code>woocommerce/logs/' . esc_attr( $this->id ) . '-' . sanitize_file_name( wp_hash( $this->id ) ) . '.txt</code>';
 	}
 
 	/**
@@ -146,6 +161,13 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 				'label'   => __( 'Ativar/Desativar', 'woocommerce-paghiper' ),
 				'default' => 'yes'
 			),
+			'debug' => array(
+				'title'       => __( 'Log de depuração', 'woocommerce-paghiper' ),
+				'type'        => 'checkbox',
+				'label'       => __( 'Ativa o log de erros', 'woocommerce-paghiper' ),
+				'default'     => 'no',
+				'description' => sprintf( __( 'Armazena eventos e erros, como chamadas API e exibições, dentro do arquivo %s Ative caso enfrente problemas.', 'woocommerce-paghiper' ), $this->get_log_view() ),
+			),
 		);
 
 		$this->form_fields = array_merge( $first, $last );
@@ -169,8 +191,14 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 			} else {
 				$order->reduce_order_stock();
 			}
+
+			if ( 'yes' === $this->debug ) {
+				wc_paghiper_add_log( $this->log, sprintf( 'Pedido %s: Itens do pedido retirados do estoque com sucesso', $order_id ) );
+			}
+
 		}
 
+		// TODO: Chamar boleto aqui para usar no processo de validação do pedido.
 		// Mark as on-hold (we're awaiting the ticket).
 		$order->update_status( 'on-hold', __( 'Boleto PagHiper: Aguardando cliente acessar o boleto.', 'woocommerce-paghiper' ) );
 
