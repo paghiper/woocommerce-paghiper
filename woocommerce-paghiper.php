@@ -3,14 +3,15 @@
  * Plugin Name: WooCommerce Boleto PagHiper
  * Plugin URI: https://github.com/paghiper/woocommerce-paghiper/
  * Description: PagHiper é um gateway de pagamentos brasileiro. Este plugin o integra ao WooCommerce.
- * Author: Henrique Cruz, PagHiper
+ * Author: PagHiper, Henrique Cruz
  * Author URI: https://www.paghiper.com
- * Version: 1.2.5.3
+ * Version: 1.2.6
+ * Tested up to: 4.9.6
  * License: GPLv2 or later
  * Text Domain: woocommerce-paghiper
  * Domain Path: /languages/
- * GitHub Plugin URI: paghiper/woocommerce-paghiper/
- * GitHub Plugin URI: https://github.com/paghiper/woocommerce-paghiper/
+ * WC requires at least: 2.2.0
+ * WC tested up to: 3.4.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -29,7 +30,7 @@ class WC_Paghiper {
 	 *
 	 * @var string
 	 */
-	const VERSION = '1.2.5.3';
+	const VERSION = '1.2.6';
 
 	/**
 	 * Instance of this class.
@@ -62,6 +63,10 @@ class WC_Paghiper {
 			add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( $this, 'plugin_action_links' ) );
 		} else {
 			add_action( 'admin_notices', array( $this, 'woocommerce_missing_notice' ) );
+		}
+
+		if (!function_exists('json_decode')) {
+			add_action( 'admin_notices', array( $this, 'json_missing_notice' ) );
 		}
 
 	}
@@ -133,18 +138,6 @@ class WC_Paghiper {
 	 */
 	public static function add_paghiper_endpoint() {
 		add_rewrite_endpoint( 'paghiper', EP_PERMALINK | EP_ROOT );
-
-
-		if ( is_admin() ) {		
-			require 'plugin-update-checker/plugin-update-checker.php';
-			$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
-				'https://github.com/paghiper/woocommerce-paghiper/',
-				__FILE__,
-				'woocommerce-paghiper'
-			);
-		}
-
-
 	}
 
 	/**
@@ -254,6 +247,15 @@ class WC_Paghiper {
 	 */
 	public function woocommerce_missing_notice() {
 		include_once 'includes/views/html-notice-woocommerce-missing.php';
+	}
+
+	/**
+	 * JSON missing notice.
+	 *
+	 * @return string
+	 */
+	public function json_missing_notice() {
+		include_once 'includes/views/html-notice-json-missing.php';
 	}
 }
 

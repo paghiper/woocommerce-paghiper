@@ -1,14 +1,18 @@
 <?php
 
 $wp_api_url = str_replace( 'https:', 'http:', add_query_arg( 'wc-api', 'WC_Gateway_Paghiper', home_url( '/' ) ) );
-add_action( 'woocommerce_api_wc_gateway_paghiper', 'check_ipn_response' );
+add_action( 'woocommerce_api_wc_gateway_paghiper', 'woocommerce_boleto_paghiper_check_ipn_response' );
+
+$settings = get_option( 'woocommerce_paghiper_settings', array() );
+$log = wc_paghiper_initialize_log( $settings[ 'debug' ] );
 
 
-function valid_paghiper_ipn_request($return, $order_no) {
+function woocommerce_boleto_paghiper_valid_ipn_request($return, $order_no) {
+
+    global $settings, $log;
 
     $order                  = new WC_Order($order_no);
     $array                  = array($return, $order_no, $order);
-    $settings               = get_option( 'woocommerce_paghiper_settings', array() );
     $order_status           = $order->get_status();
     $creditDate             = (string) $return['dataCredito'];
     $formattedCreditDate    = date("d/m/Y", strtotime($creditDate));
@@ -27,7 +31,7 @@ function valid_paghiper_ipn_request($return, $order_no) {
                 break;
             case "Disputa" :
                 $order->update_status( 'on-hold', __( 'PagHiper: Pagamento em disputa. Para responder, faça login na sua conta Paghiper e procure pelo número da transação.', 'woocommerce-paghiper' ) );
-                // increase_order_stock( $order );
+                increase_order_stock( $order );
                 break;
         }
     } else {
@@ -67,7 +71,7 @@ function valid_paghiper_ipn_request($return, $order_no) {
     }
 }
 
-function check_ipn_response() {
+function woocommerce_boleto_paghiper_check_ipn_response() {
 
     //TOKEN gerado no painel do PAGHIPER = TOKEN SECRETO
     $settings = get_option( 'woocommerce_paghiper_settings' );
@@ -114,14 +118,12 @@ function check_ipn_response() {
             $post_completo[$k] = $v;
         }
 
-        //TODO
-        // Fazer um método de log para gravar esses dados
-
-        //Serialize the array.
-        $serialized = serialize($post_completo);
-         
-        //Save the serialized array to a text file.
-        file_put_contents('serialized.txt', $serialized);
+        // Serialize the array and store it in the log
+        if ( $log ) {
+            $serialized = serialize($post_completo);
+            wc_paghiper_add_log( $log, sprintf( 'Pedido #%s: Post de retorno recebido %sConteúdo: %s', $idPlataforma, PHP_EOL, $serialized ) );
+        }
+        
 
         //For para receber os produtos
         for ($x=1; $x <= $numItem; $x++) {
@@ -144,25 +146,35 @@ function check_ipn_response() {
         "&token=$token";
         $enderecoPost = "https://www.paghiper.com/checkout/confirm/"; 
 
-        ob_start();
-        $ch = curl_init();
-         curl_setopt($ch, CURLOPT_URL, $enderecoPost);
-         curl_setopt($ch, CURLOPT_POST, true);
-         curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
-         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-         curl_setopt($ch, CURLOPT_HEADER, false);
-         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-         $resposta = curl_exec($ch);
-         curl_close($ch);
+        $response = wp_remote_post( $enderecoPost, array('body' => $post) );
 
-         $confirmado = (strcmp ($resposta, "VERIFICADO") == 0);
+        if ( is_array( $response ) && ! is_wp_error( $response ) ) {
+
+            $headers = $response['headers']; // array of http header lines
+            $body    = $response['body']; // use the content
+
+            $confirmado = (strcmp ($body, "VERIFICADO") == 0);
+
+        } else {
+            if ( $log ) {
+                $error = $response->get_error_message();
+                wc_paghiper_add_log( $log, sprintf( 'Erro: não foi possível checar o post de retorno da PagHiper. Mensagem: %s' ) );
+            }
+
+        }
+
+         
 
     }
     //FIM - NAO ALTERAR//
 
 
      if (isset($confirmado) && false !== $confirmado) {
+
+
+        if ( $log ) {
+            wc_paghiper_add_log( $log, sprintf('Pedido #%s: Post de retorno da PagHiper confirmado.', $idPlataforma) );
+        }
         
         //SE O POST FOR CONFIRMADO, ESSA AREA SERA HABILITADA.
         header( 'HTTP/1.1 200 OK' );
@@ -174,11 +186,16 @@ function check_ipn_response() {
             'dataCredito' => $dataCredito,
             'status' => $status
             );
-        valid_paghiper_ipn_request( $data, trim(str_replace('#', '', $idPlataforma ) ) );
+        woocommerce_boleto_paghiper_valid_ipn_request( $data, trim(str_replace('#', '', $idPlataforma ) ) );
         //Executa a query para armazenar as informações no banco de dados
         
     } else {
         
+
+        if ( $log ) {
+            wc_paghiper_add_log( $log, sprintf('Pedido #%s: Post de retorno da PagHiper não-confirmado.', $idPlataforma) );
+        }
+
         // SE O POST FOR NEGADO, ESSA AREA SERA HABILITADA    
         wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'woocommerce-paghiper' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'woocommerce-paghiper' ), array( 'response' => 401 ) );
         
@@ -193,6 +210,8 @@ function check_ipn_response() {
  * @param int $order_id Order ID.
  */
 function increase_order_stock( $order, $settings ) {
+    global $log;
+
     if ( 'yes' === get_option( 'woocommerce_manage_stock' ) && $settings['incrementar-estoque'] == true && $order && 0 < count( $order->get_items() ) ) {
         foreach ( $order->get_items() as $item ) {
             // Support for WooCommerce 2.7.
@@ -227,7 +246,11 @@ function increase_order_stock( $order, $settings ) {
                     } else {
                         $order->add_order_note( sprintf( __( 'Item %1$s stock increased from %2$s to %3$s.', 'reduce-stock-of-manual-orders-for-woocommerce' ), $item_name, $old_stock, $new_stock ) );
                     }
-                    $this->set_stock_reduced( $order_id, false );
+                    $order->get_data_store()->set_stock_reduced( $order_id, false );
+
+                    if ( $log ) {
+                        wc_paghiper_add_log( $log, sprintf('Pedido #%s: Itens do pedido devolvidos ao estoque.', $order_id) );
+                    }
                 }
             }
         }
