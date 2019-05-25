@@ -287,7 +287,7 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 
 		$html .= apply_filters( 'wcpaghiper_email_instructions', $message );
 
-		$html .= '<br />' . sprintf( '<a class="button" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Pagar o Boleto &rarr;', 'woocommerce-paghiper' ) ) . '<br />';
+		$html .= '<br />' . sprintf( '<a style="background: #4d90fe; padding: 10px 10px; color: white!important; text-transform: uppercase; display: inline-block; border-radius: 5px; border-style: solid; border-width: 1px; text-decoration: none!important;" class="button" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Visualizar o boleto &rarr;', 'woocommerce-paghiper' ) ) . '<br />';
 
 		$html .= '<strong style="font-size: 0.8em">' . sprintf( __( 'Data de Vencimento: %s.', 'woocommerce-paghiper' ), date( 'd/m/Y', time() + ( absint( $this->paghiper_time ) * 86400 ) ) ) . '</strong>';
 
