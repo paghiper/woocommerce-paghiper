@@ -71,7 +71,7 @@ class WC_Paghiper_Admin {
 			$html .= '<p style="border-top: 1px solid #ccc;"></p>';
 
 			$html .= '<label for="wcpaghiper_expiration_date">' . __( 'Digite uma nova data de vencimento:', 'woocommerce-paghiper' ) . '</label><br />';
-			$html .= '<input type="text" id="wcpaghiper_expiration_date" name="wcpaghiper_expiration_date" style="width: 100%;" />';
+			$html .= '<input type="date" id="wcpaghiper_expiration_date" name="wcpaghiper_expiration_date" style="width: 100%;" />';
 			$html .= '<span class="description">' . __( 'Ao configurar uma nova data de vencimento, o boleto é re-enviado ao cliente por e-mail.', 'woocommerce-paghiper' ) . '</span>';
 
 		} else {
