@@ -232,18 +232,19 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 	 * @return string Thank You message.
 	 */
 	public function thankyou_page() {
-		$html = '<div class="woocommerce-message">';
-		$html .= sprintf( '<a class="button" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $_GET['key'] ) ), __( 'Pagar o Boleto &rarr;', 'woocommerce-paghiper' ) );
+		$html = '<div class="woocommerce-notices-wrapper"><div class="woocommerce-message wc-paghiper">';
 
-		$message = sprintf( __( '%sAtenção!%s Você NÃO vai receber o boleto pelos Correios.', 'woocommerce-paghiper' ), '<strong>', '</strong>' ) . '<br />';
-		$message .= __( 'Clique no link abaixo e pague o boleto pelo seu aplicativo de Internet Banking .', 'woocommerce-paghiper' ) . '<br />';
-		$message .= __( 'Se preferir, você pode imprimir e pagar o boleto em qualquer agência bancária ou lotérica.', 'woocommerce-paghiper' ) . '<br />';
+		$message = '<p>' . sprintf( __( '%sAtenção!%s Você NÃO vai receber o boleto pelos Correios.', 'woocommerce-paghiper' ), '<strong>', '</strong>' ) . '</p>';
+		$message .= '<p>' . __( 'Clique no botão abaixo e pague o boleto pelo aplicativo do seu banco.', 'woocommerce-paghiper' ) . '</p>';
+		$message .= '<p>' . __( 'Se preferir, você pode imprimir e pagar o boleto em qualquer agência bancária ou lotérica.', 'woocommerce-paghiper' ) . '</p>';
 
 		$html .= apply_filters( 'wcpaghiper_thankyou_page_message', $message );
 
-		$html .= '<strong style="display: block; margin-top: 15px; font-size: 0.8em">' . sprintf( __( 'Data de vencimento do Boleto: %s.', 'woocommerce-paghiper' ), date( 'd/m/Y', time() + ( absint( $this->paghiper_time ) * 86400 ) ) ) . '</strong>';
+		$html .= '<p class="wc-paghiper-pay-button">' . sprintf( '<a class="button" href="%s" target="_blank" style="display: inline-block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $_GET['key'] ) ), __( 'Pagar o Boleto &rarr;', 'woocommerce-paghiper' ) ) . '</p>';
 
-		$html .= '</div>';
+		$html .= '<p class="wc-paghiper-due-date"><strong><small>' . sprintf( __( 'Data de vencimento: %s', 'woocommerce-paghiper' ), date( 'd/m/Y', time() + ( absint( $this->paghiper_time ) * 86400 ) ) ) . '</small></strong></p>';
+
+		$html .= '</div></div>';
 
 		echo $html;
 	}
