@@ -320,6 +320,12 @@ class WC_Paghiper {
 		$order = new WC_Order( $order_id );
 
 		if ( 'on-hold' === $order->status && 'paghiper' == $order->payment_method ) {
+
+			require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
+	
+			$paghiperBoleto = new WC_PagHiper_Boleto( $order_id );
+			$paghiperBoleto->printBarCode(true);
+
 			$html = '<div class="woocommerce-info">';
 			$html .= sprintf( '<a class="button" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Visualizar boleto &rarr;', 'woo-boleto-paghiper' ) );
 
