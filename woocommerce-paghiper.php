@@ -114,10 +114,10 @@ class WC_Paghiper {
 	 * Load the plugin text domain for translation.
 	 */
 	public function load_plugin_textdomain() {
-		$locale = apply_filters( 'plugin_locale', get_locale(), 'woocommerce-paghiper' );
+		$locale = apply_filters( 'plugin_locale', get_locale(), 'woo-boleto-paghiper' );
 
-		load_textdomain( 'woocommerce-paghiper', trailingslashit( WP_LANG_DIR ) . 'woocommerce-paghiper/woocommerce-paghiper-' . $locale . '.mo' );
-		load_plugin_textdomain( 'woocommerce-paghiper', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+		load_textdomain( 'woo-boleto-paghiper', trailingslashit( WP_LANG_DIR ) . 'woocommerce-paghiper/woocommerce-paghiper-' . $locale . '.mo' );
+		load_plugin_textdomain( 'woo-boleto-paghiper', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 	}
 
 	/**
