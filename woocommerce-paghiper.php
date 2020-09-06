@@ -5,14 +5,14 @@
  * Description: PagHiper é um gateway de pagamentos brasileiro. Este plugin o integra ao WooCommerce.
  * Author: PagHiper, Henrique Cruz
  * Author URI: https://www.paghiper.com
- * Version: 1.2.6
- * Tested up to: 4.9.6
+ * Version: 2.0.1
+ * Tested up to: 5.5
  * License: GPLv2 or later
- * Text Domain: woocommerce-paghiper
+ * Text Domain: woo-boleto-paghiper
  * Domain Path: /languages/
- * WC requires at least: 2.2.0
- * WC tested up to: 3.4.2
- */
+ * WC requires at least: 3.5
+ * WC tested up to: 4.4.1
+ */	
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -30,7 +30,7 @@ class WC_Paghiper {
 	 *
 	 * @var string
 	 */
-	const VERSION = '1.2.6';
+	const VERSION = '2.0.1';
 
 	/**
 	 * Instance of this class.
