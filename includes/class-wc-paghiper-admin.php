@@ -54,18 +54,18 @@ class WC_Paghiper_Admin {
 			$paghiper_data = get_post_meta( $post->ID, 'wc_paghiper_data', true );
 
 			// Save the ticket data if don't have.
-			if ( ! isset( $paghiper_data['data_vencimento'] ) ) {
-				$settings                   = get_option( 'woocommerce_paghiper_settings', array() );
-				$paghiper_time                = isset( $settings['paghiper_time'] ) ? absint( $settings['paghiper_time'] ) : 5;
-				$data                       = array();
-				$data['data_vencimento']    = date( 'Y-m-d', time() + ( $paghiper_time * 86400 ) );
+			if ( ! isset( $paghiper_data['order_billet_due_date'] ) ) {
+				$settings               		= get_option( 'woocommerce_paghiper_settings', array() );
+				$order_billet_due_date			= isset( $settings['order_billet_due_date'] ) ? absint( $settings['order_billet_due_date'] ) : 5;
+				$data                   		= array();
+				$data['order_billet_due_date']  = date( 'Y-m-d', time() + ( $order_billet_due_date * 86400 ) );
 
 				update_post_meta( $post->ID, 'wc_paghiper_data', $data );
 
-				$paghiper_data['data_vencimento'] = $data['data_vencimento'];
+				$paghiper_data['order_billet_due_date'] = $data['order_billet_due_date'];
 			}
 
-			$html = '<p><strong>' . __( 'Data de Vencimento:', 'woocommerce-paghiper' ) . '</strong> ' . date('d/m/Y', strtotime($paghiper_data['data_vencimento'])) . '</p>';
+			$html = '<p><strong>' . __( 'Data de Vencimento:', 'woocommerce-paghiper' ) . '</strong> ' . date('d/m/Y', strtotime($paghiper_data['order_billet_due_date'])) . '</p>';
 			$html .= '<p><strong>' . __( 'URL:', 'woocommerce-paghiper' ) . '</strong> <a target="_blank" href="' . esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ) . '">' . __( 'Visualizar boleto', 'woocommerce-paghiper' ) . '</a></p>';
 
 			$html .= '<p style="border-top: 1px solid #ccc;"></p>';
@@ -107,7 +107,7 @@ class WC_Paghiper_Admin {
 			// Gets ticket data.
 			$paghiper_data = get_post_meta( $post_id, 'wc_paghiper_data', true );
 			$data = DateTime::createFromFormat('d/m/Y', sanitize_text_field( $_POST['wcpaghiper_expiration_date'] ));
-			$paghiper_data['data_vencimento'] = $data->format( 'Y-m-d' );
+			$paghiper_data['order_billet_due_date'] = $data->format( 'Y-m-d' );
 
 
 			// Update ticket data.
@@ -117,10 +117,10 @@ class WC_Paghiper_Admin {
 			$order = new WC_Order( $post_id );
 
 			// Add order note.
-			$order->add_order_note( sprintf( __( 'Data de vencimento alterada para %s', 'woocommerce-paghiper' ), $paghiper_data['data_vencimento'] ) );
+			$order->add_order_note( sprintf( __( 'Data de vencimento alterada para %s', 'woocommerce-paghiper' ), $paghiper_data['order_billet_due_date'] ) );
 
 			// Send email notification.
-			$this->email_notification( $order, $paghiper_data['data_vencimento'] );
+			$this->email_notification( $order, $paghiper_data['order_billet_due_date'] );
 		}
 	}
 
