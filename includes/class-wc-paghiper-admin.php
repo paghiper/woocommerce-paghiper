@@ -60,6 +60,9 @@ class WC_Paghiper_Admin {
 				$data                   		= array();
 				$data['order_billet_due_date']  = date( 'Y-m-d', time() + ( $order_billet_due_date * 86400 ) );
 
+				// TODO: Implement validation and warnings
+				// TODO: Queue IgorEscobar's jQuery mask lib
+
 				update_post_meta( $post->ID, 'wc_paghiper_data', $data );
 
 				$paghiper_data['order_billet_due_date'] = $data['order_billet_due_date'];
@@ -138,14 +141,21 @@ class WC_Paghiper_Admin {
 			$mailer = $woocommerce->mailer();
 		}
 
+
 		$subject = sprintf( __( 'O boleto do seu pedido foi atualizado (%s)', 'woocommerce-paghiper' ), $order->get_order_number() );
 
 		// Mail headers.
 		$headers = array();
 		$headers[] = "Content-Type: text/html\r\n";
 
+		// Billet re-emission
+		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
+
+		$paghiperBoleto = new WC_PagHiper_Boleto( $order_id );
+
 		// Body message.
 		$main_message = '<p>' . sprintf( __( 'A data de vencimento do seu boleto foi atualizada para: %s', 'woocommerce-paghiper' ), '<code>' . $expiration_date . '</code>' ) . '</p>';
+		$main_message .= $paghiperBoleto->printBarCode();
 		$main_message .= '<p>' . sprintf( '<a class="button" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Pagar o boleto &rarr;', 'woocommerce-paghiper' ) ) . '</p>';
 
 		// Sets message template.
