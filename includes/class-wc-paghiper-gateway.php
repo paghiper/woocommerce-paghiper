@@ -18,7 +18,7 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 	 */
 	public function __construct() {
 		$this->id                 = 'paghiper';
-		$this->icon               = apply_filters( 'wcpaghiper_icon', plugins_url( 'assets/images/boleto.png', plugin_dir_path( __FILE__ ) ) );
+		$this->icon               = apply_filters( 'woo_paghiper_icon', plugins_url( 'assets/images/boleto.png', plugin_dir_path( __FILE__ ) ) );
 		$this->has_fields         = false;
 		$this->method_title       = __( 'Boleto PagHiper', 'woo-boleto-paghiper' );
 		$this->method_description = __( 'Ativa a emissão e recebimento de boletos via PagHiper.', 'woo-boleto-paghiper' );
@@ -298,7 +298,7 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 		$message .= __( 'Clique no link abaixo e pague o boleto pelo seu aplicativo de Internet Banking .', 'woo-boleto-paghiper' ) . '<br />';
 		$message .= __( 'Se preferir, você pode imprimir e pagar o boleto em qualquer agência bancária ou lotérica.', 'woo-boleto-paghiper' ) . '<br />';
 
-		$html .= apply_filters( 'wcpaghiper_thankyou_page_message', $message );
+		$html .= apply_filters( 'woo_paghiper_thankyou_page_message', $message );
 
 		$html .= '<strong style="display: block; margin-top: 15px; font-size: 0.8em">' . sprintf( __( 'Data de vencimento do Boleto: %s.', 'woo-boleto-paghiper' ), date( 'd/m/Y', time() + ( absint( $this->days_due_date ) * 86400 ) ) ) . '</strong>';
 
@@ -354,7 +354,7 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 		$message .= sprintf( __( '%sAtenção!%s Você NÃO vai receber o boleto pelos Correios.', 'woo-boleto-paghiper' ), '<strong>', '</strong>' ) . '<br />';
 		$message .= __( 'Se preferir, você pode imprimir e pagar o boleto em qualquer agência bancária ou lotérica.', 'woo-boleto-paghiper' ) . '<br />';
 
-		$html .= apply_filters( 'wcpaghiper_email_instructions', $message );
+		$html .= apply_filters( 'woo_paghiper_email_instructions', $message );
 
 		$html .= '<br />' . sprintf( '<a class="button" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Veja o boleto completo &rarr;', 'woo-boleto-paghiper' ) ) . '<br />';
 

@@ -306,7 +306,7 @@ class WC_Paghiper {
 			$url = add_query_arg( array( 'paghiper' => $code ), $home );
 		}
 
-		return apply_filters( 'woocommerce_paghiper_url', $url, $code, $home );
+		return apply_filters( 'woo_paghiper_url', $url, $code, $home );
 	}
 
 	/**
@@ -334,7 +334,7 @@ class WC_Paghiper {
 			$message .= __( 'Caso preferir, você pode imprimir e pagá-lo em qualquer agência bancária ou casa lotérica.', 'woo-boleto-paghiper' ) . '<br />';
 			$message .= __( 'Ignore esta mensagem caso ja tenha efetuado o pagamento. O pedido será atualizado assim que houver a compensação.', 'woo-boleto-paghiper' ) . '<br />';
 
-			$html .= apply_filters( 'wcpaghiper_pending_payment_message', $message, $order );
+			$html .= apply_filters( 'woo_paghiper_pending_payment_message', $message, $order );
 
 			$html .= '</div>';
 

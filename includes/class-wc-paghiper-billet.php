@@ -248,7 +248,7 @@ class WC_PagHiper_Boleto {
 		if($order_taxes > 0) {
 			$data['items'][] = array(
 				'item_id'		=> 1,
-				'description'	=> apply_filters('paghiper_taxes_description', $taxes_description, $this->order_id),
+				'description'	=> apply_filters('woo_paghiper_taxes_description', $taxes_description, $this->order_id),
 				'quantity'		=> 1,
 				'price_cents'	=> $this->_convert_to_cents($order_taxes)
 			);
@@ -260,7 +260,7 @@ class WC_PagHiper_Boleto {
 
 		// Seller/Order variable description
 		$billet_description = sprintf("Referente a pedido #%s na loja %s", $this->order_id, $shop_name);
-		$data['seller_description'] = apply_filters('paghiper_billet_description', $billet_description, $this->order_id);
+		$data['seller_description'] = apply_filters('woo_paghiper_billet_description', $billet_description, $this->order_id);
 
 		// Fixed data (doesn't change per request)
 		$data['type_bank_slip']					= 'boletoA4';
@@ -397,7 +397,7 @@ class WC_PagHiper_Boleto {
 		$digitable_line = $this->_get_digitable_line();
 		$barcode_number = $this->_get_barcode();
 
-		$html = '<div class="wcpaghiper_digitable_line" style="margin-bottom: 40px;">';
+		$html = '<div class="woo_paghiper_digitable_line" style="margin-bottom: 40px;">';
 
 		$html .= "<p style='width: 100%; text-align: center;'>Pague seu boleto usando o código de barras ou a linha digitável, se preferir:</p>";
 

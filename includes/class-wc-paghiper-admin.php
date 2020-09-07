@@ -48,7 +48,7 @@ class WC_Paghiper_Admin {
 		$order = new WC_Order( $post->ID );
 
 		// Use nonce for verification.
-		wp_nonce_field( basename( __FILE__ ), 'wcpaghiper_metabox_nonce' );
+		wp_nonce_field( basename( __FILE__ ), 'woo_paghiper_metabox_nonce' );
 
 		if ( 'paghiper' == $order->payment_method ) {
 			$paghiper_data = get_post_meta( $post->ID, 'wc_paghiper_data', true );
@@ -73,8 +73,8 @@ class WC_Paghiper_Admin {
 
 			$html .= '<p style="border-top: 1px solid #ccc;"></p>';
 
-			$html .= '<label for="wcpaghiper_expiration_date">' . __( 'Digite uma nova data de vencimento:', 'woocommerce-paghiper' ) . '</label><br />';
-			$html .= '<input type="text" id="wcpaghiper_expiration_date" name="wcpaghiper_expiration_date" style="width: 100%;" />';
+			$html .= '<label for="woo_paghiper_expiration_date">' . __( 'Digite uma nova data de vencimento:', 'woocommerce-paghiper' ) . '</label><br />';
+			$html .= '<input type="text" id="woo_paghiper_expiration_date" name="woo_paghiper_expiration_date" style="width: 100%;" />';
 			$html .= '<span class="description">' . __( 'Ao configurar uma nova data de vencimento, o boleto é re-enviado ao cliente por e-mail.', 'woocommerce-paghiper' ) . '</span>';
 
 		} else {
@@ -92,7 +92,7 @@ class WC_Paghiper_Admin {
 	 */
 	public function save( $post_id ) {
 		// Verify nonce.
-		if ( ! isset( $_POST['wcpaghiper_metabox_nonce'] ) || ! wp_verify_nonce( $_POST['wcpaghiper_metabox_nonce'], basename( __FILE__ ) ) ) {
+		if ( ! isset( $_POST['woo_paghiper_metabox_nonce'] ) || ! wp_verify_nonce( $_POST['woo_paghiper_metabox_nonce'], basename( __FILE__ ) ) ) {
 			return $post_id;
 		}
 
@@ -106,10 +106,10 @@ class WC_Paghiper_Admin {
 			return $post_id;
 		}
 
-		if ( isset( $_POST['wcpaghiper_expiration_date'] ) && ! empty( $_POST['wcpaghiper_expiration_date'] ) ) {
+		if ( isset( $_POST['woo_paghiper_expiration_date'] ) && ! empty( $_POST['woo_paghiper_expiration_date'] ) ) {
 			// Gets ticket data.
 			$paghiper_data = get_post_meta( $post_id, 'wc_paghiper_data', true );
-			$data = DateTime::createFromFormat('d/m/Y', sanitize_text_field( $_POST['wcpaghiper_expiration_date'] ));
+			$data = DateTime::createFromFormat('d/m/Y', sanitize_text_field( $_POST['woo_paghiper_expiration_date'] ));
 			$paghiper_data['order_billet_due_date'] = $data->format( 'Y-m-d' );
 
 
