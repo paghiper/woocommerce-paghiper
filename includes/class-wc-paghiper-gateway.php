@@ -152,7 +152,7 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 				'label'   	  => __( 'Ativar/Desativar', 'woo-boleto-paghiper' ),
 				'description' => __( 'Ative esta opção para evitar boletos com vencimento aos sábados ou domingos.', 'woo-boleto-paghiper' ),
 				'desc_tip'    => true,
-				'default'     => 5
+				'default' 	  => 'yes'
 			)
 		);
 
