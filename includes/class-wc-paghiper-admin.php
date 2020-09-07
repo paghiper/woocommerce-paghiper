@@ -8,6 +8,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class WC_Paghiper_Admin {
 
+	private $timezone;
+
 	/**
 	 * Initialize the admin.
 	 */
@@ -20,6 +22,9 @@ class WC_Paghiper_Admin {
 
 		// Update.
 		//add_action( 'admin_init', array( $this, 'update' ), 5 );
+
+		// Define our default offset
+		$this->timezone = new DateTimeZone('America/Sao_Paulo');
 	}
 
 	/**
@@ -28,7 +33,7 @@ class WC_Paghiper_Admin {
 	public function register_metabox() {
 		add_meta_box(
 			'paghiper-boleto',
-			__( 'Boleto Bancário - PagHiper', 'woocommerce-paghiper' ),
+			__( 'Boleto Bancário - PagHiper', 'woo_paghiper' ),
 			array( $this, 'metabox_content' ),
 			'shop_order',
 			'side',
@@ -55,34 +60,46 @@ class WC_Paghiper_Admin {
 
 			// Save the ticket data if don't have.
 			if ( ! isset( $paghiper_data['order_billet_due_date'] ) ) {
+
 				$settings               		= get_option( 'woocommerce_paghiper_settings', array() );
 				$order_billet_due_date			= isset( $settings['order_billet_due_date'] ) ? absint( $settings['order_billet_due_date'] ) : 5;
 				$data                   		= array();
 				$data['order_billet_due_date']  = date( 'Y-m-d', time() + ( $order_billet_due_date * 86400 ) );
-
-				// TODO: Implement validation and warnings
-				// TODO: Queue IgorEscobar's jQuery mask lib
 
 				update_post_meta( $post->ID, 'wc_paghiper_data', $data );
 
 				$paghiper_data['order_billet_due_date'] = $data['order_billet_due_date'];
 			}
 
-			$html = '<p><strong>' . __( 'Data de Vencimento:', 'woocommerce-paghiper' ) . '</strong> ' . date('d/m/Y', strtotime($paghiper_data['order_billet_due_date'])) . '</p>';
-			$html .= '<p><strong>' . __( 'URL:', 'woocommerce-paghiper' ) . '</strong> <a target="_blank" href="' . esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ) . '">' . __( 'Visualizar boleto', 'woocommerce-paghiper' ) . '</a></p>';
+			$html = '<p><strong>' . __( 'Data de Vencimento:', 'woo_paghiper' ) . '</strong> ' . date('d/m/Y', strtotime($paghiper_data['order_billet_due_date'])) . '</p>';
+			$html .= '<p><strong>' . __( 'URL:', 'woo_paghiper' ) . '</strong> <a target="_blank" href="' . esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ) . '">' . __( 'Visualizar boleto', 'woo_paghiper' ) . '</a></p>';
 
 			$html .= '<p style="border-top: 1px solid #ccc;"></p>';
 
-			$html .= '<label for="woo_paghiper_expiration_date">' . __( 'Digite uma nova data de vencimento:', 'woocommerce-paghiper' ) . '</label><br />';
-			$html .= '<input type="text" id="woo_paghiper_expiration_date" name="woo_paghiper_expiration_date" style="width: 100%;" />';
-			$html .= '<span class="description">' . __( 'Ao configurar uma nova data de vencimento, o boleto é re-enviado ao cliente por e-mail.', 'woocommerce-paghiper' ) . '</span>';
+			$html .= '<label for="woo_paghiper_expiration_date">' . __( 'Digite uma nova data de vencimento:', 'woo_paghiper' ) . '</label><br />';
+			$html .= '<input type="text" id="woo_paghiper_expiration_date" name="woo_paghiper_expiration_date" class="date" style="width: 100%;" />';
+			$html .= '<span class="description">' . __( 'Ao configurar uma nova data de vencimento, o boleto é re-enviado ao cliente por e-mail.', 'woo_paghiper' ) . '</span>';
+
+			$html .= '<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js" type="text/javascript"></script>
+			<script type="text/javascript">
+			jQuery(document).ready(function($){
+				$(".date").mask("00/00/0000", {placeholder: "__/__/____", clearIfNotMatch: true});
+			});
+			</script>';
+
+			if ( $error = get_transient( "woo_paghiper_save_order_errors_{$post->ID}" ) ) {
+
+				$html .= sprintf('<div class="error"><p>%s</p></div>', $error); 
+				delete_transient("woo_paghiper_save_order_errors_{$post->ID}");
+			}
 
 		} else {
-			$html = '<p>' . __( 'Este pedido não foi efetuado ou pago com boleto.', 'woocommerce-paghiper' ) . '</p>';
-			$html .= '<style>#woocommerce-paghiper.postbox {display: none;}</style>';
+			$html = '<p>' . __( 'Este pedido não foi efetuado ou pago com boleto.', 'woo_paghiper' ) . '</p>';
+			$html .= '<style>#woo_paghiper.postbox {display: none;}</style>';
 		}
 
 		echo $html;
+
 	}
 
 	/**
@@ -107,23 +124,50 @@ class WC_Paghiper_Admin {
 		}
 
 		if ( isset( $_POST['woo_paghiper_expiration_date'] ) && ! empty( $_POST['woo_paghiper_expiration_date'] ) ) {
+
+			// Store our input on a var for later use
+			$input_date = trim($_POST['woo_paghiper_expiration_date']);
+
 			// Gets ticket data.
 			$paghiper_data = get_post_meta( $post_id, 'wc_paghiper_data', true );
-			$data = DateTime::createFromFormat('d/m/Y', sanitize_text_field( $_POST['woo_paghiper_expiration_date'] ));
-			$paghiper_data['order_billet_due_date'] = $data->format( 'Y-m-d' );
+			$date = DateTime::createFromFormat('d/m/Y', sanitize_text_field( $input_date ));
+			$formatted_date = ($date) ? $date->format('d/m/Y') : NULL ;
 
+			// Validate data first.
+			$today_date = new \DateTime();
+			$today_date->setTimezone($this->timezone);
+
+			if(!$date || $formatted_date !== $input_date) {
+
+				$error = __( '<strong>Boleto PagHiper</strong>: Data de vencimento inválida!', 'woo_paghiper' );
+				set_transient("woo_paghiper_save_order_errors_{$post_id}", $error, 45);
+
+				return $post_id;
+
+			} elseif($date && $today_date->diff($date)->format("%r%a") < 0) {
+
+				$error = __( '<strong>Boleto PagHiper</strong>: A data de vencimento não pode ser anterior a data de hoje!', 'woo_paghiper' );
+				set_transient("woo_paghiper_save_order_errors_{$post_id}", $error, 45);
+
+				return $post_id;
+
+			}
 
 			// Update ticket data.
+			$paghiper_data['order_billet_due_date'] = $formatted_date;
 			update_post_meta( $post_id, 'wc_paghiper_data', $paghiper_data );
 
 			// Gets order data.
 			$order = new WC_Order( $post_id );
 
 			// Add order note.
-			$order->add_order_note( sprintf( __( 'Data de vencimento alterada para %s', 'woocommerce-paghiper' ), $paghiper_data['order_billet_due_date'] ) );
+			$order->add_order_note( sprintf( __( 'Data de vencimento alterada para %s', 'woo_paghiper' ), $paghiper_data['order_billet_due_date'] ) );
 
 			// Send email notification.
 			$this->email_notification( $order, $paghiper_data['order_billet_due_date'] );
+
+			return $post_id;
+
 		}
 	}
 
@@ -142,7 +186,7 @@ class WC_Paghiper_Admin {
 		}
 
 
-		$subject = sprintf( __( 'O boleto do seu pedido foi atualizado (%s)', 'woocommerce-paghiper' ), $order->get_order_number() );
+		$subject = sprintf( __( 'O boleto do seu pedido foi atualizado (%s)', 'woo_paghiper' ), $order->get_order_number() );
 
 		// Mail headers.
 		$headers = array();
@@ -151,15 +195,15 @@ class WC_Paghiper_Admin {
 		// Billet re-emission
 		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
 
-		$paghiperBoleto = new WC_PagHiper_Boleto( $order_id );
+		$paghiperBoleto = new WC_PagHiper_Boleto( $order->id );
 
 		// Body message.
-		$main_message = '<p>' . sprintf( __( 'A data de vencimento do seu boleto foi atualizada para: %s', 'woocommerce-paghiper' ), '<code>' . $expiration_date . '</code>' ) . '</p>';
+		$main_message = '<p>' . sprintf( __( 'A data de vencimento do seu boleto foi atualizada para: %s', 'woo_paghiper' ), '<code>' . $expiration_date . '</code>' ) . '</p>';
 		$main_message .= $paghiperBoleto->printBarCode();
-		$main_message .= '<p>' . sprintf( '<a class="button" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Pagar o boleto &rarr;', 'woocommerce-paghiper' ) ) . '</p>';
+		$main_message .= '<p>' . sprintf( '<a class="button" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Pagar o boleto &rarr;', 'woo_paghiper' ) ) . '</p>';
 
 		// Sets message template.
-		$message = $mailer->wrap_message( __( 'Nova data de vencimento para o seu boleto', 'woocommerce-paghiper' ), $main_message );
+		$message = $mailer->wrap_message( __( 'Nova data de vencimento para o seu boleto', 'woo_paghiper' ), $main_message );
 
 		// Send email.
 		$mailer->send( $order->billing_email, $subject, $message, $headers, '' );
