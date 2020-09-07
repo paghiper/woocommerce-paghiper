@@ -28,9 +28,10 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 		$this->init_settings();
 
 		// Define as variáveis que vamos usar e popula com os dados de configuração
-		$this->title       		= $this->get_option( 'title' );
-		$this->description 		= $this->get_option( 'description' );
-		$this->days_due_date 	= $this->get_option( 'days_due_date' );
+		$this->title       			= $this->get_option( 'title' );
+		$this->description 			= $this->get_option( 'description' );
+		$this->days_due_date 		= $this->get_option( 'days_due_date' );
+		$this->skip_non_workdays	= $this->get_option( 'skip_non_workdays' );
 		$this->set_status_when_waiting = $this->get_option( 'set_status_when_waiting' );
 
 		// Ativa os logs
@@ -144,6 +145,14 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 				'description' => __( 'Ao configurar este item, será possível pagar o boleto por uma quantidade de dias após o vencimento. O mínimo é de 5 dias e máximo de 30 dias.', 'woo-boleto-paghiper' ),
 				'desc_tip'    => true,
 				'default'     => 5
+			),
+			'skip_non_workdays' => array(
+				'title'       => __( 'Ajustar data de vencimento dos boletos para dias úteis', 'woo-boleto-paghiper' ),
+				'type'    	  => 'checkbox',
+				'label'   	  => __( 'Ativar/Desativar', 'woo-boleto-paghiper' ),
+				'description' => __( 'Ative esta opção para evitar boletos com vencimento aos sábados ou domingos.', 'woo-boleto-paghiper' ),
+				'desc_tip'    => true,
+				'default'     => 5
 			)
 		);
 
@@ -254,7 +263,7 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 		} else {
 			global $woocommerce;
 
-			//$woocommerce->cart->empty_cart();
+			$woocommerce->cart->empty_cart();
 
 			$url = add_query_arg( 'key', $order->order_key, add_query_arg( 'order', $order_id, get_permalink( woocommerce_get_page_id( 'thanks' ) ) ) );
 		}
@@ -324,7 +333,10 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 		if($due_date_config > 0)
 			$billet_due_date->modify( "+{$due_date_config} days" );
 
-		$data['order_billet_due_date'] = $billet_due_date->format( 'Y-m-d' );		
+		// Maybe skip non-workdays as per configuration
+		$billet_due_date = wc_paghiper_add_workdays($billet_due_date, $order, $this->skip_non_workdays);
+
+		$data['order_billet_due_date'] = $billet_due_date->format( 'Y-m-d' );
 
 		update_post_meta( $order->id, 'wc_paghiper_data', $data );
 	}

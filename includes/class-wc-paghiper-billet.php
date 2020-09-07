@@ -110,23 +110,7 @@ class WC_PagHiper_Boleto {
 
 			// Calcular dias de diferença entre a data de vencimento e a data atual
 			$original_due_date = DateTime::createFromFormat('Y-m-d', $order_due_date, $this->timezone);
-			$due_date_days = $today_date->diff($original_due_date)->days;
-
-			/*if($due_date_days < 3) {
-
-				$due_date_days = 3;
-
-				$order_data = get_post_meta( $this->order_id, 'wc_paghiper_data', true );
-
-				$today_date = new \DateTime();
-				$today_date->setTimezone($this->timezone);
-				$billet_due_date = $today_date->modify( "+{$due_date_days} days" );
-	
-				$order_data['order_billet_due_date'] = $billet_due_date->format( 'Y-m-d' );	
-
-				update_post_meta( $this->order_id, 'wc_paghiper_data', $order_data );
-
-			}*/
+			$billet_due_date = $today_date->diff($original_due_date);
 
 		} else {
 
@@ -141,7 +125,9 @@ class WC_PagHiper_Boleto {
 
 		}
 
-		return $due_date_days;
+		$billet_due_date = wc_paghiper_add_workdays($billet_due_date, $this->order, $this->gateway_settings['skip_non_workdays']);
+
+		return $billet_due_date->days;
 	}
 
 	public function prepare_data_for_billet() {
