@@ -126,6 +126,8 @@ class WC_PagHiper_Boleto {
 
 			$order_data['order_billet_due_date'] = $billet_due_date->format( 'Y-m-d' );		
 			update_post_meta( $this->order_id, 'wc_paghiper_data', $order_data );
+			if(function_exists('update_postmeta_cache'))
+				update_postmeta_cache( $this->order_id );
 
 		}
 
@@ -309,6 +311,8 @@ class WC_PagHiper_Boleto {
 
 			$data = array_merge($this->order_data, $current_bilet);
 			update_post_meta($this->order_id, 'wc_paghiper_data', $data);
+			if(function_exists('update_postmeta_cache'))
+				update_postmeta_cache( $this->order_id );
 
 			// Download the attachment to our storage directory
 			$transaction_id = 'Boleto bancário - '.$response['transaction_id'];
