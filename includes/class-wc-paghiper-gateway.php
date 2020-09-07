@@ -339,6 +339,8 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 		$data['order_billet_due_date'] = $billet_due_date->format( 'Y-m-d' );
 
 		update_post_meta( $order->id, 'wc_paghiper_data', $data );
+		if(function_exists('update_postmeta_cache'))
+			update_postmeta_cache( $order->id );
 	}
 
 	/**
