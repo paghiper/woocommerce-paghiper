@@ -71,7 +71,10 @@ class WC_Paghiper_Admin {
 				$paghiper_data['order_billet_due_date'] = $data['order_billet_due_date'];
 			}
 
-			$html = '<p><strong>' . __( 'Data de Vencimento:', 'woo_paghiper' ) . '</strong> ' . date('d/m/Y', strtotime($paghiper_data['order_billet_due_date'])) . '</p>';
+			$order_billet_due_date = DateTime::createFromFormat('Y-m-d', $paghiper_data['order_billet_due_date']);
+			$order_billet_due_date->setTimezone($this->timezone);
+
+			$html = '<p><strong>' . __( 'Data de Vencimento:', 'woo_paghiper' ) . '</strong> ' . $order_billet_due_date->format('d/m/Y') . '</p>';
 			$html .= '<p><strong>' . __( 'URL:', 'woo_paghiper' ) . '</strong> <a target="_blank" href="' . esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ) . '">' . __( 'Visualizar boleto', 'woo_paghiper' ) . '</a></p>';
 
 			$html .= '<p style="border-top: 1px solid #ccc;"></p>';
@@ -126,25 +129,25 @@ class WC_Paghiper_Admin {
 		if ( isset( $_POST['woo_paghiper_expiration_date'] ) && ! empty( $_POST['woo_paghiper_expiration_date'] ) ) {
 
 			// Store our input on a var for later use
-			$input_date = trim($_POST['woo_paghiper_expiration_date']);
+			$input_date = sanitize_text_field( trim($_POST['woo_paghiper_expiration_date']) );
 
-			// Gets ticket data.
-			$paghiper_data = get_post_meta( $post_id, 'wc_paghiper_data', true );
-			$date = DateTime::createFromFormat('d/m/Y', sanitize_text_field( $input_date ));
-			$formatted_date = ($date) ? $date->format('d/m/Y') : NULL ;
-
-			// Validate data first.
 			$today_date = new \DateTime();
 			$today_date->setTimezone($this->timezone);
 
-			if(!$date || $formatted_date !== $input_date) {
+			$paghiper_data = get_post_meta( $post_id, 'wc_paghiper_data', true );
+			$new_due_date = DateTime::createFromFormat('d/m/Y', $input_date);
+			$new_due_date->setTimezone($this->timezone);
+
+			$formatted_date = ($new_due_date) ? $new_due_date->format('d/m/Y') : NULL ;
+
+			if(!$new_due_date || $formatted_date !== $input_date) {
 
 				$error = __( '<strong>Boleto PagHiper</strong>: Data de vencimento inválida!', 'woo_paghiper' );
 				set_transient("woo_paghiper_save_order_errors_{$post_id}", $error, 45);
 
 				return $post_id;
 
-			} elseif($date && $today_date->diff($date)->format("%r%a") < 0) {
+			} elseif($new_due_date && $today_date->diff($new_due_date)->format("%r%a") < 0) {
 
 				$error = __( '<strong>Boleto PagHiper</strong>: A data de vencimento não pode ser anterior a data de hoje!', 'woo_paghiper' );
 				set_transient("woo_paghiper_save_order_errors_{$post_id}", $error, 45);
