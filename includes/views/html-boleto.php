@@ -61,7 +61,7 @@ if ( isset( $boleto_code ) ) {
 		
 		} else {
 		
-			if($dias_vencimento >= -3 && $dias_vencimento <= 0) {
+			if($dias_vencimento >= -3 && $dias_vencimento < 0) {
 		
 				$ico = 'boleto-waiting.png';
 				$title = 'Por favor, aguarde!';
