@@ -154,14 +154,14 @@ class WC_Paghiper_Admin {
 			}
 
 			// Update ticket data.
-			$paghiper_data['order_billet_due_date'] = $formatted_date;
+			$paghiper_data['order_billet_due_date'] = $new_due_date->format('Y-m-d');
 			update_post_meta( $post_id, 'wc_paghiper_data', $paghiper_data );
 
 			// Gets order data.
 			$order = new WC_Order( $post_id );
 
 			// Add order note.
-			$order->add_order_note( sprintf( __( 'Data de vencimento alterada para %s', 'woo_paghiper' ), $paghiper_data['order_billet_due_date'] ) );
+			$order->add_order_note( sprintf( __( 'Data de vencimento alterada para %s', 'woo_paghiper' ), $formatted_date ) );
 
 			// Send email notification.
 			$this->email_notification( $order, $paghiper_data['order_billet_due_date'] );

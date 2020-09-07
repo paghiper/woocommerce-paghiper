@@ -67,13 +67,41 @@ function wc_paghiper_add_log( $log, $message ) {
  * 
  * @return object
  */
-function wc_paghiper_add_workdays( $due_date, $order, $workday_settings = NULL) {
-	if($workday_settings) {
-		$due_date_weekday = absint( date('N', $due_date) );
+function wc_paghiper_add_workdays( $due_date, $order, $workday_settings = NULL, $format) {
+
+	if($due_date && $workday_settings == 'yes') {
+
+		$due_date_weekday = $due_date->format('N');
+
 		if ($due_date_weekday >= 6) {
-			$date_diff = 8 - $due_date_weekday;
+			$date_diff = (8 - $due_date_weekday);
 			$due_date->modify( "+{$date_diff} days" );
+			
+			$paghiper_data = get_post_meta( $order->id, 'wc_paghiper_data', true );
+			$paghiper_data['order_billet_due_date'] = $due_date->format( 'Y-m-d' );
+
+			$update = update_post_meta( $order->id, 'wc_paghiper_data', $paghiper_data );
+			if(function_exists('update_postmeta_cache'))
+				update_postmeta_cache( $order->id );
+
+			if($update) {
+				$order->add_order_note( sprintf( __( 'Data de vencimento ajustada para %s', 'woo_paghiper' ), $due_date->format('d/m/Y') ) );
+			} else {
+				var_dump($update);
+				$order->add_order_note( sprintf( __( 'Data de vencimento deveria ser ajustada para %s mas houve um erro ao salvar a nova data.', 'woo_paghiper' ), $due_date->format('d/m/Y') ) );
+			}
+
+			if($format == 'days') {
+				$today_date = new \DateTime();
+				$today_date->setTimezone(new DateTimeZone('America/Sao_Paulo'));
+				$return = (int) $today_date->diff($due_date)->format("%r%a");
+			} else {
+				$return = $due_date->format('d/m/Y');
+			}
+
+			return apply_filters('woo_paghiper_due_date', $return, $order);
 		}
+
 	}
 
 	return apply_filters('woo_paghiper_due_date', $due_date, $order);
