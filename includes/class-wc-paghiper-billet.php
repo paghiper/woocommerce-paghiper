@@ -66,7 +66,7 @@ class WC_PagHiper_Boleto {
 
 			$today_date = new \DateTime();
 			$today_date->setTimezone($this->timezone);
-			$this->past_due_days = (int) $today_date->diff($original_due_date)->format("%r%a");
+			$this->past_due_days = ($original_due_date && $current_billet_due_date) ? (int) $today_date->diff($original_due_date)->format("%r%a") : NULL ;
 
 			if($different_due_date) {
 
@@ -110,7 +110,9 @@ class WC_PagHiper_Boleto {
 
 			// Calcular dias de diferença entre a data de vencimento e a data atual
 			$original_due_date = DateTime::createFromFormat('Y-m-d', $order_due_date, $this->timezone);
-			$billet_due_date = $today_date->diff($original_due_date);
+			$billet_due_days = ($today_date && $original_due_date) ? $today_date->diff($original_due_date) : NULL;
+
+			$billet_due_date = $original_due_date;
 
 		} else {
 
@@ -120,14 +122,16 @@ class WC_PagHiper_Boleto {
 			$billet_due_date = $today_date;
 			$billet_due_date->modify( "+{$billet_days_due} days" );
 
+			$billet_due_days = $billet_due_date->days;
+
 			$order_data['order_billet_due_date'] = $billet_due_date->format( 'Y-m-d' );		
 			update_post_meta( $this->order_id, 'wc_paghiper_data', $order_data );
 
 		}
 
-		$billet_due_date = wc_paghiper_add_workdays($billet_due_date, $this->order, $this->gateway_settings['skip_non_workdays']);
+		$billet_due_days = wc_paghiper_add_workdays($billet_due_date, $this->order, $this->gateway_settings['skip_non_workdays'], 'days');
 
-		return $billet_due_date->days;
+		return $billet_due_days;
 	}
 
 	public function prepare_data_for_billet() {
