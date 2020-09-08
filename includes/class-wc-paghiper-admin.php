@@ -67,6 +67,8 @@ class WC_Paghiper_Admin {
 				$data['order_billet_due_date']  = date( 'Y-m-d', time() + ( $order_billet_due_date * 86400 ) );
 
 				update_post_meta( $post->ID, 'wc_paghiper_data', $data );
+				if(function_exists('update_postmeta_cache'))
+					update_postmeta_cache( $post->ID );
 
 				$paghiper_data['order_billet_due_date'] = $data['order_billet_due_date'];
 			}
@@ -159,6 +161,8 @@ class WC_Paghiper_Admin {
 			// Update ticket data.
 			$paghiper_data['order_billet_due_date'] = $new_due_date->format('Y-m-d');
 			update_post_meta( $post_id, 'wc_paghiper_data', $paghiper_data );
+			if(function_exists('update_postmeta_cache'))
+				update_postmeta_cache( $post_id );
 
 			// Gets order data.
 			$order = new WC_Order( $post_id );
@@ -167,7 +171,7 @@ class WC_Paghiper_Admin {
 			$order->add_order_note( sprintf( __( 'Data de vencimento alterada para %s', 'woo_paghiper' ), $formatted_date ) );
 
 			// Send email notification.
-			$this->email_notification( $order, $paghiper_data['order_billet_due_date'] );
+			$this->email_notification( $order, $new_due_date->format('d/m/Y') );
 
 			return $post_id;
 
