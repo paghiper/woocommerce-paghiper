@@ -90,19 +90,18 @@ function wc_paghiper_add_workdays( $due_date, $order, $workday_settings = NULL, 
 				var_dump($update);
 				$order->add_order_note( sprintf( __( 'Data de vencimento deveria ser ajustada para %s mas houve um erro ao salvar a nova data.', 'woo_paghiper' ), $due_date->format('d/m/Y') ) );
 			}
-
-			if($format == 'days') {
-				$today_date = new \DateTime();
-				$today_date->setTimezone(new DateTimeZone('America/Sao_Paulo'));
-				$return = (int) $today_date->diff($due_date)->format("%r%a");
-			} else {
-				$return = $due_date->format('d/m/Y');
-			}
-
-			return apply_filters('woo_paghiper_due_date', $return, $order);
 		}
 
 	}
 
-	return apply_filters('woo_paghiper_due_date', $due_date, $order);
+	if($format == 'days') {
+
+		$today_date = new \DateTime();
+		$today_date->setTimezone(new DateTimeZone('America/Sao_Paulo'));
+		$return = (int) $today_date->diff($due_date)->format("%r%a");
+	} else {
+		$return = $due_date;
+	}
+
+	return apply_filters('woo_paghiper_due_date', $return, $order);
 }

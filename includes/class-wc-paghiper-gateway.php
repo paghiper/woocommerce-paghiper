@@ -335,8 +335,8 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 
 		// Maybe skip non-workdays as per configuration
 		$billet_due_date = wc_paghiper_add_workdays($billet_due_date, $order, $this->skip_non_workdays, 'date');
-
-		$data['order_billet_due_date'] = $billet_due_date->format( 'Y-m-d' );
+		
+		$data['order_billet_due_date'] = $billet_due_date->format('Y-m-d');
 
 		update_post_meta( $order->id, 'wc_paghiper_data', $data );
 		if(function_exists('update_postmeta_cache'))

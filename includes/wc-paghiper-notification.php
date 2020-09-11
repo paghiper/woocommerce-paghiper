@@ -122,7 +122,7 @@ function woocommerce_boleto_paghiper_check_ipn_response() {
 function increase_order_stock( $order, $settings ) {
 
     /* Changing setting keys from Woo-Boleto-Paghiper 1.2.6.1 */
-    $replenish_stock = ($settings['replenish_stock'] !== '') ? settings['replenish_stock'] : $settings['incrementar-estoque'];
+    $replenish_stock = ($settings['replenish_stock'] !== '') ? $settings['replenish_stock'] : $settings['incrementar-estoque'];
     
     if ( 'yes' === get_option( 'woocommerce_manage_stock' ) && $settings['incrementar-estoque'] == true && $order && 0 < count( $order->get_items() ) ) {
         if ( apply_filters( 'woocommerce_payment_complete_reduce_order_stock', $order && ! $order->get_data_store()->get_stock_reduced( $order_id ), $order_id ) ) {
