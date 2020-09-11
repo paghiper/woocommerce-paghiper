@@ -81,8 +81,8 @@ function wc_paghiper_add_workdays( $due_date, $order, $workday_settings = NULL, 
 			$paghiper_data['order_billet_due_date'] = $due_date->format( 'Y-m-d' );
 
 			$update = update_post_meta( $order->id, 'wc_paghiper_data', $paghiper_data );
-			if(function_exists('update_postmeta_cache'))
-				update_postmeta_cache( $order->id );
+			if(function_exists('update_meta_cache'))
+				update_meta_cache( 'shop_order', $order->id );
 
 			if($update) {
 				$order->add_order_note( sprintf( __( 'Data de vencimento ajustada para %s', 'woo_paghiper' ), $due_date->format('d/m/Y') ) );

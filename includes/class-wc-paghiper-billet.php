@@ -45,7 +45,7 @@ class WC_PagHiper_Boleto {
 	
 	public function has_issued_valid_billet() {
 
-		$order_date = DateTime::createFromFormat('Y-m-d', strtok($this->order->order_date, ' '));
+		$order_date = DateTime::createFromFormat('Y-m-d', strtok($this->order->order_date, ' '), $this->timezone);
 
 		// Define data de vencimento, caso exista
 		if(empty($this->order_data["order_billet_due_date"]) || empty($this->order_data["current_billet_due_date"])) {
@@ -58,8 +58,8 @@ class WC_PagHiper_Boleto {
 
 		} else {
 
-			$original_due_date = DateTime::createFromFormat('Y-m-d', $this->order_data["order_billet_due_date"]);
-			$current_billet_due_date = DateTime::createFromFormat('Y-m-d', $this->order_data["current_billet_due_date"]);
+			$original_due_date = DateTime::createFromFormat('Y-m-d', $this->order_data["order_billet_due_date"], $this->timezone);
+			$current_billet_due_date = DateTime::createFromFormat('Y-m-d', $this->order_data["current_billet_due_date"], $this->timezone);
 
 			$different_total = ( $this->order->get_total() == $this->order_data['value_cents'] ? NULL : TRUE );
 			$different_due_date = ( $this->order_data["order_billet_due_date"] == $this->order_data["current_billet_due_date"] ? NULL : TRUE );
@@ -126,8 +126,8 @@ class WC_PagHiper_Boleto {
 
 			$order_data['order_billet_due_date'] = $billet_due_date->format( 'Y-m-d' );		
 			update_post_meta( $this->order_id, 'wc_paghiper_data', $order_data );
-			if(function_exists('update_postmeta_cache'))
-				update_postmeta_cache( $this->order_id );
+			if(function_exists('update_meta_cache'))
+				update_meta_cache( 'shop_order', $this->order_id );
 
 		}
 
@@ -311,8 +311,8 @@ class WC_PagHiper_Boleto {
 
 			$data = array_merge($this->order_data, $current_bilet);
 			update_post_meta($this->order_id, 'wc_paghiper_data', $data);
-			if(function_exists('update_postmeta_cache'))
-				update_postmeta_cache( $this->order_id );
+			if(function_exists('update_meta_cache'))
+				update_meta_cache( 'shop_order', $this->order_id );
 
 			// Download the attachment to our storage directory
 			$transaction_id = 'Boleto bancário - '.$response['transaction_id'];

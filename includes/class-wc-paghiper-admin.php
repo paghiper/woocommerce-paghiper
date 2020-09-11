@@ -67,14 +67,13 @@ class WC_Paghiper_Admin {
 				$data['order_billet_due_date']  = date( 'Y-m-d', time() + ( $order_billet_due_date * 86400 ) );
 
 				update_post_meta( $post->ID, 'wc_paghiper_data', $data );
-				if(function_exists('update_postmeta_cache'))
-					update_postmeta_cache( $post->ID );
+				if(function_exists('update_meta_cache'))
+					update_meta_cache( 'shop_order', $post->ID );
 
 				$paghiper_data['order_billet_due_date'] = $data['order_billet_due_date'];
 			}
 
-			$order_billet_due_date = DateTime::createFromFormat('Y-m-d', $paghiper_data['order_billet_due_date']);
-			$order_billet_due_date->setTimezone($this->timezone);
+			$order_billet_due_date = DateTime::createFromFormat('Y-m-d', $paghiper_data['order_billet_due_date'], $this->timezone);
 
 			$html = '<p><strong>' . __( 'Data de Vencimento:', 'woo_paghiper' ) . '</strong> ' . $order_billet_due_date->format('d/m/Y') . '</p>';
 			$html .= '<p><strong>' . __( 'URL:', 'woo_paghiper' ) . '</strong> <a target="_blank" href="' . esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ) . '">' . __( 'Visualizar boleto', 'woo_paghiper' ) . '</a></p>';
@@ -137,8 +136,7 @@ class WC_Paghiper_Admin {
 			$today_date->setTimezone($this->timezone);
 
 			$paghiper_data = get_post_meta( $post_id, 'wc_paghiper_data', true );
-			$new_due_date = DateTime::createFromFormat('d/m/Y', $input_date);
-			$new_due_date->setTimezone($this->timezone);
+			$new_due_date = DateTime::createFromFormat('d/m/Y', $input_date, $this->timezone);
 
 			$formatted_date = ($new_due_date) ? $new_due_date->format('d/m/Y') : NULL ;
 
@@ -161,8 +159,8 @@ class WC_Paghiper_Admin {
 			// Update ticket data.
 			$paghiper_data['order_billet_due_date'] = $new_due_date->format('Y-m-d');
 			update_post_meta( $post_id, 'wc_paghiper_data', $paghiper_data );
-			if(function_exists('update_postmeta_cache'))
-				update_postmeta_cache( $post_id );
+			if(function_exists('update_meta_cache'))
+				update_meta_cache( 'shop_order', $post_id );
 
 			// Gets order data.
 			$order = new WC_Order( $post_id );
