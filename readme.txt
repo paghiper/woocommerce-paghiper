@@ -2,7 +2,7 @@
 Contributors: henriqueccruz, paghiper
 Tags: woocommerce, boleto, paghiper, pagamento
 Requires at least: 3.5
-Tested up to: 5.3.2
+Tested up to: 5.5.1
 Stable tag: 2.0.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -19,7 +19,7 @@ Este módulo implementa emissão de boletos com retorno automático.
 * **Requer WooCommerce** versão mínima 2.2.0
 * **Requer Wordpress** preferencialmente atualizado
 * **Requisitos:** PHP >= 5.2.0, cURL ativado.
-* **Compatibilidade:** Wordpress 4.9.x, Woocommerce 3.3.x, PHP 7.x, HHVM. Integrado diretamente ao Wordpress usando WC_API
+* **Compatibilidade:** Wordpress 5.5.x, Woocommerce 4.4.x, PHP 7.x, HHVM. Integrado diretamente ao Wordpress usando WC_API
 
 
 # Como Instalar

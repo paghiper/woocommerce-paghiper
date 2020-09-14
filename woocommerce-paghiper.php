@@ -6,7 +6,7 @@
  * Author: PagHiper, Henrique Cruz
  * Author URI: https://www.paghiper.com
  * Version: 2.0.1
- * Tested up to: 5.5
+ * Tested up to: 5.5.1
  * License: GPLv2 or later
  * Text Domain: woo-boleto-paghiper
  * Domain Path: /languages/
