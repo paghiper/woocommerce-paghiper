@@ -70,14 +70,51 @@ class WC_PagHiper_Boleto {
 
 			if($different_due_date) {
 
-				$this->invalid_reason = 'different_due_date';
+				// Check if date is different
+				$due_date_weekday = $current_billet_due_date->format('N');
 
-				if ( $this->log ) {
-					$log_message = 'Pedido #%s: Data de vencimento do boleto não bate com a informada no pedido. Um novo boleto será gerado.';
+				if ($current_billet_due_date->format('N') == 1 && $original_due_date->format('N') > 5) {
+					
+					$paghiper_data = get_post_meta( $this->order_id, 'wc_paghiper_data', true );
+					$paghiper_data['order_billet_due_date'] = $current_billet_due_date->format( 'Y-m-d' );
+
+					$update = update_post_meta( $this->order_id, 'wc_paghiper_data', $paghiper_data );
+					if(function_exists('update_meta_cache'))
+						update_meta_cache( 'shop_order', $this->order_id );
+
+					if($update) {
+						$order->add_order_note( sprintf( __( 'Data de vencimento ajustada para %s', 'woo_paghiper' ), $current_billet_due_date->format('d/m/Y') ) );
+					} else {
+						$order->add_order_note( sprintf( __( 'Data de vencimento deveria ser ajustada para %s mas houve um erro ao salvar a nova data.', 'woo_paghiper' ), $current_billet_due_date->format('d/m/Y') ) );
+					}
+
+					$log_message = 'Pedido #%s: Data de vencimento do boleto não bate com a informada no pedido. Cheque a opção "Vencimento em finais de semana" no <a href="https://www.paghiper.com/painel/prazo-vencimento-boleto/" target="_blank">Painel da PagHiper</a>.';
 					wc_paghiper_add_log( $this->log, sprintf( $log_message, $this->order_id ) );
+
+
+					$error = __( '<strong>Boleto PagHiper</strong>: 
+					A data de vencimento do boleto foi configurada para um final de semana mas o boleto foi emitido para segunda-feira. 
+					Cheque a opção "Vencimento em finais de semana" no <a href="https://www.paghiper.com/painel/prazo-vencimento-boleto/" target="_blank">Painel da PagHiper</a> ou 
+					ative nas configurações do plugin a correção de datas para que o vencimento não caia em finais de semana', 'woo_paghiper' );
+					set_transient("woo_paghiper_due_date_order_errors_{$this->order_id}", $error, 0);
+
+					$different_due_date = NULL;
+
+				} else {
+
+					$this->invalid_reason = 'different_due_date';
+	
+					if ( $this->log ) {
+						$log_message = 'Pedido #%s: Data de vencimento do boleto não bate com a informada no pedido. Um novo boleto será gerado.';
+						wc_paghiper_add_log( $this->log, sprintf( $log_message, $this->order_id ) );
+					}
 				}
 
-			} elseif($different_total) {
+
+
+			}
+			
+			if($different_total) {
 
 				$this->invalid_reason = 'different_total';
 
@@ -371,7 +408,7 @@ class WC_PagHiper_Boleto {
 			echo $body;
 
 			if ( $this->log ) {
-			wc_paghiper_add_log( $this->log, sprintf( 'Boleto resgatado com sucesso para o pedido #%s.', $this->order_id ) );
+				wc_paghiper_add_log( $this->log, sprintf( 'Boleto resgatado com sucesso para o pedido #%s.', $this->order_id ) );
 			}
 		} elseif( is_wp_error( $response ) ) {
 			$error = $response->get_error_message();

@@ -91,11 +91,22 @@ class WC_Paghiper_Admin {
 			});
 			</script>';
 
+			// Show errors related to user input (invalid or past inputted dates)
 			if ( $error = get_transient( "woo_paghiper_save_order_errors_{$post->ID}" ) ) {
 
 				$html .= sprintf('<div class="error"><p>%s</p></div>', $error); 
 				delete_transient("woo_paghiper_save_order_errors_{$post->ID}");
+
 			}
+
+			// Show due date errors (set on weekend, skipped to monday)
+			if ( $error = get_transient( "woo_paghiper_due_date_order_errors_{$post->ID}" ) ) {
+
+				$html .= sprintf('<div class="error"><p>%s</p></div>', $error); 
+
+			}
+
+
 
 		} else {
 			$html = '<p>' . __( 'Este pedido não foi efetuado ou pago com boleto.', 'woo_paghiper' ) . '</p>';
@@ -161,6 +172,9 @@ class WC_Paghiper_Admin {
 			update_post_meta( $post_id, 'wc_paghiper_data', $paghiper_data );
 			if(function_exists('update_meta_cache'))
 				update_meta_cache( 'shop_order', $post_id );
+				
+			// Delete notification if order due date has been modified
+			delete_transient("woo_paghiper_due_date_order_errors_{$post_id}");
 
 			// Gets order data.
 			$order = new WC_Order( $post_id );
