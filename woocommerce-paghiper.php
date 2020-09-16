@@ -5,7 +5,7 @@
  * Description: PagHiper é um gateway de pagamentos brasileiro. Este plugin o integra ao WooCommerce.
  * Author: PagHiper, Henrique Cruz
  * Author URI: https://www.paghiper.com
- * Version: 2.0.1
+ * Version: 2.0.2
  * Tested up to: 5.5.1
  * License: GPLv2 or later
  * Text Domain: woo-boleto-paghiper
@@ -17,6 +17,8 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+
+use PagHiper\PagHiper;
 
 if ( ! class_exists( 'WC_Paghiper' ) ) :
 
@@ -30,7 +32,7 @@ class WC_Paghiper {
 	 *
 	 * @var string
 	 */
-	const VERSION = '2.0.1';
+	const VERSION = '2.0.2';
 
 	/**
 	 * Instance of this class.
@@ -61,6 +63,7 @@ class WC_Paghiper {
 
 			add_filter( 'woocommerce_payment_gateways', array( $this, 'add_gateway' ) );
 			add_action( 'init', array( __CLASS__, 'add_paghiper_endpoint' ) );
+			add_action( 'admin_init', array( __CLASS__, 'check_paghiper_credentials' ) );
 			add_filter( 'template_include', array( $this, 'paghiper_template' ), 9999 );
 			add_action( 'woocommerce_view_order', array( $this, 'pending_payment_message' ) );
 			add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( $this, 'plugin_action_links' ) );
@@ -156,6 +159,42 @@ class WC_Paghiper {
 	 */
 	public static function add_paghiper_endpoint() {
 		add_rewrite_endpoint( 'paghiper', EP_PERMALINK | EP_ROOT );
+	}
+
+	/**
+	 * Check saved credentials on admin space.
+	 */
+	public static function check_paghiper_credentials() {
+
+		// Include SDK for our call
+		require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/vendor/autoload.php';
+
+		$gateway_settings = get_option( 'woocommerce_paghiper_settings' );
+
+		if(!array_key_exists('api_key', $gateway_settings) || empty($gateway_settings['api_key'])) {
+			add_action( 'admin_notices', function() {
+				echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __('Boleto PagHiper'), __('Você ainda não configurou sua apiKey! Finalize a configuração do seu plug-in aqui:'), admin_url('admin.php?page=wc-settings&tab=checkout&section=wc_paghiper_gateway'), __('Configurações de integração PagHiper'));
+			});
+
+			return;
+		}
+
+		if(!get_transient( 'woo_boleto_paghiper_apikey_valid' )) {
+	
+			try {
+				$PagHiperAPI = new PagHiper($gateway_settings['api_key'], $gateway_settings['token']);
+				$response = $PagHiperAPI->transaction()->status('0000000000000000');
+				set_transient( 'woo_boleto_paghiper_apikey_valid', 1, 12 * 60 * 60 );
+			} catch(Exception $e) {
+
+				if (strpos($e->getMessage(), 'apiKey') !== false) {
+					add_action( 'admin_notices', function() {
+						echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __('Boleto PagHiper'), __('Sua apiKey é inválida! Confira novamente seus dados aqui:'), admin_url('admin.php?page=wc-settings&tab=checkout&section=wc_paghiper_gateway'), __('Configurações de integração PagHiper'));
+					});
+				}
+			}
+		}
+
 	}
 
 	/**

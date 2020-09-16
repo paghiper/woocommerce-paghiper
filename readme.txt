@@ -3,7 +3,7 @@ Contributors: henriqueccruz, paghiper
 Tags: woocommerce, boleto, paghiper, pagamento
 Requires at least: 3.5
 Tested up to: 5.5.1
-Stable tag: 2.0.1
+Stable tag: 2.0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -15,7 +15,7 @@ Implementa a emissão de boletos e integração do gateway da Paghiper ao seu Wo
 Permite a emissão de boletos e integração do gateway da Paghiper ao seu WooCommerce.
 Este módulo implementa emissão de boletos com retorno automático.
 
-* **Versão mais Recente:** 2.0.1
+* **Versão mais Recente:** 2.0.2
 * **Requer WooCommerce** versão mínima 3.5
 * **Requer Wordpress** preferencialmente atualizado
 * **Requisitos:** PHP >= 5.6, cURL ativado.
@@ -49,6 +49,10 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 - Uso opcional do plug-in Brazilian Market on WooCommerce (antigo WooCommerce Extra Checkout Fields for Brazil)
 - Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
 - Implementação de funcionalidade de boleto parcelado
+
+## 2.0.1 - 2020/09/16
+
+- Validação de ApiKey e avisos no back-end do Wordpress
 
 ## 2.0.1 - 2020/09/15
 
