@@ -15,11 +15,11 @@ Implementa a emissão de boletos e integração do gateway da Paghiper ao seu Wo
 Permite a emissão de boletos e integração do gateway da Paghiper ao seu WooCommerce.
 Este módulo implementa emissão de boletos com retorno automático.
 
-* **Versão mais Recente:** 1.2.6
-* **Requer WooCommerce** versão mínima 2.2.0
+* **Versão mais Recente:** 2.0.1
+* **Requer WooCommerce** versão mínima 3.5
 * **Requer Wordpress** preferencialmente atualizado
-* **Requisitos:** PHP >= 5.2.0, cURL ativado.
-* **Compatibilidade:** Wordpress 5.5.x, Woocommerce 4.4.x, PHP 7.x, HHVM. Integrado diretamente ao Wordpress usando WC_API
+* **Requisitos:** PHP >= 5.6, cURL ativado.
+* **Compatibilidade:** Wordpress 5.5.x, Woocommerce 3.5.x, PHP 7.4. Integrado diretamente ao Wordpress usando WC_API.
 
 
 # Como Instalar
@@ -46,11 +46,24 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 = Planejado para a próxima versão =
 
-- Emissão antecipada de boletos (automaticamente, no momento da criação do pedido)
-- Disponibilização de linha digitável no painel e e-mails de cobrança/fatura
-- Boleto PDF anexado nos e-mails do pedido
+- Uso opcional do plug-in Brazilian Market on WooCommerce (antigo WooCommerce Extra Checkout Fields for Brazil)
 - Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
 - Implementação de funcionalidade de boleto parcelado
+
+## 2.0.1 - 2020/09/15
+
+- Lógica de emissão de boleto re-escrita totalmente do zero
+- Automação de pedido (boleto emitido automaticamente ao criar o pedido)
+- Boleto anexo nos e-mails de notificação da loja
+- Código de barras e linha digitável disponíveis na tela de confirmação do pedido e nos e-mails de notificação da loja 
+- Melhor lógica de cálculo da data de vencimento na emissão dos boletos
+- Melhor segurança ao salvar nova data de vencimento (validação e máscara de preenchimento)
+- API 2.0 e novas funcionalidades
+- Novos filtros disponíveis para maior personalização
+- Implementação da API HTTP do Wordpress, para melhoria de performance e padronização
+- Uso do novo PHP SDK
+- Lançamento no repositório oficial do WP, permitindo instalação direto pelo painel
+- FIX: Plugin agora suporta uso em lojas sem mod_rewrite disponível (links no formato https://loja/index.php/...)
 
 = 1.2.6 - 2018/06/12 =
 

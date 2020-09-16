@@ -38,7 +38,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
 * Implementação de funcionalidade de boleto parcelado
 
-## 2.0.1 - 2020/09/16
+## 2.0.1 - 2020/09/15
 
 * Lógica de emissão de boleto re-escrita totalmente do zero
 * Automação de pedido (boleto emitido automaticamente ao criar o pedido)

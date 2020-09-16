@@ -27,6 +27,7 @@ class Transaction extends PagHiper {
     */
     public function create(array $data = []) {
 
+        $data['partners_id'] = "S0CS1BY0";
         $create_transaction = $this->paghiper->request(
             self::CREATE_ENDPOINT,
             $data

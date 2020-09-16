@@ -137,14 +137,14 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 				'type'        => 'number',
 				'description' => __( 'Número de dias para calcular a data de vencimento do boleto. Caso a data de vencimento não seja útil, o sistema bancário considera o dia útil seguinte como data de vencimento.', 'woo-boleto-paghiper' ),
 				'desc_tip'    => true,
-				'default'     => 5
+				'default'     => 2
 			),
 			'open_after_day_due' => array(
 				'title'       => __( 'Dias de tolerância para pagto. do boleto', 'woo-boleto-paghiper' ),
 				'type'        => 'number',
 				'description' => __( 'Ao configurar este item, será possível pagar o boleto por uma quantidade de dias após o vencimento. O mínimo é de 5 dias e máximo de 30 dias.', 'woo-boleto-paghiper' ),
 				'desc_tip'    => true,
-				'default'     => 5
+				'default'     => 0
 			),
 			'skip_non_workdays' => array(
 				'title'       => __( 'Ajustar data de vencimento dos boletos para dias úteis', 'woo-boleto-paghiper' ),
