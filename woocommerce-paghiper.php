@@ -5,14 +5,14 @@
  * Description: PagHiper é um gateway de pagamentos brasileiro. Este plugin o integra ao WooCommerce.
  * Author: PagHiper, Henrique Cruz
  * Author URI: https://www.paghiper.com
- * Version: 1.2.6
- * Tested up to: 4.9.6
+ * Version: 2.0.1
+ * Tested up to: 5.5.1
  * License: GPLv2 or later
- * Text Domain: woocommerce-paghiper
+ * Text Domain: woo-boleto-paghiper
  * Domain Path: /languages/
- * WC requires at least: 2.2.0
- * WC tested up to: 3.4.2
- */
+ * WC requires at least: 3.5
+ * WC tested up to: 4.4.1
+ */	
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -30,7 +30,7 @@ class WC_Paghiper {
 	 *
 	 * @var string
 	 */
-	const VERSION = '1.2.6';
+	const VERSION = '2.0.1';
 
 	/**
 	 * Instance of this class.
@@ -38,6 +38,9 @@ class WC_Paghiper {
 	 * @var object
 	 */
 	protected static $instance = null;
+
+	private $gateway_settings;
+	private $log;
 
 	/**
 	 * Initialize the plugin actions.
@@ -61,6 +64,11 @@ class WC_Paghiper {
 			add_filter( 'template_include', array( $this, 'paghiper_template' ), 9999 );
 			add_action( 'woocommerce_view_order', array( $this, 'pending_payment_message' ) );
 			add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( $this, 'plugin_action_links' ) );
+			add_filter( 'woocommerce_new_order', array($this, 'generate_billet') );
+			add_filter( 'woocommerce_email_attachments', array($this, 'attach_billet'), 10, 3 );
+			
+
+			/* */
 		} else {
 			add_action( 'admin_notices', array( $this, 'woocommerce_missing_notice' ) );
 		}
@@ -68,6 +76,14 @@ class WC_Paghiper {
 		if (!function_exists('json_decode')) {
 			add_action( 'admin_notices', array( $this, 'json_missing_notice' ) );
 		}
+
+		// Ativa os logs
+
+		// Pega a configuração atual do plug-in.
+		$this->gateway_settings = get_option( 'woocommerce_paghiper_settings' );
+
+		// Inicializa logs, caso ativados
+		$this->log = wc_paghiper_initialize_log( $this->gateway_settings[ 'debug' ] );
 
 	}
 
@@ -98,19 +114,21 @@ class WC_Paghiper {
 	 * Load the plugin text domain for translation.
 	 */
 	public function load_plugin_textdomain() {
-		$locale = apply_filters( 'plugin_locale', get_locale(), 'woocommerce-paghiper' );
+		$locale = apply_filters( 'plugin_locale', get_locale(), 'woo-boleto-paghiper' );
 
-		load_textdomain( 'woocommerce-paghiper', trailingslashit( WP_LANG_DIR ) . 'woocommerce-paghiper/woocommerce-paghiper-' . $locale . '.mo' );
-		load_plugin_textdomain( 'woocommerce-paghiper', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+		load_textdomain( 'woo-boleto-paghiper', trailingslashit( WP_LANG_DIR ) . 'woo_paghiper/woo_paghiper-' . $locale . '.mo' );
+		load_plugin_textdomain( 'woo-boleto-paghiper', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 	}
 
 	/**
 	 * Includes.
 	 */
 	private function includes() {
+
 		include_once 'includes/wc-paghiper-functions.php';
+		include_once 'includes/wc-paghiper-notification.php';
 		include_once 'includes/class-wc-paghiper-gateway.php';
-		include_once 'includes/wc-retorno-paghiper.php';
+
 	}
 
 	/**
@@ -147,6 +165,14 @@ class WC_Paghiper {
 		self::add_paghiper_endpoint();
 
 		flush_rewrite_rules();
+
+		$uploads = wp_upload_dir();
+		$upload_dir = $uploads['basedir'];
+		$paghiper_dir = $upload_dir . '/paghiper';
+
+		if (!is_dir($paghiper_dir)) {
+			mkdir( $paghiper_dir, 0700 );
+		}
 	}
 
 	/**
@@ -154,6 +180,64 @@ class WC_Paghiper {
 	 */
 	public static function deactivate() {
 		flush_rewrite_rules();
+	}
+
+	/**
+	 * Generate billet once a new order is placed.
+	 * 
+	 * @param	string $order_id
+	 * 
+	 * @return WC_PagHiper_Boleto
+	 */
+	public function generate_billet( $order_id ) {
+		return self::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
+	}
+
+	/**
+	 * Attach billet to the order e-mails
+	 * 
+	 * @param	array $attachments
+	 * @param	string $email_id
+	 * @param	object $order
+	 */
+	public function attach_billet( $attachments, $email_id, $order ) {
+
+		if ( $this->log ) {
+			wc_paghiper_add_log( $this->log, sprintf( 'Enviando mail: %s', $email_id ) );
+		}
+
+		if ( apply_filters('woo_paghiper_pending_status', 'on-hold', $order) === $order->status && 'paghiper' == $order->payment_method ) {
+		//if( in_array($email_id, array('new_order', 'customer_invoice')) && 'paghiper' == $order->payment_method ){
+
+			try {
+
+				$order_data = get_post_meta( $order->get_id(), 'wc_paghiper_data', true );
+
+				$transaction_id = 'Boleto bancário - '.$order_data['transaction_id'];
+				$billet_url		= $order_data['url_slip_pdf'];
+
+				$uploads = wp_upload_dir();
+				$upload_dir = $uploads['basedir'];
+				$upload_dir = $upload_dir . '/paghiper';
+
+				$billet_pdf_file = $upload_dir.'/'.$transaction_id.'.pdf';
+
+				if(file_exists($billet_pdf_file)) {
+					$attachments[] = $billet_pdf_file;
+				}
+
+			} catch(Exception $e) {
+
+				if ( $this->log ) {
+					wc_paghiper_add_log( $this->log, sprintf( 'Erro: %s', $e->getMessage() ) );
+				}
+
+			}
+
+		}
+
+		return $attachments;
+
 	}
 
 	/**
@@ -167,11 +251,41 @@ class WC_Paghiper {
 		global $wp_query;
 
 		if ( isset( $wp_query->query_vars['paghiper'] ) ) {
+
 			return self::get_plugin_path() . 'includes/views/html-boleto.php';
+
 		}
 
 		return $template;
 	}
+
+	/**
+	 * Gets the base-permalink.
+	 * Just in case we're dealing with a pathinfo configured WP installation
+	 * 
+	 * @return string		Base rewrite URL.
+	 */
+
+	 public static function get_base_url() {
+
+		$wordpress_permalink_config		= get_option('permalink_structure');
+		$woocommerce_permalink_config 	= maybe_unserialize(get_option( 'woocommerce_permalinks' ));
+
+		if(
+			strpos($wordpress_permalink_config, 'index.php') === FALSE &&
+			(
+				is_array($woocommerce_permalink_config) && 
+				array_key_exists('product_base', $woocommerce_permalink_config) && 
+				strpos($woocommerce_permalink_config['product_base'], 'index.php') === FALSE
+			)
+		) {
+			$base_url = '/';
+		} else {
+			$base_url = '/index.php/';
+		}
+
+		return $base_url;
+	 }
 
 	/**
 	 * Gets the paghiper URL.
@@ -181,7 +295,10 @@ class WC_Paghiper {
 	 * @return string       Boleto URL.
 	 */
 	public static function get_paghiper_url( $code ) {
-		$home = home_url( '/' );
+
+		$base_url = WC_Paghiper::get_base_url();
+
+		$home = home_url( $base_url );
 
 		if ( get_option( 'permalink_structure' ) ) {
 			$url = trailingslashit( $home ) . 'paghiper/' . $code;
@@ -189,7 +306,7 @@ class WC_Paghiper {
 			$url = add_query_arg( array( 'paghiper' => $code ), $home );
 		}
 
-		return apply_filters( 'woocommerce_paghiper_url', $url, $code, $home );
+		return apply_filters( 'woo_paghiper_url', $url, $code, $home );
 	}
 
 	/**
@@ -203,15 +320,21 @@ class WC_Paghiper {
 		$order = new WC_Order( $order_id );
 
 		if ( 'on-hold' === $order->status && 'paghiper' == $order->payment_method ) {
+
+			require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
+	
+			$paghiperBoleto = new WC_PagHiper_Boleto( $order_id );
+			$paghiperBoleto->printBarCode(true);
+
 			$html = '<div class="woocommerce-info">';
-			$html .= sprintf( '<a class="button" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Visualizar boleto &rarr;', 'woocommerce-paghiper' ) );
+			$html .= sprintf( '<a class="button" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Visualizar boleto &rarr;', 'woo-boleto-paghiper' ) );
 
-			$message = sprintf( __( '%sAtenção!%s Ainda não registramos o pagamento deste pedido.', 'woocommerce-paghiper' ), '<strong>', '</strong>' ) . '<br />';
-			$message .= __( 'Por favor clique no botão ao lado e pague o boleto pelo seu Internet Banking.', 'woocommerce-paghiper' ) . '<br />';
-			$message .= __( 'Caso preferir, você pode imprimir e pagá-lo em qualquer agência bancária ou casa lotérica.', 'woocommerce-paghiper' ) . '<br />';
-			$message .= __( 'Ignore esta mensagem caso ja tenha efetuado o pagamento. O pedido será atualizado assim que houver a compensação.', 'woocommerce-paghiper' ) . '<br />';
+			$message = sprintf( __( '%sAtenção!%s Ainda não registramos o pagamento deste pedido.', 'woo-boleto-paghiper' ), '<strong>', '</strong>' ) . '<br />';
+			$message .= __( 'Por favor clique no botão ao lado e pague o boleto pelo seu Internet Banking.', 'woo-boleto-paghiper' ) . '<br />';
+			$message .= __( 'Caso preferir, você pode imprimir e pagá-lo em qualquer agência bancária ou casa lotérica.', 'woo-boleto-paghiper' ) . '<br />';
+			$message .= __( 'Ignore esta mensagem caso ja tenha efetuado o pagamento. O pedido será atualizado assim que houver a compensação.', 'woo-boleto-paghiper' ) . '<br />';
 
-			$html .= apply_filters( 'wcpaghiper_pending_payment_message', $message, $order );
+			$html .= apply_filters( 'woo_paghiper_pending_payment_message', $message, $order );
 
 			$html .= '</div>';
 
@@ -235,7 +358,7 @@ class WC_Paghiper {
 			$settings_url = admin_url( 'admin.php?page=woocommerce_settings&tab=payment_gateways&section=WC_Paghiper_Gateway' );
 		}
 
-		$plugin_links[] = '<a href="' . esc_url( $settings_url ) . '">' . __( 'Settings', 'woocommerce-paghiper' ) . '</a>';
+		$plugin_links[] = '<a href="' . esc_url( $settings_url ) . '">' . __( 'Settings', 'woo-boleto-paghiper' ) . '</a>';
 
 		return array_merge( $plugin_links, $links );
 	}
