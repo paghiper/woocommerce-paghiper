@@ -3,7 +3,7 @@ Contributors: henriqueccruz, paghiper
 Tags: woocommerce, boleto, paghiper, pagamento
 Requires at least: 3.5
 Tested up to: 5.5.1
-Stable tag: 2.0.2
+Stable tag: 2.0.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,7 +50,11 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 - Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
 - Implementação de funcionalidade de boleto parcelado
 
-## 2.0.1 - 2020/09/16
+## 2.0.3 - 2020/09/16
+
+- Bigfix: Erro "payer_name invalido" ao finalizar pedido
+
+## 2.0.2 - 2020/09/16
 
 - Validação de ApiKey e avisos no back-end do Wordpress
 

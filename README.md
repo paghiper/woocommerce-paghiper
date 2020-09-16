@@ -38,6 +38,10 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
 * Implementação de funcionalidade de boleto parcelado
 
+## 2.0.3 - 2020/09/16
+
+* Bigfix: Erro "payer_name invalido" ao finalizar pedido
+
 ## 2.0.2 - 2020/09/16
 
 * Validação de ApiKey e avisos no back-end do Wordpress
