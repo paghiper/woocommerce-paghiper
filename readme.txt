@@ -15,7 +15,7 @@ Implementa a emissão de boletos e integração do gateway da Paghiper ao seu Wo
 Permite a emissão de boletos e integração do gateway da Paghiper ao seu WooCommerce.
 Este módulo implementa emissão de boletos com retorno automático.
 
-* **Versão mais Recente:** 2.0.2
+* **Versão mais Recente:** 2.0.3
 * **Requer WooCommerce** versão mínima 3.5
 * **Requer Wordpress** preferencialmente atualizado
 * **Requisitos:** PHP >= 5.6, cURL ativado.
