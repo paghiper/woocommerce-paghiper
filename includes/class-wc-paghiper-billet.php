@@ -186,15 +186,18 @@ class WC_PagHiper_Boleto {
 		$order_line_total = 0;
 
 		// Client data.
-		
-		// TODO: Implement a filter here, so we don't need these info
 		if(!empty($this->order->billing_persontype)) {
 			$data['payer_name'] = ($this->order->billing_persontype == 2 && !empty($this->order->billing_company)) ? $this->order->billing_company : $this->order->billing_first_name . ' ' . $this->order->billing_last_name;
 			$data['payer_cpf_cnpj'] = ($this->order->billing_persontype == 1) ? $this->order->billing_cpf : $this->order->billing_cnpj ;
 		} else {
 			// Get default field options if not using Brazilian Market on WooCommerce
-			$data['payer_name'] = (!empty($this->order->billing_company)) ? $this->order->billing_company : $this->order->billing_first_name . ' ' . $this->order->billing_last_name;
-			$data['payer_cpf_cnpj'] = (!empty($this->order->billing_cnpj)) ? $this->order->billing_cnpj : $this->order->billing_cpf;
+			if(!empty($this->order->billing_cnpj) && !empty($this->order->billing_company)) {
+				$data['payer_name'] = $this->order->billing_company;
+				$data['payer_cpf_cnpj'] = $this->order->billing_cnpj;
+			} else {
+				$data['payer_name'] = $this->order->billing_first_name . ' ' . $this->order->billing_last_name;
+				$data['payer_cpf_cnpj'] = $this->order->billing_cpf;
+			}
 		}
 
 		// Address
