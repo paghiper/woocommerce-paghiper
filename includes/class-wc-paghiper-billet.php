@@ -33,7 +33,11 @@ class WC_PagHiper_Boleto {
 		$this->order = new WC_Order( $order_id );
 
 		// Pegamos a meta do pedido
-		$this->order_data = get_post_meta( $order_id, 'wc_paghiper_data', true );
+		if(function_exists('update_meta_cache'))
+			update_meta_cache( 'shop_order', $this->order_id );
+
+		$order_meta_data = get_post_meta( $this->order_id, 'wc_paghiper_data', true );
+		$this->order_data = (is_array($order_meta_data)) ? $order_meta_data : [];
 
 		// Formulamos a URL-base a ser utilizada
 		$this->base_url = WC_Paghiper::get_base_url();
@@ -46,6 +50,7 @@ class WC_PagHiper_Boleto {
 	public function has_issued_valid_billet() {
 
 		$order_date = DateTime::createFromFormat('Y-m-d', strtok($this->order->order_date, ' '), $this->timezone);
+		$new_request = FALSE;
 
 		// Define data de vencimento, caso exista
 		if(empty($this->order_data["order_billet_due_date"]) || empty($this->order_data["current_billet_due_date"])) {
@@ -154,6 +159,7 @@ class WC_PagHiper_Boleto {
 		} else {
 
 			$order_data = get_post_meta( $this->order_id, 'wc_paghiper_data', true );
+			$order_data = (is_array($order_data)) ? $order_data : array();
 
 			// Calcular dias entre a data do pedido e os dias para vencimento na configuração
 			$billet_due_date = $today_date;
@@ -162,10 +168,20 @@ class WC_PagHiper_Boleto {
 			$billet_due_days = $billet_due_date->days;
 
 			$order_data['order_billet_due_date'] = $billet_due_date->format( 'Y-m-d' );		
-			update_post_meta( $this->order_id, 'wc_paghiper_data', $order_data );
+			$this->order_data = $order_data;
+
+			$update = update_post_meta( $this->order_id, 'wc_paghiper_data', $order_data );
 			if(function_exists('update_meta_cache'))
 				update_meta_cache( 'shop_order', $this->order_id );
 
+			if(!$update) {
+				if ( $this->log ) {
+					wc_paghiper_add_log( $this->log, sprintf( 'Não foi possível guardar a data de vencimento: %s', var_export( $update, true) ) );
+					wc_paghiper_add_log( $this->log, sprintf( 'Dados a guardar: %s', var_export( $order_data, true) ) );
+				}
+			}
+
+			
 		}
 
 		$billet_due_days = wc_paghiper_add_workdays($billet_due_date, $this->order, $this->gateway_settings['skip_non_workdays'], 'days');
@@ -279,7 +295,6 @@ class WC_PagHiper_Boleto {
 
 		$data['discount_cents']	= $this->_convert_to_cents($order_discount);
 		$data['discount_cents']	= $order_discount_cents;
-
 		if($order_taxes > 0) {
 			$data['items'][] = array(
 				'item_id'		=> 1,
@@ -335,7 +350,7 @@ class WC_PagHiper_Boleto {
 
 			$billet_data = get_post_meta( $this->order_id, 'wc_paghiper_data', true );
 
-			$current_bilet = array(
+			$current_billet = array(
 				'transaction_id'			=> $response['transaction_id'],
 				'value_cents'				=> $this->_convert_to_currency($response['value_cents']),
 				'status'					=> $response['status'],
@@ -349,13 +364,22 @@ class WC_PagHiper_Boleto {
 
 			// Define a due date for storing on the order, for future reference
 			if(!array_key_exists('order_billet_due_date', $this->order_data)) {
-				$current_bilet['order_billet_due_date'] = $response['due_date'];
+				$current_billet['order_billet_due_date'] = $response['due_date'];
 			}
 
-			$data = array_merge($this->order_data, $current_bilet);
-			update_post_meta($this->order_id, 'wc_paghiper_data', $data);
+			$order_data = (is_array($this->order_data)) ? $this->order_data : array();
+			$data = array_merge($this->order_data, $current_billet);
+
+			$update = update_post_meta($this->order_id, 'wc_paghiper_data', $data);
 			if(function_exists('update_meta_cache'))
 				update_meta_cache( 'shop_order', $this->order_id );
+
+			if(!$update) {
+				if ( $this->log ) {
+					wc_paghiper_add_log( $this->log, sprintf( 'Não foi possível guardar os dados do boleto: %s', var_export( $update, true) ) );
+					wc_paghiper_add_log( $this->log, sprintf( 'Dados a guardar: %s', var_export( $data, true) ) );
+				}
+			}
 
 			// Download the attachment to our storage directory
 			$transaction_id = 'Boleto bancário - '.$response['transaction_id'];
@@ -380,12 +404,21 @@ class WC_PagHiper_Boleto {
 				}
 				
 				$billet_download = wp_remote_get($billet_url);
-				$billet_content = $billet_download['body'];
 
-				if(get_filesystem_method() == 'direct') {
-					file_put_contents( $billet_pdf_file, $billet_content, LOCK_EX );
-				} else {
-					$wp_filesystem->put_contents($billet_pdf_file, $billet_content);
+				if ( is_array( $billet_download ) && ! is_wp_error( $billet_download ) ) {
+
+					$billet_content = $billet_download['body'];
+	
+					if(get_filesystem_method() == 'direct') {
+						file_put_contents( $billet_pdf_file, $billet_content, LOCK_EX );
+					} else {
+						$wp_filesystem->put_contents($billet_pdf_file, $billet_content);
+					}
+
+				} elseif( is_wp_error( $billet_download ) ) {
+					if ( $this->log ) {
+						wc_paghiper_add_log( $this->log, sprintf( 'Erro: %s', $billet_download->get_error_message() ) );
+					}
 				}
 
 			}
