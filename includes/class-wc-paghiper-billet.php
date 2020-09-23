@@ -217,7 +217,7 @@ class WC_PagHiper_Boleto {
 			$product_id 		= ($item->is_type( 'variable' )) ? $item->get_variation_id() : $item->get_product_id() ;
 			$product_name		= $item->get_name();
 			$product_quantity	= $item->get_quantity();
-			$individual_price	= $item->get_subtotal() / $product_quantity;
+			$individual_price	= $item->get_total() / $product_quantity;
 			$product_price		= $this->_convert_to_cents($individual_price);
 
 			$data['items'][] = array(
@@ -262,23 +262,24 @@ class WC_PagHiper_Boleto {
 		// Conciliate order, in order to avoind conflict with third-party plugins and custom solutions
 		// We do this to facilitate integration, even when users implement stuff using unorthodox methos
 		$order_total 		= round(floatval($this->order->get_total()), 2);
-		$simulated_total	= round(($order_line_total + $order_shipping + $order_taxes) - $order_discount, 2);
+		$simulated_total	= round(($order_line_total + $order_shipping + $order_taxes), 2);
+
+		// If our sum is lower than the order total:
+		if($order_total > $simulated_total) {
+
+			$order_taxes 	= $order_total - $simulated_total;
 
 		// If our sum is higher than the order total:
-		if($order_total < $simulated_total) {
+		} elseif($order_total < $simulated_total) {
 
 			$order_discount = $simulated_total - $order_total;
 			$order_discount_cents = $this->_convert_to_cents($order_discount);
-
-		// If our sum is lower than the order total:
-		} elseif($order_total > $simulated_total) {
-
-			$order_taxes 	= $order_total - $simulated_total;
 
 		}
 
 		$data['discount_cents']	= $this->_convert_to_cents($order_discount);
 		$data['discount_cents']	= $order_discount_cents;
+
 		if($order_taxes > 0) {
 			$data['items'][] = array(
 				'item_id'		=> 1,
