@@ -5,7 +5,6 @@ use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\RejectedPromise;
 use GuzzleHttp\Psr7;
 use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
 
 /**
  * Middleware that retries requests based on the boolean result of
@@ -19,9 +18,6 @@ class RetryMiddleware
     /** @var callable */
     private $decider;
 
-    /** @var callable */
-    private $delay;
-
     /**
      * @param callable $decider     Function that accepts the number of retries,
      *                              a request, [response], and [exception] and
@@ -29,8 +25,8 @@ class RetryMiddleware
      *                              retried.
      * @param callable $nextHandler Next handler to invoke.
      * @param callable $delay       Function that accepts the number of retries
-     *                              and [response] and returns the number of
-     *                              milliseconds to delay.
+     *                              and returns the number of milliseconds to
+     *                              delay.
      */
     public function __construct(
         callable $decider,
@@ -45,13 +41,13 @@ class RetryMiddleware
     /**
      * Default exponential backoff delay function.
      *
-     * @param int $retries
+     * @param $retries
      *
-     * @return int milliseconds.
+     * @return int
      */
     public static function exponentialDelay($retries)
     {
-        return (int) pow(2, $retries - 1) * 1000;
+        return (int) pow(2, $retries - 1);
     }
 
     /**
@@ -74,11 +70,6 @@ class RetryMiddleware
             );
     }
 
-    /**
-     * Execute fulfilled closure
-     *
-     * @return mixed
-     */
     private function onFulfilled(RequestInterface $req, array $options)
     {
         return function ($value) use ($req, $options) {
@@ -91,15 +82,10 @@ class RetryMiddleware
             )) {
                 return $value;
             }
-            return $this->doRetry($req, $options, $value);
+            return $this->doRetry($req, $options);
         };
     }
 
-    /**
-     * Execute rejected closure
-     *
-     * @return callable
-     */
     private function onRejected(RequestInterface $req, array $options)
     {
         return function ($reason) use ($req, $options) {
@@ -110,18 +96,15 @@ class RetryMiddleware
                 null,
                 $reason
             )) {
-                return \GuzzleHttp\Promise\rejection_for($reason);
+                return new RejectedPromise($reason);
             }
             return $this->doRetry($req, $options);
         };
     }
 
-    /**
-     * @return self
-     */
-    private function doRetry(RequestInterface $request, array $options, ResponseInterface $response = null)
+    private function doRetry(RequestInterface $request, array $options)
     {
-        $options['delay'] = call_user_func($this->delay, ++$options['retries'], $response);
+        $options['delay'] = call_user_func($this->delay, ++$options['retries']);
 
         return $this($request, $options);
     }
