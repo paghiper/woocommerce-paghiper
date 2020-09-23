@@ -240,7 +240,7 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 
 		// Reduce stock levels.
 		// Support for WooCommerce 2.7.
-		if ( 'on-hold' !== $order->status) {
+		if ( $this->set_status_when_waiting !== $order->status) {
 			if ( function_exists( 'wc_reduce_stock_levels' ) ) {
 				wc_reduce_stock_levels( $order_id );
 			} else {
@@ -271,6 +271,7 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 		// Gera um boleto e guarda os dados, pra reutilizarmos.
 		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
 
+
 		$paghiperBoleto = new WC_PagHiper_Boleto( $order_id );
 		$billet = $paghiperBoleto->create_billet();
 
@@ -278,6 +279,12 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 			// Mark as on-hold (we're awaiting the ticket).
 			$waiting_status = (!empty($this->set_status_when_waiting)) ? $this->set_status_when_waiting : 'on-hold';
 			$order->update_status( $waiting_status, __( 'Boleto PagHiper: Boleto gerado e enviado por e-mail.', 'woo-boleto-paghiper' ) );
+
+		} else {
+
+			if ( 'yes' === $this->debug ) {
+				wc_paghiper_add_log( $this->log, sprintf( 'Pedido %s: Não foi possível gerar o boleto. Detalhes: %s', var_export($billet, true) ) );
+			}
 
 		}
 
@@ -341,6 +348,8 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 		update_post_meta( $order->id, 'wc_paghiper_data', $data );
 		if(function_exists('update_meta_cache'))
 			update_meta_cache( 'shop_order', $order->id );
+
+		return;
 	}
 
 	/**
@@ -352,7 +361,7 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 	 * @return string                Billet instructions.
 	 */
 	function email_instructions( $order, $sent_to_admin ) {
-		if ( $sent_to_admin || apply_filters('woo_paghiper_pending_status', 'on-hold', $order) !== $order->status || 'paghiper' !== $order->payment_method ) {
+		if ( $sent_to_admin || apply_filters('woo_paghiper_pending_status', $this->set_status_when_waiting, $order) !== $order->status || 'paghiper' !== $order->payment_method ) {
 			return;
 		}
 
