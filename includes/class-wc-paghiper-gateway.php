@@ -368,7 +368,8 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
 		$paghiperBoleto = new WC_PagHiper_Boleto( $order->id );
 
-		$html = '<h2>' . __( 'Pagamento', 'woo-boleto-paghiper' ) . '</h2>';
+		$html = '<div class="woo-paghiper-boleto-details">';
+		$html .= '<h2>' . __( 'Pagamento', 'woo-boleto-paghiper' ) . '</h2>';
 
 		$html .= '<p class="order_details">';
 
@@ -379,11 +380,12 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 
 		$html .= apply_filters( 'woo_paghiper_email_instructions', $message );
 
-		$html .= '<br />' . sprintf( '<a class="button" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Veja o boleto completo &rarr;', 'woo-boleto-paghiper' ) ) . '<br />';
+		$html .= '<br />' . sprintf( '<a class="button alt" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Veja o boleto completo &rarr;', 'woo-boleto-paghiper' ) ) . '<br />';
 
 		$html .= '<strong style="font-size: 0.8em">' . sprintf( __( 'Data de Vencimento: %s.', 'woo-boleto-paghiper' ), date( 'd/m/Y', time() + ( absint( $this->days_due_date ) * 86400 ) ) ) . '</strong>';
 
 		$html .= '</p>';
+		$html .= '</div>';
 
 		echo $html;
 	}
