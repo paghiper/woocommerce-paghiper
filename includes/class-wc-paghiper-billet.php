@@ -268,8 +268,7 @@ class WC_PagHiper_Boleto {
 		$data['shipping_price_cents']	= $this->_convert_to_cents($order_shipping);
 
 		// Discount data
-		$order_discount					= $this->order->get_total_discount();
-		$order_discount_cents			= $this->_convert_to_cents($order_discount);
+		$order_discount	= 0;
 
 		// Taxes and additional costs
 		$order_taxes 		= $this->order->get_total_tax();
@@ -280,9 +279,6 @@ class WC_PagHiper_Boleto {
 		$order_total 		= round(floatval($this->order->get_total()), 2);
 		$simulated_total	= round(($order_line_total + $order_shipping + $order_taxes), 2);
 
-		/*$data['discount_cents']	= $this->_convert_to_cents($order_discount);
-		$data['discount_cents']	= $order_discount_cents;*/
-
 		// If our sum is lower than the order total:
 		if($order_total > $simulated_total) {
 
@@ -292,8 +288,11 @@ class WC_PagHiper_Boleto {
 		} elseif($order_total < $simulated_total) {
 
 			$order_discount = $simulated_total - $order_total;
-			$order_discount_cents = $this->_convert_to_cents($order_discount);
 
+		}
+
+		if($order_discount > 0) {
+			$data['discount_cents']	= $this->_convert_to_cents($order_discount);
 		}
 
 		if($order_taxes > 0) {
