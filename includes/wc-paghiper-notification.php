@@ -126,7 +126,7 @@ function increase_order_stock( $order, $settings ) {
 
     $order_id = $order->get_id();
     
-    if ( 'yes' === get_option( 'woocommerce_manage_stock' ) && $settings['incrementar-estoque'] == true && $order && 0 < count( $order->get_items() ) ) {
+    if ( 'yes' === get_option( 'woocommerce_manage_stock' ) && $replenish_stock == true && $order && 0 < count( $order->get_items() ) ) {
         if ( apply_filters( 'woocommerce_payment_complete_reduce_order_stock', $order && ! $order->get_data_store()->get_stock_reduced( $order_id ), $order_id ) ) {
             if ( function_exists( 'wc_maybe_increase_stock_levels' ) ) {
                 wc_maybe_increase_stock_levels( $order_id );
