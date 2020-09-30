@@ -49,6 +49,10 @@ function woocommerce_boleto_paghiper_valid_ipn_request($return, $order_no, $sett
                 $order->add_order_note( __( 'PagHiper: Pagamento pré-compensado (reservado). Aguarde confirmação.' , 'woo_paghiper' ) );
                 break;
             case "canceled" :
+
+                    // TODO: Checar se data do boleto cancelado é menor que a atual (do pedido)
+                    // Se data do pedido for maior que a do boleto cancelado, não cancelar pedido
+
                     $cancelled_status = (!empty($settings['set_status_when_cancelled'])) ? $settings['set_status_when_cancelled'] : 'cancelled';
                     
                     $order->update_status( $cancelled_status, __( 'PagHiper: Boleto Cancelado.', 'woo_paghiper' ) );
