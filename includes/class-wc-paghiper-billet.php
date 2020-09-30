@@ -87,10 +87,12 @@ class WC_PagHiper_Boleto {
 					if(function_exists('update_meta_cache'))
 						update_meta_cache( 'shop_order', $this->order_id );
 
+					$this->order_data = $paghiper_data;
+
 					if($update) {
-						$order->add_order_note( sprintf( __( 'Data de vencimento ajustada para %s', 'woo_paghiper' ), $current_billet_due_date->format('d/m/Y') ) );
+						$this->order->add_order_note( sprintf( __( 'Data de vencimento ajustada para %s', 'woo_paghiper' ), $current_billet_due_date->format('d/m/Y') ) );
 					} else {
-						$order->add_order_note( sprintf( __( 'Data de vencimento deveria ser ajustada para %s mas houve um erro ao salvar a nova data.', 'woo_paghiper' ), $current_billet_due_date->format('d/m/Y') ) );
+						$this->order->add_order_note( sprintf( __( 'Data de vencimento deveria ser ajustada para %s mas houve um erro ao salvar a nova data.', 'woo_paghiper' ), $current_billet_due_date->format('d/m/Y') ) );
 					}
 
 					$log_message = 'Pedido #%s: Data de vencimento do boleto não bate com a informada no pedido. Cheque a opção "Vencimento em finais de semana" no <a href="https://www.paghiper.com/painel/prazo-vencimento-boleto/" target="_blank">Painel da PagHiper</a>.';
@@ -373,6 +375,8 @@ class WC_PagHiper_Boleto {
 			$update = update_post_meta($this->order_id, 'wc_paghiper_data', $data);
 			if(function_exists('update_meta_cache'))
 				update_meta_cache( 'shop_order', $this->order_id );
+
+			$this->order_data = $data;
 
 			if(!$update) {
 				if ( $this->log ) {
