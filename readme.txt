@@ -1,5 +1,5 @@
 === Boleto PagHiper para Woocommerce ===
-Contributors: paghiper
+Contributors: henriqueccruz
 Tags: woocommerce, boleto, paghiper, pagamento
 Requires at least: 3.5
 Tested up to: 5.5.1
@@ -7,13 +7,15 @@ Stable tag: 2.0.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Implementa a emissão de boletos e integração do gateway da Paghiper ao seu WooCommerce.
+Ofereça a seus clientes pagamento boleto bancário com a PagHiper. Fácil, prático e rapido!
 
+== Description ==
 
-# WooCommerce - Módulo de boleto PagHiper 
+Ofereça a seus clientes pagamento boleto bancário com a PagHiper. Fácil, prático e rapido!
+Emita boletos bancários de maneira descomplicada. A PagHiper cuida de toda a emissão, compensação e registro do boleto.
+O plug-in anexa o boleto, mostra código de barras e linha digitável nos e-mails de pedido e ainda faz reposição de estoque, caso o boleto não seja pago.
 
-Permite a emissão de boletos e integração do gateway da Paghiper ao seu WooCommerce.
-Este módulo implementa emissão de boletos com retorno automático.
+Fácil, prático e rápido!
 
 * **Versão mais Recente:** 2.0.4
 * **Requer WooCommerce** versão mínima 3.5
