@@ -1,5 +1,5 @@
-=== WooCommerce - Módulo de boleto PagHiper ===
-Contributors: henriqueccruz, paghiper
+=== Boleto PagHiper para Woocommerce ===
+Contributors: paghiper
 Tags: woocommerce, boleto, paghiper, pagamento
 Requires at least: 3.5
 Tested up to: 5.5.1
