@@ -49,6 +49,10 @@ function woocommerce_boleto_paghiper_valid_ipn_request($return, $order_no, $sett
                 $order->add_order_note( __( 'PagHiper: Pagamento pré-compensado (reservado). Aguarde confirmação.' , 'woo_paghiper' ) );
                 break;
             case "canceled" :
+
+                    // TODO: Checar se data do boleto cancelado é menor que a atual (do pedido)
+                    // Se data do pedido for maior que a do boleto cancelado, não cancelar pedido
+
                     $cancelled_status = (!empty($settings['set_status_when_cancelled'])) ? $settings['set_status_when_cancelled'] : 'cancelled';
                     
                     $order->update_status( $cancelled_status, __( 'PagHiper: Boleto Cancelado.', 'woo_paghiper' ) );
@@ -123,10 +127,14 @@ function increase_order_stock( $order, $settings ) {
 
     /* Changing setting keys from Woo-Boleto-Paghiper 1.2.6.1 */
     $replenish_stock = ($settings['replenish_stock'] !== '') ? $settings['replenish_stock'] : $settings['incrementar-estoque'];
+
+    $order_id = $order->get_id();
     
-    if ( 'yes' === get_option( 'woocommerce_manage_stock' ) && $settings['incrementar-estoque'] == true && $order && 0 < count( $order->get_items() ) ) {
+    if ( 'yes' === get_option( 'woocommerce_manage_stock' ) && $replenish_stock == true && $order && 0 < count( $order->get_items() ) ) {
         if ( apply_filters( 'woocommerce_payment_complete_reduce_order_stock', $order && ! $order->get_data_store()->get_stock_reduced( $order_id ), $order_id ) ) {
-            wc_reduce_stock_levels( $order );
+            if ( function_exists( 'wc_maybe_increase_stock_levels' ) ) {
+                wc_maybe_increase_stock_levels( $order_id );
+            }
         }
     }
 }

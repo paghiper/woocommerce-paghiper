@@ -1,12 +1,11 @@
 <?php
 namespace GuzzleHttp;
 
-use GuzzleHttp\Exception\InvalidArgumentException;
 use GuzzleHttp\Handler\CurlHandler;
 use GuzzleHttp\Handler\CurlMultiHandler;
 use GuzzleHttp\Handler\Proxy;
 use GuzzleHttp\Handler\StreamHandler;
-use Psr\Http\Message\UriInterface;
+use Psr\Http\Message\StreamInterface;
 
 /**
  * Expands a URI template
@@ -58,7 +57,7 @@ function describe_type($input)
 /**
  * Parses an array of header lines into an associative array of headers.
  *
- * @param iterable $lines Header lines array of strings in the following
+ * @param array $lines Header lines array of strings in the following
  *                     format: "Name: Value"
  * @return array
  */
@@ -169,8 +168,6 @@ function default_ca_bundle()
         '/etc/ssl/certs/ca-certificates.crt',
         // FreeBSD (provided by the ca_root_nss package)
         '/usr/local/share/certs/ca-root-nss.crt',
-        // SLES 12 (provided by the ca-certificates package)
-        '/var/lib/ca-certificates/ca-bundle.pem',
         // OS X provided by homebrew (using the default path)
         '/usr/local/etc/openssl/cert.pem',
         // Google app engine
@@ -198,8 +195,7 @@ function default_ca_bundle()
         }
     }
 
-    throw new \RuntimeException(
-        <<< EOT
+    throw new \RuntimeException(<<< EOT
 No system CA bundle could be found in any of the the common system locations.
 PHP versions earlier than 5.6 are not properly configured to use the system's
 CA bundle by default. In order to verify peer certificates, you will need to
@@ -297,16 +293,15 @@ function is_host_in_noproxy($host, array $noProxyArray)
  * @param int    $options Bitmask of JSON decode options.
  *
  * @return mixed
- * @throws Exception\InvalidArgumentException if the JSON cannot be decoded.
+ * @throws \InvalidArgumentException if the JSON cannot be decoded.
  * @link http://www.php.net/manual/en/function.json-decode.php
  */
 function json_decode($json, $assoc = false, $depth = 512, $options = 0)
 {
     $data = \json_decode($json, $assoc, $depth, $options);
     if (JSON_ERROR_NONE !== json_last_error()) {
-        throw new Exception\InvalidArgumentException(
-            'json_decode error: ' . json_last_error_msg()
-        );
+        throw new \InvalidArgumentException(
+            'json_decode error: ' . json_last_error_msg());
     }
 
     return $data;
@@ -315,80 +310,21 @@ function json_decode($json, $assoc = false, $depth = 512, $options = 0)
 /**
  * Wrapper for JSON encoding that throws when an error occurs.
  *
- * @param mixed $value   The value being encoded
+ * @param string $value   The value being encoded
  * @param int    $options JSON encode option bitmask
  * @param int    $depth   Set the maximum depth. Must be greater than zero.
  *
  * @return string
- * @throws Exception\InvalidArgumentException if the JSON cannot be encoded.
+ * @throws \InvalidArgumentException if the JSON cannot be encoded.
  * @link http://www.php.net/manual/en/function.json-encode.php
  */
 function json_encode($value, $options = 0, $depth = 512)
 {
     $json = \json_encode($value, $options, $depth);
     if (JSON_ERROR_NONE !== json_last_error()) {
-        throw new Exception\InvalidArgumentException(
-            'json_encode error: ' . json_last_error_msg()
-        );
+        throw new \InvalidArgumentException(
+            'json_encode error: ' . json_last_error_msg());
     }
 
     return $json;
-}
-
-/**
- * Wrapper for the hrtime() or microtime() functions
- * (depending on the PHP version, one of the two is used)
- *
- * @return float|mixed UNIX timestamp
- * @internal
- */
-function _current_time()
-{
-    return function_exists('hrtime') ? hrtime(true) / 1e9 : microtime(true);
-}
-
-
-/**
- * @param int $options
- *
- * @return UriInterface
- *
- * @internal
- */
-function _idn_uri_convert(UriInterface $uri, $options = 0)
-{
-    if ($uri->getHost()) {
-        $idnaVariant = defined('INTL_IDNA_VARIANT_UTS46') ? INTL_IDNA_VARIANT_UTS46 : 0;
-        $asciiHost = $idnaVariant === 0
-            ? idn_to_ascii($uri->getHost(), $options)
-            : idn_to_ascii($uri->getHost(), $options, $idnaVariant, $info);
-        if ($asciiHost === false) {
-            $errorBitSet = isset($info['errors']) ? $info['errors'] : 0;
-
-            $errorConstants = array_filter(array_keys(get_defined_constants()), function ($name) {
-                return substr($name, 0, 11) === 'IDNA_ERROR_';
-            });
-
-            $errors = [];
-            foreach ($errorConstants as $errorConstant) {
-                if ($errorBitSet & constant($errorConstant)) {
-                    $errors[] = $errorConstant;
-                }
-            }
-
-            $errorMessage = 'IDN conversion failed';
-            if ($errors) {
-                $errorMessage .= ' (errors: ' . implode(', ', $errors) . ')';
-            }
-
-            throw new InvalidArgumentException($errorMessage);
-        } else {
-            if ($uri->getHost() !== $asciiHost) {
-                // Replace URI only if the ASCII version is different
-                $uri = $uri->withHost($asciiHost);
-            }
-        }
-    }
-
-    return $uri;
 }

@@ -1,9 +1,7 @@
 <?php
 namespace GuzzleHttp;
 
-use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
 
 /**
  * Creates a composed Guzzle handler function by stacking middlewares on top of
@@ -11,7 +9,7 @@ use Psr\Http\Message\ResponseInterface;
  */
 class HandlerStack
 {
-    /** @var callable|null */
+    /** @var callable */
     private $handler;
 
     /** @var array */
@@ -24,7 +22,7 @@ class HandlerStack
      * Creates a default handler stack that can be used by clients.
      *
      * The returned handler will wrap the provided handler or use the most
-     * appropriate default handler for your system. The returned HandlerStack has
+     * appropriate default handler for you system. The returned HandlerStack has
      * support for cookies, redirects, HTTP error exceptions, and preparing a body
      * before sending.
      *
@@ -61,8 +59,6 @@ class HandlerStack
      *
      * @param RequestInterface $request
      * @param array            $options
-     *
-     * @return ResponseInterface|PromiseInterface
      */
     public function __invoke(RequestInterface $request, array $options)
     {
@@ -210,7 +206,7 @@ class HandlerStack
     }
 
     /**
-     * @param string $name
+     * @param $name
      * @return int
      */
     private function findByName($name)
@@ -227,10 +223,10 @@ class HandlerStack
     /**
      * Splices a function into the middleware list at a specific position.
      *
-     * @param string   $findName
-     * @param string   $withName
+     * @param          $findName
+     * @param          $withName
      * @param callable $middleware
-     * @param bool     $before
+     * @param          $before
      */
     private function splice($findName, $withName, callable $middleware, $before)
     {

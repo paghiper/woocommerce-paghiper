@@ -1,9 +1,12 @@
-# WooCommerce - Módulo de boleto PagHiper 
+# Boleto PagHiper para Woocommerce
 
-Permite a emissão de boletos e integração do gateway da Paghiper ao seu WooCommerce.
-Este módulo implementa emissão de boletos com retorno automático.
+Ofereça a seus clientes pagamento boleto bancário com a PagHiper. Fácil, prático e rapido!
+Emita boletos bancários de maneira descomplicada. A PagHiper cuida de toda a emissão, compensação e registro do boleto.
+O plug-in anexa o boleto, mostra código de barras e linha digitável nos e-mails de pedido e ainda faz reposição de estoque, caso o boleto não seja pago.
 
-* **Versão mais Recente:** 2.0.2
+Fácil, prático e rápido!
+
+* **Versão mais Recente:** 2.0.4
 * **Requer WooCommerce** versão mínima 3.5
 * **Requer Wordpress** preferencialmente atualizado
 * **Requisitos:** PHP >= 5.6.0, Suporte a JSON e permissões de escrita na pasta uploads.
@@ -12,15 +15,19 @@ Este módulo implementa emissão de boletos com retorno automático.
 
 # Como Instalar
 
-1. Crie sua conta na PagHiper [clique aqui para saber como](https://github.com/paghiper/whmcs/wiki/Como-criar-seu-cadastro-na-PagHiper).
+1. Crie sua conta na PagHiper [clicando aqui](https://www.paghiper.com/abra-sua-conta/);
 
-2. Baixe [este arquivo .zip](https://github.com/paghiper/woocommerce-paghiper/archive/master.zip), crie uma pasta chamada 'woocommerce-paghiper' dentro da sua pasta de plugins, extraia os arquivos do .zip e faça upload dentro da pasta criada.
+2. Faça login e guarde suas **Chave de API (ApiKey)** e **Token** em Minha Conta > Credenciais;
 
-3. Dentro da área administrativa do seu Wordpress, vá em: Woocommerce > Configurações > Finalizar Compra. Haver um item escrito "Boleto Bancário", com o ID paghiper. Clique neste item.
+3. No painel do seu site Wordpress, acesse a seção de plug-ins e clique em **Adicionar novo**. Digite "PagHiper" e aperte Enter;
 
-4. Ative o Boleto PagHiper marcando a primeira opção e preencha o restante do formulário com seu e-mail de cadastro da PagHiper e seu Token.
+4. Dentro da área administrativa do seu Wordpress, vá em: Woocommerce > Configurações > Finalizar Compra. Haver um item escrito "Boleto Bancário", com o ID paghiper. Clique neste item;
 
-5. Configure a quantidade de dias que deseja dar de prazo no vencimento e ative o checkout transparente.
+5. Ative o Boleto PagHiper marcando a primeira opção e preencha o restante do formulário com seu e-mail de cadastro da PagHiper e seu Token;
+
+6. Configure a quantidade de dias que deseja dar de prazo no vencimento e comece a receber!
+
+**Boas vendas!**
 
 Se tiver dúvidas sobre esse processo, acesse nosso [guia de configuração de plugin](https://github.com/paghiper/woocommerce-paghiper/wiki/Configurando-o-plugin-no-seu-WHMCS)
 
@@ -34,9 +41,19 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 ## Planejado para a próxima versão
 
-* Uso opcional do plug-in Brazilian Market on WooCommerce (antigo WooCommerce Extra Checkout Fields for Brazil)
 * Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
 * Implementação de funcionalidade de boleto parcelado
+
+## 2.0.4 - 2020/10/05
+
+* Melhoria: Uso opcional do plug-in Brazilian Market on WooCommerce (antigo WooCommerce Extra Checkout Fields for Brazil)
+* Melhoria: UX e acessibilidade na página de finalização de pedido
+* Melhoria: Downgrade da versão do GuzzleHttp (evita conflitos com outros plug-ins que também usam a lib)
+* Bugfix: Estabilidade e tratamento de erro na emissão e baixa de pagamentos
+* Bugfix: Problema com Mimetype e permissões de acesso no gerador de código de barras
+* Bugfix: Cálculo de desconto retornava valor incompleto em alguns casos
+* Bugfix: Conciliação de estoque (no cancelamento de pedidos)
+* Bugfix: Corrige alguns potenciais problemas relacionados a criação de log (dependendo da versão do Woocommerce)
 
 ## 2.0.3 - 2020/09/16
 
@@ -60,71 +77,6 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Uso do novo PHP SDK
 * Lançamento no repositório oficial do WP, permitindo instalação direto pelo painel
 * FIX: Plugin agora suporta uso em lojas sem mod_rewrite disponível (links no formato https://loja/index.php/...)
-
-## 1.2.5.3 - 2018/04/27
-
-* BUGFIX: Melhoria na lógica de exibição das telas de status, caso a data de vencimento do boleto ja tenha passado
-
-## 1.2.5 - 2018/04/06
-
-* MELHORIA: Re-utilização de boletos emitidos
-* MELHORIA: Telas de status do pedido (Pago, Aguardando e Cancelado), caso o cliente acesse o boleto diretamente, depois da data de vencimento (evitando confusão por parte dos clientes).
-* Fix: Não é mais possível que o cliente faça re-emitissão de boletos cancelados, a não ser que o lojista mude a data de vencimento pelo painel.
-* Fix: Strings não-traduzidas e melhorias no texto dos avisos
-* BUGFIX: Inconsistência na data de vencimento, caso a data seja mais de 25 dias da data atual
-
-## 1.2.4.2 - 2017/12/20
-
-* BUGFIX: ID do Pedido inconsistente
-Caso: Comportamento inconsistente na função intval()
-A função pode retornar o ID do pedido com um espaço na frente, em alguns casos.
-
-## 1.2.4.1 - 2017/10/10
-
-* Corridos detalhes relacionados a texto e tradução.
-
-## 1.2.4 - 2017/10/08
-
-* Melhorias no sistema de atualização e tradução de algumas strings.
-
-## 1.2.3.1 - 2017/09/15
-
-* Fix: Corrige eventual problema com cancelamento de pedidos com boletos já pagos.
-
-## 1.2.3 - 2017/09/13
-
-* Fix: Hooks eram mostrados ao ativar o plug-in.
-
-## 1.2.2 - 2017/09/03
-
-* Fix: Baixa do estoque só acontecia em boletos com status diferentes de "Aguardando"
-* ESTABILIDADE: Suporte a baixa de estoque no WC em versões inferiores a 2.7
-
-## 1.2.1 - 2017/08/31
-
-* Melhoria: Incremento de estoque no cancelamento de boletos. Ficará para uso disponível na próxima versão.
-* Melhoria: Pedidos a partir de agora ficam "Aguardando" quando o cliente escolhe boleto PagHiper.
-* Fix: E-mails só eram enviados quando o cliente acessava o boleto pela primeira vez
-* ESTABILIDADE: Baixa do estoque acontecia quantas vezes o cliente acessava o boleto
-
-## 1.2 - 2017/07/07
-
-* Correção de bugs e estabiliadade do plug-in
-* BUG: Data de crédito ficava indefinida na compensação do boleto
-* BUG: Pedido podia ser marcado como "Aguardando" ou "Cancelado", caso o cliente gerasse mais de uma fatura e não pagasse a mais recente.
-* ESTABILIDADE: Implementação de lógica para impedir que boletos não pagos alterem status de pedidos ja aprovados.
-
-## 1.1.1 - 2017/07/07
-
-* Atualização no updater
-
-## 1.1 - 2017/04/13
-
-* Repositório renomeado
-
-## 1.0 - 2017/04/13
-
-* Lançamento inicial
 
 # Licença
 

@@ -1,7 +1,6 @@
 <?php
 namespace GuzzleHttp\Handler;
 
-use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\RejectedPromise;
@@ -14,7 +13,7 @@ use Psr\Http\Message\ResponseInterface;
  */
 class MockHandler implements \Countable
 {
-    private $queue = [];
+    private $queue;
     private $lastRequest;
     private $lastOptions;
     private $onFulfilled;
@@ -28,7 +27,7 @@ class MockHandler implements \Countable
      * @param callable $onFulfilled Callback to invoke when the return value is fulfilled.
      * @param callable $onRejected  Callback to invoke when the return value is rejected.
      *
-     * @return HandlerStack
+     * @return MockHandler
      */
     public static function createWithMiddleware(
         array $queue = null,
@@ -66,7 +65,7 @@ class MockHandler implements \Countable
             throw new \OutOfBoundsException('Mock queue is empty');
         }
 
-        if (isset($options['delay']) && is_numeric($options['delay'])) {
+        if (isset($options['delay'])) {
             usleep($options['delay'] * 1000);
         }
 
@@ -74,24 +73,12 @@ class MockHandler implements \Countable
         $this->lastOptions = $options;
         $response = array_shift($this->queue);
 
-        if (isset($options['on_headers'])) {
-            if (!is_callable($options['on_headers'])) {
-                throw new \InvalidArgumentException('on_headers must be callable');
-            }
-            try {
-                $options['on_headers']($response);
-            } catch (\Exception $e) {
-                $msg = 'An error was encountered during the on_headers event';
-                $response = new RequestException($msg, $request, $response, $e);
-            }
-        }
-
         if (is_callable($response)) {
             $response = call_user_func($response, $request, $options);
         }
 
         $response = $response instanceof \Exception
-            ? \GuzzleHttp\Promise\rejection_for($response)
+            ? new RejectedPromise($response)
             : \GuzzleHttp\Promise\promise_for($response);
 
         return $response->then(
@@ -120,7 +107,7 @@ class MockHandler implements \Countable
                 if ($this->onRejected) {
                     call_user_func($this->onRejected, $reason);
                 }
-                return \GuzzleHttp\Promise\rejection_for($reason);
+                return new RejectedPromise($reason);
             }
         );
     }
@@ -158,7 +145,7 @@ class MockHandler implements \Countable
     /**
      * Get the last received request options.
      *
-     * @return array
+     * @return RequestInterface
      */
     public function getLastOptions()
     {
@@ -175,11 +162,6 @@ class MockHandler implements \Countable
         return count($this->queue);
     }
 
-    public function reset()
-    {
-        $this->queue = [];
-    }
-
     private function invokeStats(
         RequestInterface $request,
         array $options,
@@ -187,8 +169,7 @@ class MockHandler implements \Countable
         $reason = null
     ) {
         if (isset($options['on_stats'])) {
-            $transferTime = isset($options['transfer_time']) ? $options['transfer_time'] : 0;
-            $stats = new TransferStats($request, $response, $transferTime, $reason);
+            $stats = new TransferStats($request, $response, 0, $reason);
             call_user_func($options['on_stats'], $stats);
         }
     }

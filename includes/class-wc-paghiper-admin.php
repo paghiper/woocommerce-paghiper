@@ -74,8 +74,9 @@ class WC_Paghiper_Admin {
 			}
 
 			$order_billet_due_date = DateTime::createFromFormat('Y-m-d', $paghiper_data['order_billet_due_date'], $this->timezone);
+			$formatted_due_date = ($order_billet_due_date) ? $order_billet_due_date->format('d/m/Y') : __("Boleto indisponível");
 
-			$html = '<p><strong>' . __( 'Data de Vencimento:', 'woo_paghiper' ) . '</strong> ' . $order_billet_due_date->format('d/m/Y') . '</p>';
+			$html = '<p><strong>' . __( 'Data de Vencimento:', 'woo_paghiper' ) . '</strong> ' . $formatted_due_date . '</p>';
 			$html .= '<p><strong>' . __( 'URL:', 'woo_paghiper' ) . '</strong> <a target="_blank" href="' . esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ) . '">' . __( 'Visualizar boleto', 'woo_paghiper' ) . '</a></p>';
 
 			$html .= '<p style="border-top: 1px solid #ccc;"></p>';
