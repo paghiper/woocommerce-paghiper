@@ -59,7 +59,7 @@ function wc_paghiper_initialize_log( $debug_settings ) {
  */
 function wc_paghiper_add_log( $log, $message ) {
 	$gateway_id = 'paghiper';
-	return ($log->add( $gateway_id, $message )) ? TRUE : FALSE;
+	return ($log && $log->add( $gateway_id, $message )) ? TRUE : FALSE;
 }
 
 /**
