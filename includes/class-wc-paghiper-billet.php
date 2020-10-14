@@ -236,7 +236,7 @@ class WC_PagHiper_Boleto {
 			$product_name		= $item->get_name();
 			$product_quantity	= $item->get_quantity();
 			$individual_price	= $item->get_total() / $product_quantity;
-			$product_price		= $this->_convert_to_cents($individual_price);
+			$product_price		= $this->_convert_to_cents(($individual_price > 0) ? $individual_price : 0);
 
 			$data['items'][] = array(
 				'item_id'		=> $product_id,
@@ -245,7 +245,8 @@ class WC_PagHiper_Boleto {
 				'price_cents'	=> $product_price
 			);
 
-			$order_line_total += $individual_price * $product_quantity;
+			$item_total = $individual_price * $product_quantity;
+			$order_line_total += ($item_total > 0) ? $item_total : 0;
 
 		}
 
