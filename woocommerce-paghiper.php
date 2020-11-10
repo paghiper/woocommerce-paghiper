@@ -5,13 +5,13 @@
  * Description: Ofereça a seus clientes pagamento boleto bancário com a PagHiper. Fácil, prático e rapido!
  * Author: PagHiper, Henrique Cruz
  * Author URI: https://www.paghiper.com
- * Version: 2.0.4
- * Tested up to: 5.5.1
+ * Version: 2.0.5
+ * Tested up to: 5.5.3
  * License: GPLv2 or later
  * Text Domain: woo-boleto-paghiper
  * Domain Path: /languages/
  * WC requires at least: 3.5
- * WC tested up to: 4.4.1
+ * WC tested up to: 4.6.2
  */	
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -32,7 +32,7 @@ class WC_Paghiper {
 	 *
 	 * @var string
 	 */
-	const VERSION = '2.0.4';
+	const VERSION = '2.0.5';
 
 	/**
 	 * Instance of this class.

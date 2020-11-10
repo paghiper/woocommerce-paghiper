@@ -6,7 +6,7 @@ O plug-in anexa o boleto, mostra código de barras e linha digitável nos e-mail
 
 Fácil, prático e rápido!
 
-* **Versão mais Recente:** 2.0.4
+* **Versão mais Recente:** 2.0.5
 * **Requer WooCommerce** versão mínima 3.5
 * **Requer Wordpress** preferencialmente atualizado
 * **Requisitos:** PHP >= 5.6.0, Suporte a JSON e permissões de escrita na pasta uploads.
@@ -43,6 +43,12 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 * Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
 * Implementação de funcionalidade de boleto parcelado
+
+## 2.0.5 - 2020/11/10
+
+* Bugfix: Melhor tratativa de descontos (quando há um item com valor negativo no carrinho)
+* Bugfix: Warning removido do painel (Warning: count(): Parameter must be an array or an object that implements Countable...)
+* Melhoria: Melhor descrição das notificações IPN no log de pedido
 
 ## 2.0.4 - 2020/10/05
 

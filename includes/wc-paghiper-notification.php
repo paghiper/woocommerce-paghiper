@@ -41,7 +41,7 @@ function woocommerce_boleto_paghiper_valid_ipn_request($return, $order_no, $sett
                     $waiting_status = (!empty($settings['set_status_when_waiting'])) ? $settings['set_status_when_waiting'] : 'on-hold';
                     $order->update_status( $waiting_status, __( 'Boleto PagHiper: Novo boleto gerado. Aguardando compensação.', 'woo_paghiper' ) );
                 } else {
-                    $order->add_order_note( __( 'PagHiper: Boleto gerado, aguardando compensação.' , 'woo_paghiper' ) );
+                    $order->add_order_note( __( 'PagHiper: Post de notificação recebido. Aguardando compensação do boleto.' , 'woo_paghiper' ) );
                 }
                 break;
             case "reserved" :
