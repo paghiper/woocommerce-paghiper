@@ -67,7 +67,7 @@ function woocommerce_boleto_paghiper_valid_ipn_request($return, $order_no, $sett
                 $order->payment_complete();
 
                 if(strpos('paid', $settings['set_status_when_paid']) === FALSE) {
-                    $order->update_status( $settings['set_status_when_paid'], __( 'PagHiper: Boleto Cancelado.', 'woo_paghiper' ) );
+                    $order->update_status( $settings['set_status_when_paid'], __( 'PagHiper: Boleto Pago.', 'woo_paghiper' ) );
                 } else {
                     $order->add_order_note( __( 'PagHiper: Pagamento compensado.', 'woo_paghiper' ) );
                 }
