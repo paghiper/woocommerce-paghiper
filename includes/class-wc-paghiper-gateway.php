@@ -241,14 +241,16 @@ class WC_Paghiper_Gateway extends WC_Payment_Gateway {
 		// Reduce stock levels.
 		// Support for WooCommerce 2.7.
 		if ( $this->set_status_when_waiting !== $order->status) {
-			if ( function_exists( 'wc_reduce_stock_levels' ) ) {
-				wc_reduce_stock_levels( $order_id );
-			} else {
-				$order->reduce_order_stock();
-			}
-
-			if ( 'yes' === $this->debug ) {
-				wc_paghiper_add_log( $this->log, sprintf( 'Pedido %s: Itens do pedido retirados do estoque com sucesso', $order_id ) );
+			if( !$order->get_data_store()->get_stock_reduced( $order_id ) ) {
+				if ( function_exists( 'wc_reduce_stock_levels' ) ) {
+					wc_reduce_stock_levels( $order_id );
+				} else {
+					$order->reduce_order_stock();
+				}
+	
+				if ( 'yes' === $this->debug ) {
+					wc_paghiper_add_log( $this->log, sprintf( 'Pedido %s: Itens do pedido retirados do estoque com sucesso', $order_id ) );
+				}
 			}
 
 		}
