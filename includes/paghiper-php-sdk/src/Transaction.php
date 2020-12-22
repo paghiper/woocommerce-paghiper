@@ -4,11 +4,13 @@ namespace PagHiper;
 
 class Transaction extends PagHiper {
 	
-    const CREATE_ENDPOINT = '/transaction/create/';
+    const CREATE_PIX_ENDPOINT = 'https://pix.paghiper.com/invoice/create/';
+    const CREATE_BILLET_ENDPOINT = 'https://api.paghiper.com/transaction/create/';
     const CANCEL_ENDPOINT = '/transaction/cancel/';
     const STATUS_ENDPOINT = '/transaction/status/';
-	const MULTIPLE_ENDPOINT = '/transaction/multiple_bank_slip';
-	const NOTIFICATION_ENDPOINT = '/transaction/notification/';
+    const MULTIPLE_ENDPOINT = '/transaction/multiple_bank_slip';
+    const NOTIFICATION_PIX_ENDPOINT = 'https://pix.paghiper.com/invoice/notification/';
+	const NOTIFICATION_BILLET_ENDPOINT = 'https://api.paghiper.com/transaction/notification/';
 
     /**
      * @var \PagHiper\PagHiper;
@@ -27,11 +29,14 @@ class Transaction extends PagHiper {
     */
     public function create(array $data = []) {
 
-        $data['partners_id'] = "S0CS1BY0";
+        $transaction_type       = ((array_key_exists('transaction_type', $data) && $data['transaction_type'] !== '') ? $data['transaction_type'] : 'pix');
+        $data['partners_id']    = ($transaction_type == 'pix' ? "EMIIKD1R" : "S0CS1BY0");
         $create_transaction = $this->paghiper->request(
-            self::CREATE_ENDPOINT,
+            (($transaction_type == 'pix') ? self::CREATE_PIX_ENDPOINT : self::CREATE_BILLET_ENDPOINT),
             $data
-        )['create_request'];
+        );
+
+        $transaction = (($transaction_type == 'pix') ? $create_transaction['pix_create_request'] : $create_transaction['create_request']);
 
         if ($create_transaction['result'] === 'reject') {
             throw new \Exception($create_transaction['response_message'], 400);
@@ -118,9 +123,11 @@ class Transaction extends PagHiper {
      *
      * @return array
      */
-    public function process_ipn_notification(string $notification_id, string $transaction_id) {
+    public function process_ipn_notification(string $notification_id, string $transaction_id, string $transaction_type) {
+
+        $transaction_type = ( (!is_null($transaction_type)) ? $transaction_type : 'pix');
         $ipn_request = $this->paghiper->request(
-            self::NOTIFICATION_ENDPOINT,
+            (($transaction_type == 'pix') ? self::NOTIFICATION_PIX_ENDPOINT : self::NOTIFICATION_BILLET_ENDPOINT ),
             [
                 'notification_id' => $notification_id,
                 'transaction_id' => $transaction_id
