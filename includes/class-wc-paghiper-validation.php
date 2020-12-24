@@ -12,9 +12,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
-/**
- * Extra_Checkout_Fields_For_Brazil_Formatting class.
- */
 class WC_PagHiper_Data_Formatting {
 
 	/**

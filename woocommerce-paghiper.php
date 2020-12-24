@@ -130,7 +130,8 @@ class WC_Paghiper {
 
 		include_once 'includes/wc-paghiper-functions.php';
 		include_once 'includes/wc-paghiper-notification.php';
-		include_once 'includes/class-wc-paghiper-gateway.php';
+		include_once 'includes/class-wc-paghiper-billet-gateway.php';
+		include_once 'includes/class-wc-paghiper-pix-gateway.php';
 
 	}
 
@@ -149,7 +150,8 @@ class WC_Paghiper {
 	 * @return array          Payment methods with Boleto.
 	 */
 	public function add_gateway( $methods ) {
-		$methods[] = 'WC_Paghiper_Gateway';
+		$methods[] = 'WC_Paghiper_Billet_Gateway';
+		$methods[] = 'WC_Paghiper_Pix_Gateway';
 
 		return $methods;
 	}
