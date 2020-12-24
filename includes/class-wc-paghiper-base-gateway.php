@@ -76,7 +76,7 @@ class WC_Paghiper_Base_Gateway {
 
 		$default_label 			= ($this->gateway->id == 'paghiper_pix') ? 'Ativar PIX PagHiper' : 'Ativar Boleto PagHiper';
 		$default_title 			= ($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'Boleto Bancário';
-		$default_description	= ($this->gateway->id == 'paghiper_pix') ? 'Pague rapidamente com PIX' : 'Pagar com Boleto Bancário';
+		$default_description	= ($this->gateway->id == 'paghiper_pix') ? 'Pague de maneira rápida e segura com PIX' : 'Pagar com Boleto Bancário';
 
 		$first = array(
 			'enabled' => array(
@@ -180,7 +180,7 @@ class WC_Paghiper_Base_Gateway {
 				'title'       => __( 'Log de depuração', 'woo-boleto-paghiper' ),
 				'type'        => 'checkbox',
 				'label'       => __( 'Ativa o log de erros', 'woo-boleto-paghiper' ),
-				'default'     => 'no',
+				'default'     => 'yes',
 				'description' => sprintf( __( 'Armazena eventos e erros, como chamadas API e exibições, dentro do arquivo %s Ative caso enfrente problemas.', 'woo-boleto-paghiper' ), $this->get_log_view() ),
 			),
 		);

@@ -37,15 +37,6 @@ class WC_Paghiper_Pix_Gateway extends WC_Payment_Gateway {
 	}
 
 	/**
-	 * Returns a bool that indicates if currency is amongst the supported ones.
-	 *
-	 * @return bool
-	 */
-	protected function using_supported_currency() {
-		return ( 'BRL' == get_woocommerce_currency() );
-	}
-
-	/**
 	 * Returns a value indicating the the Gateway is available or not. It's called
 	 * automatically by WooCommerce before allowing customers to use the gateway
 	 * for payment.
@@ -54,7 +45,7 @@ class WC_Paghiper_Pix_Gateway extends WC_Payment_Gateway {
 	 */
 	public function is_available() {
 		// Test if is valid for use.
-		$available = ( 'yes' == $this->get_option( 'enabled' ) ) && $this->using_supported_currency();
+		$available = ( 'yes' == $this->get_option( 'enabled' ) ) && $paghiper_gateway->using_supported_currency();
 
 		return $available;
 	}

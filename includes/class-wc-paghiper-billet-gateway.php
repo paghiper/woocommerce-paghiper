@@ -23,36 +23,17 @@ class WC_Paghiper_Billet_Gateway extends WC_Payment_Gateway {
 		$this->method_title       = __( 'PagHiper Boleto', 'woo-boleto-paghiper' );
 		$this->method_description = __( 'Ativa a emissão e recebimento de boletos via PagHiper.', 'woo-boleto-paghiper' );
 
+		require_once('class-wc-paghiper-base-gateway.php');
+		$paghiper_gateway = new WC_Paghiper_Base_Gateway($this);
+
 		// Carrega as configurações
-		$this->init_form_fields();
+		$this->form_fields = $paghiper_gateway->init_form_fields();
 		$this->init_settings();
 
-		// Define as variáveis que vamos usar e popula com os dados de configuração
-		$this->title       			= $this->get_option( 'title' );
-		$this->description 			= $this->get_option( 'description' );
-		$this->days_due_date 		= $this->get_option( 'days_due_date' );
-		$this->skip_non_workdays	= $this->get_option( 'skip_non_workdays' );
-		$this->set_status_when_waiting = $this->get_option( 'set_status_when_waiting' );
-
-		// Ativa os logs
-		$this->log = wc_paghiper_initialize_log( $this->get_option( 'debug' ) );
-
 		// Ações
-		add_action( 'woocommerce_thankyou_paghiper', array( $this, 'thankyou_page' ) );
-		add_action( 'woocommerce_email_after_order_table', array( $this, 'email_instructions' ), 10, 2 );
-		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
-
-		// Definimos o offset a ser utilizado para as operações de data
-		$this->timezone = new DateTimeZone('America/Sao_Paulo');
-	}
-
-	/**
-	 * Returns a bool that indicates if currency is amongst the supported ones.
-	 *
-	 * @return bool
-	 */
-	protected function using_supported_currency() {
-		return ( 'BRL' == get_woocommerce_currency() );
+		add_action( 'woocommerce_thankyou_paghiper', array( $paghiper_gateway, 'thankyou_page' ) );
+		add_action( 'woocommerce_email_after_order_table', array( $paghiper_gateway, 'email_instructions' ), 10, 2 );
+		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $paghiper_gateway, 'process_admin_options' ) );
 	}
 
 	/**
@@ -64,7 +45,7 @@ class WC_Paghiper_Billet_Gateway extends WC_Payment_Gateway {
 	 */
 	public function is_available() {
 		// Test if is valid for use.
-		$available = ( 'yes' == $this->get_option( 'enabled' ) ) && $this->using_supported_currency();
+		$available = ( 'yes' == $this->get_option( 'enabled' ) ) && $paghiper_gateway->using_supported_currency();
 
 		return $available;
 	}
