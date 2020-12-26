@@ -443,12 +443,15 @@ class WC_Paghiper {
 		$plugin_links = array();
 
 		if ( defined( 'WC_VERSION' ) && version_compare( WC_VERSION, '2.1', '>=' ) ) {
-			$settings_url = admin_url( 'admin.php?page=wc-settings&tab=checkout&section=wc_paghiper_gateway' );
+			$billet_settings_url = admin_url( 'admin.php?page=wc-settings&tab=checkout&section=wc_paghiper_billet_gateway' );
+			$pix_settings_url = admin_url( 'admin.php?page=wc-settings&tab=checkout&section=wc_paghiper_pix_gateway' );
 		} else {
-			$settings_url = admin_url( 'admin.php?page=woocommerce_settings&tab=payment_gateways&section=WC_Paghiper_Gateway' );
+			$billet_settings_url = admin_url( 'admin.php?page=woocommerce_settings&tab=payment_gateways&section=WC_Paghiper_Billet_Gateway' );
+			$pix_settings_url = admin_url( 'admin.php?page=woocommerce_settings&tab=payment_gateways&section=WC_Paghiper_Pix_Gateway' );
 		}
 
-		$plugin_links[] = '<a href="' . esc_url( $settings_url ) . '">' . __( 'Settings', 'woo-boleto-paghiper' ) . '</a>';
+		$plugin_links[] = '<a href="' . esc_url( $billet_settings_url ) . '">' . __( 'Opções de Boleto', 'woo-boleto-paghiper' ) . '</a>';
+		$plugin_links[] = '<a href="' . esc_url( $pix_settings_url ) . '">' . __( 'Opções de PIX', 'woo-boleto-paghiper' ) . '</a>';
 
 		return array_merge( $plugin_links, $links );
 	}
