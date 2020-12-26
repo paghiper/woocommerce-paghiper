@@ -252,10 +252,15 @@ class WC_Paghiper {
 	 * Plugin activate method.
 	 */
 	public static function activate() {
-		self::add_paghiper_endpoint();
 
+		// Migrate gateway settings
+		self::migrate_gateway_settings();
+
+		// Add our API endpoint for notifications and transactions
+		self::add_paghiper_endpoint();
 		flush_rewrite_rules();
 
+		// Make sure we have our own dir at /wp-content/uploads so we can write our PDFs
 		$uploads = wp_upload_dir();
 		$upload_dir = $uploads['basedir'];
 		$paghiper_dir = $upload_dir . '/paghiper';
@@ -273,11 +278,66 @@ class WC_Paghiper {
 	}
 
 	/**
+	 * Migrate settings from old versions
+	 */
+	public function migrate_gateway_settings() {
+
+		$is_migrated = FALSE;
+
+		// TODO: Check if there are old credentials that need to be migrated
+		$legacy_gateway_settings = get_option( 'woocommerce_paghiper_settings' );
+		if(!is_array($legacy_gateway_settings) || empty($legacy_gateway_settings)) {
+			$legacy_gateway_settings = NULL;
+		}
+
+		// Maybe migrate old gateway settings for the new billet gateway
+		$billet_gateway_settings = get_option( 'woocommerce_paghiper_billet_settings' );
+		$billet_gateway_options = array('enabled', 'title', 'description', 'api_key', 'token', 'paghiper_time', 'debug', 'days_due_date', 'skip_non_workdays', 'open_after_day_due', 'replenish_stock', 'fixed_description', 'set_status_when_waiting', 'set_status_when_paid', 'set_status_when_cancelled');
+		
+		if(!$billet_gateway_settings && $legacy_gateway_settings) {
+			$billet_gateway_settings = [];
+
+			foreach($billet_gateway_options as $billet_gateway_option) {
+				$billet_gateway_settings[$billet_gateway_option] = $legacy_gateway_settings[$billet_gateway_option];
+			}
+
+			add_option( 'woocommerce_paghiper_billet_settings', $billet_gateway_settings, '', 'yes' );
+			$is_migrated = TRUE;
+		}
+	
+
+		// Maybe migrate old gateway settings for the new PIX gateway
+		$pix_gateway_settings = get_option( 'woocommerce_paghiper_pix_settings' );
+
+		if(!$pix_gateway_settings && $legacy_gateway_settings) {
+			$pix_gateway_options = $billet_gateway_options;
+			$pix_gateway_settings = [];
+
+			foreach($pix_gateway_options as $pix_gateway_option) {
+				$pix_gateway_settings[$pix_gateway_option] = $legacy_gateway_settings[$pix_gateway_option];
+			}
+
+			unset($pix_gateway_settings['open_after_day_due']);
+			$pix_gateway_settings['title'] = 'PIX';
+			$pix_gateway_settings['description'] = 'Pague de maneira rápida e prática usando PIX';
+
+			add_option( 'woocommerce_paghiper_pix_settings', $pix_gateway_settings, '', 'yes' );
+			$is_migrated = TRUE;
+		}
+
+		if($is_migrated) {
+			set_transient( 'woo_paghiper_notice_2_1', true, (5 * 24 * 60 * 60) );
+		}
+
+		return $is_migrated;
+	}
+
+	/**
 	 * Generate billet once a new order is placed.
 	 * 
 	 * @param	string $order_id
 	 * 
-	 * @return WC_PagHiper_Boleto
+	 * @return WC_PagHiper_Transaction
 	 */
 	public function generate_billet( $order_id ) {
 		return self::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
