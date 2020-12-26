@@ -1,1 +1,14 @@
-jQuery( document ).ready( function( $ ) {});
+jQuery(document).ready( function($){
+	
+	$( document ).on( 'click', '.paghiper-dismiss-notice .notice-dismiss', function() {
+		let noticeId = $(this).parent().data('notice-id');
+		var data = {
+			action: 'paghiper_dismiss_notice',
+			notice: noticeId
+		};
+		
+		$.post( notice_params.ajaxurl, data, function() {
+		});
+	});
+
+});

@@ -63,7 +63,10 @@ class WC_Paghiper {
 
 			add_filter( 'woocommerce_payment_gateways', array( $this, 'add_gateway' ) );
 			add_action( 'init', array( __CLASS__, 'add_paghiper_endpoint' ) );
-			add_action( 'admin_init', array( __CLASS__, 'check_paghiper_credentials' ) );
+			add_action( 'admin_notices', array( __CLASS__, 'check_paghiper_credentials' ) );
+			add_action( 'admin_init', array( __CLASS__, 'print_notices' ) );
+			add_action( 'wp_ajax_paghiper_dismiss_notice', array( __CLASS__, 'dismiss_notices') );
+
 			add_filter( 'template_include', array( $this, 'paghiper_template' ), 9999 );
 			add_action( 'woocommerce_view_order', array( $this, 'pending_payment_message' ) );
 			add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( $this, 'plugin_action_links' ) );
@@ -197,6 +200,52 @@ class WC_Paghiper {
 			}
 		}
 
+	}
+
+	/**
+	 * 
+	 */
+	public static function print_notices() {
+
+		$is_updated = get_transient( 'woo_paghiper_notice_2_1' );
+
+		if($is_updated) {
+
+			// Enqueue scripts
+			add_action( 'admin_enqueue_scripts', function() {
+				wp_register_script( 'paghiper_admin_js', wc_paghiper_assets_url() . 'js/admin.min.js','','1.0', false );
+				
+				wp_localize_script( 'paghiper_admin_js', 'notice_params', array(
+					'ajaxurl' => get_admin_url() . 'admin-ajax.php', 
+				));
+				
+				wp_enqueue_script(  'paghiper_admin_js' );
+			} );
+
+			// Print notices
+			add_action( 'admin_notices', function() {
+				echo sprintf('<div class="error notice paghiper-dismiss-notice is-dismissible" data-notice-id="notice_2_1"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __('PIX PagHiper'), __('Você ja pode receber pagamentos por PIX! Configure aqui:'), admin_url('admin.php?page=wc-settings&tab=checkout&section=wc_paghiper_pix_gateway'), __('Configurações do PIX PagHiper'));
+			});
+			
+		}		
+
+	}
+
+	/**
+	 * 
+	 */
+	public static function dismiss_notices() {
+		if(isset($_POST) && array_key_exists('notice', $_POST)) {
+
+			$notice_name = str_replace('notice_', '', sanitize_text_field($_POST['notice']));
+			$dismissal = delete_transient("woo_paghiper_notice_{$notice_name}");
+
+			if(!$dismissal) {
+				return false;
+			}
+
+		}
+		return true;
 	}
 
 	/**
