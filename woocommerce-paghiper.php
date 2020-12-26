@@ -3,7 +3,7 @@
  * Plugin Name: WooCommerce Boleto PagHiper
  * Plugin URI: https://github.com/paghiper/woocommerce-paghiper/
  * Description: Ofereça a seus clientes pagamento boleto bancário com a PagHiper. Fácil, prático e rapido!
- * Author: PagHiper, Henrique Cruz
+ * Author: PagHiper Pagamentos
  * Author URI: https://www.paghiper.com
  * Version: 2.0.5
  * Tested up to: 5.5.3
