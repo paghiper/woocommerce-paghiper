@@ -82,7 +82,8 @@ function woocommerce_boleto_paghiper_valid_ipn_request($return, $order_no, $sett
 
 function woocommerce_boleto_paghiper_check_ipn_response() {
 
-    $settings = get_option( 'woocommerce_paghiper_settings' );
+    $is_pix = (isset($_GET) && array_key_exists('pix', $_GET)) ? true : false;
+    $settings = ($is_pix) ? get_option( 'woocommerce_paghiper_pix_settings' ) : get_option( 'woocommerce_paghiper_billet_settings' );
     $log = wc_paghiper_initialize_log( $settings[ 'debug' ] );
 
     $token 			= $settings['token'];

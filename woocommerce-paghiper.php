@@ -70,7 +70,7 @@ class WC_Paghiper {
 			add_filter( 'template_include', array( $this, 'paghiper_template' ), 9999 );
 			add_action( 'woocommerce_view_order', array( $this, 'pending_payment_message' ) );
 			add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( $this, 'plugin_action_links' ) );
-			add_filter( 'woocommerce_new_order', array($this, 'generate_billet') );
+			add_filter( 'woocommerce_new_order', array($this, 'generate_transaction') );
 			add_filter( 'woocommerce_email_attachments', array($this, 'attach_billet'), 10, 3 );
 			
 
@@ -339,8 +339,8 @@ class WC_Paghiper {
 	 * 
 	 * @return WC_PagHiper_Transaction
 	 */
-	public function generate_billet( $order_id ) {
-		return self::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
+	public function generate_transaction( $order_id ) {
+		return self::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
 	}
 
 	/**
@@ -356,8 +356,7 @@ class WC_Paghiper {
 			wc_paghiper_add_log( $this->log, sprintf( 'Enviando mail: %s', $email_id ) );
 		}
 
-		if ( apply_filters('woo_paghiper_pending_status', 'on-hold', $order) === $order->status && 'paghiper' == $order->payment_method ) {
-		//if( in_array($email_id, array('new_order', 'customer_invoice')) && 'paghiper' == $order->payment_method ){
+		if ( apply_filters('woo_paghiper_pending_status', 'on-hold', $order) === $order->status && in_array($order->payment_method, ['paghiper', 'paghiper_billet']) ) {
 
 			try {
 
@@ -473,7 +472,7 @@ class WC_Paghiper {
 
 			require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
 	
-			$paghiperBoleto = new WC_PagHiper_Boleto( $order_id );
+			$paghiperBoleto = new WC_PagHiper_Transaction( $order_id );
 			$paghiperBoleto->printBarCode(true);
 
 			$html = '<div class="woocommerce-info">';

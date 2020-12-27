@@ -23,6 +23,7 @@ class WC_Paghiper_Pix_Gateway extends WC_Payment_Gateway {
 		$this->method_title       = __( 'PagHiper PIX', 'woo-boleto-paghiper' );
 		$this->method_description = __( 'Receba pagamentos por PIX usando PagHiper.', 'woo-boleto-paghiper' );
 
+		// Carrega as configurações
 		require_once('class-wc-paghiper-base-gateway.php');
 		$paghiper_gateway = new WC_Paghiper_Base_Gateway($this);
 
@@ -31,9 +32,7 @@ class WC_Paghiper_Pix_Gateway extends WC_Payment_Gateway {
 		$this->init_settings();
 
 		// Ações
-		add_action( 'woocommerce_thankyou_paghiper', array( $paghiper_gateway, 'thankyou_page' ) );
-		add_action( 'woocommerce_email_after_order_table', array( $paghiper_gateway, 'email_instructions' ), 10, 2 );
-		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $paghiper_gateway, 'process_admin_options' ) );
+		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
 	}
 
 	/**

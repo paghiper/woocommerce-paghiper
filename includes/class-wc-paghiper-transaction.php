@@ -5,11 +5,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use PagHiper\PagHiper;
 
-class WC_PagHiper_Boleto {
+class WC_PagHiper_Transaction {
 
 	private $order;
 	private $order_id;
 	private $order_data;
+	private $gateway_id;
 	private $gateway_settings;
 	private $invalid_reason;
 	private $past_due_days;
@@ -20,17 +21,20 @@ class WC_PagHiper_Boleto {
 
 		global $wp_query;
 
-		// Pega a configuração atual do plug-in.
-		$this->gateway_settings = get_option( 'woocommerce_paghiper_settings' );
-
-		// Inicializa logs, caso ativados
-		$this->log = wc_paghiper_initialize_log( $this->gateway_settings[ 'debug' ] );
-
 		// Pega a referência do pedido
 		$this->order_id = $order_id;
 
 		// Pegamos o pedido completo
 		$this->order = new WC_Order( $order_id );
+
+		// Pega a configuração atual do plug-in.
+		$this->gateway_name = $order->get_payment_method();
+		print_r($this->gateway_name);
+		exit();
+		$this->gateway_settings = get_option( 'woocommerce_paghiper_settings' );
+
+		// Inicializa logs, caso ativados
+		$this->log = wc_paghiper_initialize_log( $this->gateway_settings[ 'debug' ] );
 
 		// Pegamos a meta do pedido
 		if(function_exists('update_meta_cache'))

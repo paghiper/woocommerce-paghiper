@@ -35,7 +35,7 @@ if ( isset( $boleto_code ) ) {
 
 		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
 
-		$paghiperBoleto = new WC_PagHiper_Boleto( $order_id );
+		$paghiperBoleto = new WC_PagHiper_Transaction( $order_id );
 		$paghiperBoleto->has_issued_valid_billet();
 
 		$order = $paghiperBoleto->_get_order();

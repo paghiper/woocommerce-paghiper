@@ -19,6 +19,10 @@ class WC_Paghiper_Base_Gateway {
 		// Ativa os logs
 		$this->log = wc_paghiper_initialize_log( $this->gateway->get_option( 'debug' ) );
 
+		// Ações
+		add_action( 'woocommerce_thankyou_paghiper', array( $this, 'thankyou_page' ) );
+		add_action( 'woocommerce_email_after_order_table', array( $this, 'email_instructions' ), 10, 2 );
+
 		// Definimos o offset a ser utilizado para as operações de data
 		$this->timezone = new DateTimeZone('America/Sao_Paulo');
  
@@ -80,7 +84,7 @@ class WC_Paghiper_Base_Gateway {
 
 		$first = array(
 			'enabled' => array(
-				'title'   => __( $enabled_label, 'woo-boleto-paghiper' ),
+				'title'   => __( $default_label, 'woo-boleto-paghiper' ),
 				'type'    => 'checkbox',
 				'label'   => __( 'Ativar/Desativar', 'woo-boleto-paghiper' ),
 				'default' => 'yes'
@@ -90,7 +94,7 @@ class WC_Paghiper_Base_Gateway {
 				'type'        => 'text',
 				'description' => __( 'Esse campo controla o título da seção que o usuário vê durante o checkout.', 'woo-boleto-paghiper' ),
 				'desc_tip'    => true,
-				'default'     => __( $enabled_title, 'woo-boleto-paghiper' )
+				'default'     => __( $default_title, 'woo-boleto-paghiper' )
 			),
 			'description' => array(
 				'title'       => __( 'Descrição', 'woo-boleto-paghiper' ),
@@ -100,7 +104,7 @@ class WC_Paghiper_Base_Gateway {
 				'default'     => __( $default_description, 'woo-boleto-paghiper' )
 			),
 			'paghiper_details' => array(
-				'title' => __( 'Configurações do PagHiper Boleto Bancário', 'woo-boleto-paghiper' ),
+				'title' => __( 'Configurações do PagHiper '.(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'Boleto bancário'), 'woo-boleto-paghiper' ),
 				'type'  => 'title'
 			),
 			'api_key' => array(
@@ -156,21 +160,21 @@ class WC_Paghiper_Base_Gateway {
 				'default' => 'yes'
 			),
 			'set_status_when_waiting' => array(
-				'title'	  => __('Mudar status após emissão do boleto para:', 'woo-boleto-paghiper'),
+				'title'	  => __('Mudar status após emissão do '.(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto').' para:', 'woo-boleto-paghiper'),
 				'type'	  => 'select',
 				'options' => $this->get_available_status(),
 				'default'  => $this->get_available_status('on-hold'),
 
 			),
 			'set_status_when_paid' => array(
-				'title'	  => __('Mudar status após pagamento do boleto para:', 'woo-boleto-paghiper'),
+				'title'	  => __('Mudar status após pagamento do '.(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto').' para:', 'woo-boleto-paghiper'),
 				'type'	  => 'select',
 				'options' => $this->get_available_status(),
 				'default'  => $this->get_available_status('processing'),
 
 			),
 			'set_status_when_cancelled' => array(
-				'title'	  => __('Mudar status após cancelamento do boleto para:', 'woo-boleto-paghiper'),
+				'title'	  => __('Mudar status após cancelamento do '.(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto').' para:', 'woo-boleto-paghiper'),
 				'type'	  => 'select',
 				'options' => $this->get_available_status(),
 				'default'  => $this->get_available_status('cancelled'),
@@ -260,7 +264,7 @@ class WC_Paghiper_Base_Gateway {
 		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
 
 
-		$paghiperBoleto = new WC_PagHiper_Boleto( $order_id );
+		$paghiperBoleto = new WC_PagHiper_Transaction( $order_id );
 		$billet = $paghiperBoleto->create_billet();
 
 		if($billet) {
@@ -292,7 +296,7 @@ class WC_Paghiper_Base_Gateway {
 
 		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
 
-		$paghiperBoleto = new WC_PagHiper_Boleto( $order_id );
+		$paghiperBoleto = new WC_PagHiper_Transaction( $order_id );
 		$paghiperBoleto->printBarCode(true);
 
 		$html = '<div class="woocommerce-message">';
@@ -354,7 +358,7 @@ class WC_Paghiper_Base_Gateway {
 		}
 
 		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
-		$paghiperBoleto = new WC_PagHiper_Boleto( $order->id );
+		$paghiperBoleto = new WC_PagHiper_Transaction( $order->id );
 
 		$html = '<div class="woo-paghiper-boleto-details">';
 		$html .= '<h2>' . __( 'Pagamento', 'woo-boleto-paghiper' ) . '</h2>';
