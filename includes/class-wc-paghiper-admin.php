@@ -55,7 +55,7 @@ class WC_Paghiper_Admin {
 		// Use nonce for verification.
 		wp_nonce_field( basename( __FILE__ ), 'woo_paghiper_metabox_nonce' );
 
-		if ( 'paghiper' == $order->payment_method ) {
+		if ( in_array($order->payment_method, ['paghiper', 'paghiper_pix', 'paghiper_billet']) ) {
 			$paghiper_data = get_post_meta( $post->ID, 'wc_paghiper_data', true );
 
 			// Compatibility with pre v2.1 keys

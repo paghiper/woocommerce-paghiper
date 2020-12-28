@@ -28,8 +28,8 @@ class WC_PagHiper_Transaction {
 		$this->order = new WC_Order( $order_id );
 
 		// Pega a configuração atual do plug-in.
-		$this->gateway_name = $this->order->get_payment_method();
-		$this->gateway_settings = ($this->gateway_name == 'paghiper_pix') ? get_option( 'woocommerce_paghiper_pix_settings' ) : get_option( 'woocommerce_paghiper_billet_settings' );
+		$this->gateway_id = $this->order->get_payment_method();
+		$this->gateway_settings = ($this->gateway_id == 'paghiper_pix') ? get_option( 'woocommerce_paghiper_pix_settings' ) : get_option( 'woocommerce_paghiper_billet_settings' );
 
 		// Inicializa logs, caso ativados
 		$this->log = wc_paghiper_initialize_log( $this->gateway_settings[ 'debug' ] );
@@ -62,7 +62,7 @@ class WC_PagHiper_Transaction {
 		$new_request = FALSE;
 
 		// Novo request caso o método de pagamento tenha mudado
-		if( isset($this->order_data['transaction_type']) && ($this->order_data['transaction_type'] == 'pix' && $this->gateway_name !== 'paghiper_pix') ) {
+		if( isset($this->order_data['transaction_type']) && ($this->order_data['transaction_type'] == 'pix' && $this->gateway_id !== 'paghiper_pix') ) {
 
 			$new_request = TRUE;
 
@@ -340,8 +340,8 @@ class WC_PagHiper_Transaction {
 		$data['early_payment_discounts_cents'] 	= $this->gateway_settings['early_payment_discounts_cents'];
 		$data['early_payment_discounts_days'] 	= $this->gateway_settings['early_payment_discounts_days'];
 
-		$data['notification_url']				= get_site_url(null, $this->base_url.'wc-api/WC_Gateway_Paghiper/?gateway=').(($this->gateway_name == 'paghiper_pix') ? 'pix' : 'billet');
-		$data['transaction_type']				= ($this->gateway_name == 'paghiper_pix') ? 'pix' : 'billet';
+		$data['notification_url']				= get_site_url(null, $this->base_url.'wc-api/WC_Gateway_Paghiper/?gateway=').(($this->gateway_id == 'paghiper_pix') ? 'pix' : 'billet');
+		$data['transaction_type']				= ($this->gateway_id == 'paghiper_pix') ? 'pix' : 'billet';
 
 		$data = apply_filters( 'paghiper_billet_data', $data, $this->order_id );
 
@@ -382,7 +382,7 @@ class WC_PagHiper_Transaction {
 			);
 
 
-			if($this->gateway_name == 'paghiper_pix') {
+			if($this->gateway_id == 'paghiper_pix') {
 				$transaction = array(
 					'qrcode_base64'		        => $response['pix_code']['qrcode_base64'],
 					'qrcode_image_url'	        => $response['pix_code']['qrcode_image_url'],
@@ -435,7 +435,7 @@ class WC_PagHiper_Transaction {
 			$billet_pdf_file = $upload_dir.'/'.$transaction_id.'.pdf';
 
 			// Don't try downloading PDF files for PIX transacitons
-			if(in_array($this->gateway_name, ['paghiper_billet', 'paghiper']) && !file_exists($billet_pdf_file)) {
+			if(in_array($this->gateway_id, ['paghiper_billet', 'paghiper']) && !file_exists($billet_pdf_file)) {
 
 				global $wp_filesystem;
 				require_once ABSPATH . 'wp-admin/includes/file.php'; // for get_filesystem_method(), request_filesystem_credentials()
@@ -509,17 +509,43 @@ class WC_PagHiper_Transaction {
 	public function print_transaction_barcode($print = FALSE) {
 
 		$digitable_line = $this->_get_digitable_line();
-		$barcode_number = $this->_get_barcode();
+		$due_date = (DateTime::createFromFormat('Y-m-d', $this->order_data['order_transaction_due_date']))->format('d/m/Y');
 
 		$html = '<div class="woo_paghiper_digitable_line" style="margin-bottom: 40px;">';
 
-		$html .= "<p style='width: 100%; text-align: center;'>Pague seu boleto usando o código de barras ou a linha digitável, se preferir:</p>";
+		if($this->gateway_id !== 'paghiper_pix') :
+			$barcode_number = $this->_get_barcode();
+			$barcode_url = plugins_url( "assets/php/barcode.php?codigo={$barcode_number}", plugin_dir_path( __FILE__ ) );
+			$html .= "<p style='width: 100%; text-align: center;'>Pague seu boleto usando o código de barras ou a linha digitável, se preferir:</p>";
+			$html .= ($barcode_number) ? "<img src='{$barcode_url}' title='Código de barras do boleto deste pedido.' style='max-width: 100%;'>" : '';
+			$html .= ($print) ? "<strong style='font-size: 18px;'>" : "";
+			$html .= "<p style='width: 100%; text-align: center;'>{$digitable_line}</p>";
+			$html .= ($print) ? "</strong>" : "";
+		else :
 
-		$barcode_url = plugins_url( "assets/php/barcode.php?codigo={$barcode_number}", plugin_dir_path( __FILE__ ) );
-		$html .= ($barcode_number) ? "<img src='{$barcode_url}' title='Código de barras do boleto deste pedido.' style='max-width: 100%;'>" : '';
-		$html .= ($print) ? "<strong style='font-size: 18px;'>" : "";
-		$html .= "<p style='width: 100%; text-align: center;'>{$digitable_line}</p>";
-		$html .= ($print) ? "</strong>" : "";
+			wp_register_script( 'paghiper_frontend_js', wc_paghiper_assets_url() . 'js/frontend.min.js','','1.0', false );
+			wp_register_style( 'paghiper_frontend_css', wc_paghiper_assets_url() . 'css/frontend.min.css','','1.0', false );
+			wp_enqueue_script(  'paghiper_frontend_js' );
+			wp_enqueue_style( 'paghiper_frontend_css' );
+
+			$barcode_url = $this->_get_barcode();
+			$html .= "<p style='width: 100%; text-align: center;'>Efetue o pagamento PIX usando o <strong>código de barras</strong> ou usando <strong>PIX copia e cola</strong>, se preferir:</p>";
+			$html .= ($barcode_url) ? "<img src='{$barcode_url}' title='Código de barras do boleto deste pedido.' style='max-width: 100%; margin: 0 auto;'>" : '';
+			$html .= "<p style='width: 100%; text-align: center;'>Data de vencimento: <strong>{$due_date}</strong></p>";
+
+			if($print) {
+				$html .= '<ul>
+					<li><span>Abra o app do seu banco ou instituição financeira e <strong>entre no ambiente Pix</strong>.</span></li>
+					<li><span>Escolha a opção <strong>Pagar com QR Code</strong> e escanele o código ao lado.</span></li>
+					<li><span>Confirme as informações e finalize o pagamento.</span></li>
+				</ul>';
+				$html .= sprintf('<div class="paghiper-pix-code" onclick="copyPaghiperEmv()"><p>Pagar com PIX copia e cola - <button>Clique para copiar</button></p><div class="textarea-container"><textarea readonly rows="3">%s</textarea></div></div>', $digitable_line);
+			} else {
+				$html .= "<p style='width: 100%; text-align: center;'>Seu código PIX: {$digitable_line}</p>";
+			}
+
+			$html .= "<p style='width: 100%; text-align: center; margin-top: 20px;'>Após o pagamento, podemos levar alguns segundos para confirmar o seu pagamento.<br>Você será avisado assim que isso ocorrer!</p>";
+		endif;
 
 		$html .= '</div>';
 
@@ -544,11 +570,14 @@ class WC_PagHiper_Transaction {
 	}
 
 	public function _get_digitable_line() {
-		return $this->order_data['digitable_line'];
+		return ($this->gateway_id == 'paghiper_pix') ? $this->order_data['emv'] : $this->order_data['digitable_line'];
 	}
 
 	public function _get_barcode() {
-		return (array_key_exists('barcode', $this->order_data)) ? $this->order_data['barcode'] : NULL;
+		return (
+			($this->gateway_id == 'paghiper_pix') ? $this->order_data['qrcode_image_url'] :
+				((array_key_exists('barcode', $this->order_data)) ? $this->order_data['barcode'] : NULL)
+		);
 	}
 
 	public function _get_past_due_days() {

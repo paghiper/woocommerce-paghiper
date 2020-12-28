@@ -283,34 +283,6 @@ class WC_Paghiper_Base_Gateway {
 	}
 
 	/**
-	 * Output for the order received page.
-	 *
-	 * @return string Thank You message.
-	 */
-	public function thankyou_page($order_id) {
-
-		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
-
-		$paghiperTransaction = new WC_PagHiper_Transaction( $order_id );
-		$paghiperTransaction->printBarCode(true);
-
-		$html = '<div class="woocommerce-message">';
-		$html .= sprintf( '<a class="button button-primary wc-forward" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $_GET['key'] ) ), __( 'Pagar o Boleto', 'woo-boleto-paghiper' ) );
-
-		$message = sprintf( __( '%sAtenção!%s Você NÃO vai receber o boleto pelos Correios.', 'woo-boleto-paghiper' ), '<strong>', '</strong>' ) . '<br />';
-		$message .= __( 'Clique no link abaixo e pague o boleto pelo seu aplicativo de Internet Banking .', 'woo-boleto-paghiper' ) . '<br />';
-		$message .= __( 'Se preferir, você pode imprimir e pagar o boleto em qualquer agência bancária ou lotérica.', 'woo-boleto-paghiper' ) . '<br />';
-
-		$html .= apply_filters( 'woo_paghiper_thankyou_page_message', $message );
-
-		$html .= '<strong style="display: block; margin-top: 15px; font-size: 0.8em">' . sprintf( __( 'Data de vencimento do Boleto: %s.', 'woo-boleto-paghiper' ), date( 'd/m/Y', time() + ( absint( $this->days_due_date ) * 86400 ) ) ) . '</strong>';
-
-		$html .= '</div>';
-
-		echo $html;
-	}
-
-	/**
 	 * Generate ticket data.
 	 *
 	 * @param  object $order Order object.
@@ -341,6 +313,45 @@ class WC_Paghiper_Base_Gateway {
 	}
 
 	/**
+	 * Output for the order received page.
+	 *
+	 * @return string Thank You message.
+	 */
+	public function show_payment_instructions($order) {
+
+		$order 		= (is_numeric($order)) ? wc_get_order($order) : $order;
+		$order_id 	= $order->get_id();
+
+		if($this->gateway->id !== 'paghiper_pix' && $order->get_payment_method() !== $this->gateway->id) {
+			return;
+		}
+
+		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
+
+		$paghiperTransaction = new WC_PagHiper_Transaction( $order_id );
+		$paghiperTransaction->printBarCode(true);
+
+		if($order->get_payment_method() !== 'paghiper_pix') {
+
+			$html = '<div class="woocommerce-message">';
+			$html .= sprintf( '<a class="button button-primary wc-forward" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $_GET['key'] ) ), __( 'Pagar o Boleto', 'woo-boleto-paghiper' ) );
+	
+			$message = sprintf( __( '%sAtenção!%s Você NÃO vai receber o boleto pelos Correios.', 'woo-boleto-paghiper' ), '<strong>', '</strong>' ) . '<br />';
+			$message .= __( 'Clique no link abaixo e pague o boleto pelo seu aplicativo de Internet Banking .', 'woo-boleto-paghiper' ) . '<br />';
+			$message .= __( 'Se preferir, você pode imprimir e pagar o boleto em qualquer agência bancária ou lotérica.', 'woo-boleto-paghiper' ) . '<br />';
+	
+			$html .= apply_filters( 'woo_paghiper_thankyou_page_message', $message );
+	
+			$html .= '<strong style="display: block; margin-top: 15px; font-size: 0.8em">' . sprintf( __( 'Data de vencimento do Boleto: %s.', 'woo-boleto-paghiper' ), date( 'd/m/Y', time() + ( absint( $this->days_due_date ) * 86400 ) ) ) . '</strong>';
+	
+			$html .= '</div>';
+	
+			echo $html;
+
+		}
+	}
+
+	/**
 	 * Add content to the WC emails.
 	 *
 	 * @param  object $order         Order object.
@@ -349,31 +360,39 @@ class WC_Paghiper_Base_Gateway {
 	 * @return string                Billet instructions.
 	 */
 	function email_instructions( $order, $sent_to_admin ) {
-		if ( $sent_to_admin || apply_filters('woo_paghiper_pending_status', $this->set_status_when_waiting, $order) !== $order->status || 'paghiper' !== $order->payment_method ) {
+
+		$order_status = (strpos($order->get_status(), 'wc-') === false) ? 'wc-'.$order->get_status() : $order->get_status();
+		if ( $sent_to_admin || apply_filters('woo_paghiper_pending_status', $this->set_status_when_waiting, $order) !== $order_status || strpos($order->payment_method, 'paghiper') === false || ($order->payment_method == 'paghiper_pix' && $order->get_payment_method() !== $this->gateway->id)) {
 			return;
 		}
 
-		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
+		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
 		$paghiperTransaction = new WC_PagHiper_Transaction( $order->id );
 
-		$html = '<div class="woo-paghiper-boleto-details">';
+		$html = '<div class="woo-paghiper-boleto-details" style="text-align: center;">';
 		$html .= '<h2>' . __( 'Pagamento', 'woo-boleto-paghiper' ) . '</h2>';
 
 		$html .= '<p class="order_details">';
 
 		$message = $paghiperTransaction->printBarCode();
 
-		$message .= sprintf( __( '%sAtenção!%s Você NÃO vai receber o boleto pelos Correios.', 'woo-boleto-paghiper' ), '<strong>', '</strong>' ) . '<br />';
-		$message .= __( 'Se preferir, você pode imprimir e pagar o boleto em qualquer agência bancária ou lotérica.', 'woo-boleto-paghiper' ) . '<br />';
+		if($order->get_payment_method() !== 'paghiper_pix') {
 
-		$html .= apply_filters( 'woo_paghiper_email_instructions', $message );
+			$message .= sprintf( __( '%sAtenção!%s Você NÃO vai receber o boleto pelos Correios.', 'woo-boleto-paghiper' ), '<strong>', '</strong>' ) . '<br />';
+			$message .= __( 'Se preferir, você pode imprimir e pagar o boleto em qualquer agência bancária ou lotérica.', 'woo-boleto-paghiper' ) . '<br />';
+	
+			$html .= apply_filters( 'woo_paghiper_email_instructions', $message );
+	
+			$html .= '<br />' . sprintf( '<a class="button alt" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Veja o boleto completo &rarr;', 'woo-boleto-paghiper' ) ) . '<br />';
+	
+			$html .= '<strong style="font-size: 0.8em">' . sprintf( __( 'Data de Vencimento: %s.', 'woo-boleto-paghiper' ), date( 'd/m/Y', time() + ( absint( $this->days_due_date ) * 86400 ) ) ) . '</strong>';
+	
+			$html .= '</p>';
+			$html .= '</div>';
 
-		$html .= '<br />' . sprintf( '<a class="button alt" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Veja o boleto completo &rarr;', 'woo-boleto-paghiper' ) ) . '<br />';
-
-		$html .= '<strong style="font-size: 0.8em">' . sprintf( __( 'Data de Vencimento: %s.', 'woo-boleto-paghiper' ), date( 'd/m/Y', time() + ( absint( $this->days_due_date ) * 86400 ) ) ) . '</strong>';
-
-		$html .= '</p>';
-		$html .= '</div>';
+		} else {
+			$html .= apply_filters( 'woo_paghiper_email_instructions', $message );
+		}
 
 		echo $html;
 	}
