@@ -44,6 +44,22 @@
 	}
 }
 
+.pix-container {
+	display: flex;
+	flex-direction: row;
+	margin: 2em 0 4em;
+
+	.qr-code {
+		flex-grow: 1;
+	}
+
+	.instructions {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+	}
+}
+
 .woo_paghiper_digitable_line {
 
 	text-align: center;
@@ -53,6 +69,7 @@
 		list-style-type: none !important;
 		padding: 2em 0 !important;
 		margin: 0px !important;
+		max-width: 400px;
 
 		li {
 			margin-bottom: 1.5em !important;

@@ -529,14 +529,17 @@ class WC_PagHiper_Transaction {
 			$html .= "<p style='width: 100%; text-align: center;'>Efetue o pagamento PIX usando o <strong>código de barras</strong> ou usando <strong>PIX copia e cola</strong>, se preferir:</p>";
 
 			if($print) {
-				$html .= '<ul>
+				$html .= '<div class="pix-container">';
+				$html .= ($barcode_url) ? "<div class='qr-code'><img src='{$barcode_url}' title='Código de barras do PIX deste pedido.'><br>Data de vencimento: <strong>{$due_date}</strong></div>" : '';
+				$html .= '<div class="instructions"><ul>
 					<li><span>Abra o app do seu banco ou instituição financeira e <strong>entre no ambiente Pix</strong>.</span></li>
 					<li><span>Escolha a opção <strong>Pagar com QR Code</strong> e escanele o código ao lado.</span></li>
 					<li><span>Confirme as informações e finalize o pagamento.</span></li>
-				</ul>';
+				</ul></div>';
+				$html .= '</div>';
 				$html .= sprintf('<div class="paghiper-pix-code" onclick="copyPaghiperEmv()"><p>Pagar com PIX copia e cola - <button>Clique para copiar</button></p><div class="textarea-container"><textarea readonly rows="3">%s</textarea></div></div>', $digitable_line);
 			} else {
-				$html .= ($barcode_url) ? "<img src='{$barcode_url}' title='Código de barras do boleto deste pedido.' style='max-width: 100%; margin: 0 auto;'>" : '';
+				$html .= ($barcode_url) ? "<img src='{$barcode_url}' title='Código de barras do PIX deste pedido.' style='max-width: 100%; margin: 0 auto;'>" : '';
 				$html .= "<p style='width: 100%; text-align: center;'>Data de vencimento: <strong>{$due_date}</strong></p>";
 				$html .= "<p style='width: 100%; text-align: center;'>Seu código PIX: {$digitable_line}</p>";
 			}
