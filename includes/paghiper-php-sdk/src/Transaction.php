@@ -38,11 +38,11 @@ class Transaction extends PagHiper {
 
         $transaction = (($transaction_type == 'pix') ? $create_transaction['pix_create_request'] : $create_transaction['create_request']);
 
-        if ($create_transaction['result'] === 'reject') {
-            throw new \Exception($create_transaction['response_message'], 400);
+        if ($transaction['result'] === 'reject') {
+            throw new \Exception($transaction['response_message'], 400);
         }
 
-        return $create_transaction;
+        return $transaction;
     }
 
     /**
