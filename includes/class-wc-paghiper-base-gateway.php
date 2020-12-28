@@ -18,6 +18,7 @@ class WC_Paghiper_Base_Gateway {
 		$this->log = wc_paghiper_initialize_log( $this->gateway->get_option( 'debug' ) );
 
 		// Ações
+		add_action('wp_enqueue_scripts', array( $this, 'load_paghiper_assets'));
 
 		// Definimos o offset a ser utilizado para as operações de data
 		$this->timezone = new DateTimeZone('America/Sao_Paulo');
@@ -44,7 +45,7 @@ class WC_Paghiper_Base_Gateway {
      */ 
     public function currency_not_supported_message() { 
 		echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __(($this->gateway->id == 'paghiper_pix') ? 'PIX Paghiper' : 'Boleto Paghiper'), __('A moeda-padrão do seu Woocommerce não é o R$. Ajuste suas configurações aqui:'), admin_url('admin.php?page=wc-settings&tab=general'), __('Configurações de moeda'));
-    }
+	}
 
 
 	/**
@@ -395,5 +396,19 @@ class WC_Paghiper_Base_Gateway {
 		}
 
 		echo $html;
+	}
+
+	/**
+	 * Enqueue stylesheets and scripts for the front-end
+	 */
+	function load_paghiper_assets() {
+
+		wp_register_script( 'paghiper_frontend_js', wc_paghiper_assets_url() . 'js/frontend.min.js','','1.0', false );
+		wp_register_style( 'paghiper_frontend_css', wc_paghiper_assets_url() . 'css/frontend.min.css','','1.0', false );
+
+		if(!is_admin()) {
+			wp_enqueue_script(  'paghiper_frontend_js' );
+			wp_enqueue_style( 'paghiper_frontend_css' );
+		}
 	}
 }

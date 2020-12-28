@@ -514,6 +514,7 @@ class WC_PagHiper_Transaction {
 		$html = '<div class="woo_paghiper_digitable_line" style="margin-bottom: 40px;">';
 
 		if($this->gateway_id !== 'paghiper_pix') :
+			
 			$barcode_number = $this->_get_barcode();
 			$barcode_url = plugins_url( "assets/php/barcode.php?codigo={$barcode_number}", plugin_dir_path( __FILE__ ) );
 			$html .= "<p style='width: 100%; text-align: center;'>Pague seu boleto usando o código de barras ou a linha digitável, se preferir:</p>";
@@ -521,17 +522,11 @@ class WC_PagHiper_Transaction {
 			$html .= ($print) ? "<strong style='font-size: 18px;'>" : "";
 			$html .= "<p style='width: 100%; text-align: center;'>{$digitable_line}</p>";
 			$html .= ($print) ? "</strong>" : "";
-		else :
 
-			wp_register_script( 'paghiper_frontend_js', wc_paghiper_assets_url() . 'js/frontend.min.js','','1.0', false );
-			wp_register_style( 'paghiper_frontend_css', wc_paghiper_assets_url() . 'css/frontend.min.css','','1.0', false );
-			wp_enqueue_script(  'paghiper_frontend_js' );
-			wp_enqueue_style( 'paghiper_frontend_css' );
+		else :
 
 			$barcode_url = $this->_get_barcode();
 			$html .= "<p style='width: 100%; text-align: center;'>Efetue o pagamento PIX usando o <strong>código de barras</strong> ou usando <strong>PIX copia e cola</strong>, se preferir:</p>";
-			$html .= ($barcode_url) ? "<img src='{$barcode_url}' title='Código de barras do boleto deste pedido.' style='max-width: 100%; margin: 0 auto;'>" : '';
-			$html .= "<p style='width: 100%; text-align: center;'>Data de vencimento: <strong>{$due_date}</strong></p>";
 
 			if($print) {
 				$html .= '<ul>
@@ -541,6 +536,8 @@ class WC_PagHiper_Transaction {
 				</ul>';
 				$html .= sprintf('<div class="paghiper-pix-code" onclick="copyPaghiperEmv()"><p>Pagar com PIX copia e cola - <button>Clique para copiar</button></p><div class="textarea-container"><textarea readonly rows="3">%s</textarea></div></div>', $digitable_line);
 			} else {
+				$html .= ($barcode_url) ? "<img src='{$barcode_url}' title='Código de barras do boleto deste pedido.' style='max-width: 100%; margin: 0 auto;'>" : '';
+				$html .= "<p style='width: 100%; text-align: center;'>Data de vencimento: <strong>{$due_date}</strong></p>";
 				$html .= "<p style='width: 100%; text-align: center;'>Seu código PIX: {$digitable_line}</p>";
 			}
 
