@@ -1,17 +1,17 @@
 <?php
 /**
- * Plugin Name: WooCommerce Boleto PagHiper
+ * Plugin Name: WooCommerce Boleto e PIX PagHiper
  * Plugin URI: https://github.com/paghiper/woocommerce-paghiper/
  * Description: Ofereça a seus clientes pagamento boleto bancário com a PagHiper. Fácil, prático e rapido!
  * Author: PagHiper Pagamentos
  * Author URI: https://www.paghiper.com
- * Version: 2.0.5
- * Tested up to: 5.5.3
+ * Version: 2.1
+ * Tested up to: 5.6
  * License: GPLv2 or later
  * Text Domain: woo-boleto-paghiper
  * Domain Path: /languages/
  * WC requires at least: 3.5
- * WC tested up to: 4.6.2
+ * WC tested up to: 4.8.0
  */	
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -32,7 +32,7 @@ class WC_Paghiper {
 	 *
 	 * @var string
 	 */
-	const VERSION = '2.0.5';
+	const VERSION = '2.1';
 
 	/**
 	 * Instance of this class.
