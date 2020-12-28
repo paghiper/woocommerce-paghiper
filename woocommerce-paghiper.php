@@ -472,11 +472,11 @@ class WC_Paghiper {
 
 			require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
 	
-			$paghiperBoleto = new WC_PagHiper_Transaction( $order_id );
-			$paghiperBoleto->printBarCode(true);
+			$paghiperTransaction = new WC_PagHiper_Transaction( $order_id );
+			$paghiperTransaction->printBarCode(true);
 
 			$html = '<div class="woocommerce-info">';
-			$html .= sprintf( '<a class="button" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Visualizar boleto &rarr;', 'woo-boleto-paghiper' ) );
+			$html .= sprintf( '<a class="button button-primary wc-forward" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Visualizar boleto &rarr;', 'woo-boleto-paghiper' ) );
 
 			$message = sprintf( __( '%sAtenção!%s Ainda não registramos o pagamento deste pedido.', 'woo-boleto-paghiper' ), '<strong>', '</strong>' ) . '<br />';
 			$message .= __( 'Por favor clique no botão ao lado e pague o boleto pelo seu Internet Banking.', 'woo-boleto-paghiper' ) . '<br />';

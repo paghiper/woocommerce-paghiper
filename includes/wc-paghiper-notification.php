@@ -8,7 +8,7 @@ require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/vendor/
 $wp_api_url = add_query_arg( 'wc-api', 'WC_Gateway_Paghiper', home_url( '/' ) );
 add_action( 'woocommerce_api_wc_gateway_paghiper', 'woocommerce_boleto_paghiper_check_ipn_response' );
 
-function woocommerce_boleto_paghiper_valid_ipn_request($return, $order_no, $settings) {
+function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 
     $order          = new WC_Order($order_no);
     $order_status   = $order->get_status();
@@ -82,7 +82,7 @@ function woocommerce_boleto_paghiper_valid_ipn_request($return, $order_no, $sett
 
 function woocommerce_boleto_paghiper_check_ipn_response() {
 
-    $is_pix = (isset($_GET) && array_key_exists('pix', $_GET)) ? true : false;
+    $is_pix = (isset($_GET) && array_key_exists('gateway', $_GET) && $_GET['gateway'] == 'pix') ? true : false;
     $settings = ($is_pix) ? get_option( 'woocommerce_paghiper_pix_settings' ) : get_option( 'woocommerce_paghiper_billet_settings' );
     $log = wc_paghiper_initialize_log( $settings[ 'debug' ] );
 
@@ -103,7 +103,7 @@ function woocommerce_boleto_paghiper_check_ipn_response() {
         header( 'HTTP/1.1 200 OK' );
 
         // Carry on with the operation
-        woocommerce_boleto_paghiper_valid_ipn_request( $response, $response['order_id'], $settings );
+        woocommerce_paghiper_valid_ipn_request( $response, $response['order_id'], $settings );
 
 
     } else {

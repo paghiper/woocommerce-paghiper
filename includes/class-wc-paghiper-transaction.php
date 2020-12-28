@@ -28,10 +28,8 @@ class WC_PagHiper_Transaction {
 		$this->order = new WC_Order( $order_id );
 
 		// Pega a configuração atual do plug-in.
-		$this->gateway_name = $order->get_payment_method();
-		print_r($this->gateway_name);
-		exit();
-		$this->gateway_settings = get_option( 'woocommerce_paghiper_settings' );
+		$this->gateway_name = $this->order->get_payment_method();
+		$this->gateway_settings = ($this->gateway_name == 'paghiper_pix') ? get_option( 'woocommerce_paghiper_pix_settings' ) : get_option( 'woocommerce_paghiper_billet_settings' );
 
 		// Inicializa logs, caso ativados
 		$this->log = wc_paghiper_initialize_log( $this->gateway_settings[ 'debug' ] );
@@ -43,6 +41,13 @@ class WC_PagHiper_Transaction {
 		$order_meta_data = get_post_meta( $this->order_id, 'wc_paghiper_data', true );
 		$this->order_data = (is_array($order_meta_data)) ? $order_meta_data : [];
 
+		// Compatibility with pre v2.1 keys
+		if(array_key_exists('order_billet_due_date', $this->order_data) && !array_key_exists('order_transaction_due_date', $this->order_data)) {
+			$this->order_data['order_transaction_due_date'] = $this->order_data['order_billet_due_date'];
+			$this->order_data['current_transaction_due_date'] = $this->order_data['current_billet_due_date'];
+			$this->order_data['transaction_type'] = 'billet';
+		}
+
 		// Formulamos a URL-base a ser utilizada
 		$this->base_url = WC_Paghiper::get_base_url();
 
@@ -51,13 +56,23 @@ class WC_PagHiper_Transaction {
 
 	}
 	
-	public function has_issued_valid_billet() {
+	public function has_issued_valid_transaction() {
 
 		$order_date = DateTime::createFromFormat('Y-m-d', strtok($this->order->order_date, ' '), $this->timezone);
 		$new_request = FALSE;
 
+		// Novo request caso o método de pagamento tenha mudado
+		if( isset($this->order_data['transaction_type']) && ($this->order_data['transaction_type'] == 'pix' && $this->gateway_name !== 'paghiper_pix') ) {
+
+			$new_request = TRUE;
+
+			if ( $this->log ) {
+				wc_paghiper_add_log( $this->log, sprintf( 'Pedido #%s: Método de pagamento é PIX mas a transação gerada não é.', $this->order_id ) );
+			}
+		}
+
 		// Define data de vencimento, caso exista
-		if(empty($this->order_data["order_billet_due_date"]) || empty($this->order_data["current_billet_due_date"])) {
+		if(empty($this->order_data['order_transaction_due_date']) || empty($this->order_data['current_transaction_due_date'])) {
 
 			$new_request = TRUE;
 
@@ -67,11 +82,11 @@ class WC_PagHiper_Transaction {
 
 		} else {
 
-			$original_due_date = DateTime::createFromFormat('Y-m-d', $this->order_data["order_billet_due_date"], $this->timezone);
-			$current_billet_due_date = DateTime::createFromFormat('Y-m-d', $this->order_data["current_billet_due_date"], $this->timezone);
+			$original_due_date = DateTime::createFromFormat('Y-m-d', $this->order_data['order_transaction_due_date'], $this->timezone);
+			$current_billet_due_date = DateTime::createFromFormat('Y-m-d', $this->order_data['current_transaction_due_date'], $this->timezone);
 
 			$different_total = ( $this->order->get_total() == $this->order_data['value_cents'] ? NULL : TRUE );
-			$different_due_date = ( $this->order_data["order_billet_due_date"] == $this->order_data["current_billet_due_date"] ? NULL : TRUE );
+			$different_due_date = ( $this->order_data['order_transaction_due_date'] == $this->order_data['current_transaction_due_date'] ? NULL : TRUE );
 
 			$today_date = new \DateTime();
 			$today_date->setTimezone($this->timezone);
@@ -85,7 +100,7 @@ class WC_PagHiper_Transaction {
 				if ($current_billet_due_date->format('N') == 1 && $original_due_date->format('N') > 5) {
 					
 					$paghiper_data = get_post_meta( $this->order_id, 'wc_paghiper_data', true );
-					$paghiper_data['order_billet_due_date'] = $current_billet_due_date->format( 'Y-m-d' );
+					$paghiper_data['order_transaction_due_date'] = $current_billet_due_date->format( 'Y-m-d' );
 
 					$update = update_post_meta( $this->order_id, 'wc_paghiper_data', $paghiper_data );
 					if(function_exists('update_meta_cache'))
@@ -147,8 +162,8 @@ class WC_PagHiper_Transaction {
 	}
 
 	public function determine_due_date() {
-		$order_due_date 	= $this->order_data["order_billet_due_date"];
-		$billet_days_due	= (!empty($this->gateway_settings['days_due_date'])) ? $this->gateway_settings['days_due_date'] : 5;
+		$order_due_date 	= $this->order_data['order_transaction_due_date'];
+		$transaction_days_due	= (!empty($this->gateway_settings['days_due_date'])) ? $this->gateway_settings['days_due_date'] : 5;
 
 		$today_date = new \DateTime();
 		$today_date->setTimezone($this->timezone);
@@ -158,9 +173,9 @@ class WC_PagHiper_Transaction {
 
 			// Calcular dias de diferença entre a data de vencimento e a data atual
 			$original_due_date = DateTime::createFromFormat('Y-m-d', $order_due_date, $this->timezone);
-			$billet_due_days = ($today_date && $original_due_date) ? $today_date->diff($original_due_date) : NULL;
+			$transaction_due_days = ($today_date && $original_due_date) ? $today_date->diff($original_due_date) : NULL;
 
-			$billet_due_date = $original_due_date;
+			$transaction_due_date = $original_due_date;
 
 		} else {
 
@@ -168,12 +183,12 @@ class WC_PagHiper_Transaction {
 			$order_data = (is_array($order_data)) ? $order_data : array();
 
 			// Calcular dias entre a data do pedido e os dias para vencimento na configuração
-			$billet_due_date = $today_date;
-			$billet_due_date->modify( "+{$billet_days_due} days" );
+			$transaction_due_date = $today_date;
+			$transaction_due_date->modify( "+{$billet_days_due} days" );
 
-			$billet_due_days = $billet_due_date->days;
+			$transaction_due_days = $billet_due_date->days;
 
-			$order_data['order_billet_due_date'] = $billet_due_date->format( 'Y-m-d' );		
+			$order_data['order_transaction_due_date'] = $transaction_due_date->format( 'Y-m-d' );		
 			$this->order_data = $order_data;
 
 			$update = update_post_meta( $this->order_id, 'wc_paghiper_data', $order_data );
@@ -190,12 +205,12 @@ class WC_PagHiper_Transaction {
 			
 		}
 
-		$billet_due_days = wc_paghiper_add_workdays($billet_due_date, $this->order, $this->gateway_settings['skip_non_workdays'], 'days');
+		$transaction_due_days = wc_paghiper_add_workdays($transaction_due_date, $this->order, $this->gateway_settings['skip_non_workdays'], 'days');
 
-		return $billet_due_days;
+		return $transaction_due_days;
 	}
 
-	public function prepare_data_for_billet() {
+	public function prepare_data_for_transaction() {
 
 		if ( empty( $this->order ) ) {
 			return false;
@@ -325,7 +340,8 @@ class WC_PagHiper_Transaction {
 		$data['early_payment_discounts_cents'] 	= $this->gateway_settings['early_payment_discounts_cents'];
 		$data['early_payment_discounts_days'] 	= $this->gateway_settings['early_payment_discounts_days'];
 
-		$data['notification_url']				= get_site_url(null, $this->base_url.'wc-api/WC_Gateway_Paghiper/');
+		$data['notification_url']				= get_site_url(null, $this->base_url.'wc-api/WC_Gateway_Paghiper/?gateway=').(($this->gateway_name == 'paghiper_pix') ? 'pix' : 'billet');
+		$data['transaction_type']				= ($this->gateway_name == 'paghiper_pix') ? 'pix' : 'billet';
 
 		$data = apply_filters( 'paghiper_billet_data', $data, $this->order_id );
 
@@ -336,42 +352,60 @@ class WC_PagHiper_Transaction {
 		return $data;
 	}
 
-	public function create_billet() {
+	public function create_transaction() {
 
-		if($this->has_issued_valid_billet()) {
+		if($this->has_issued_valid_transaction()) {
 			return false;
 		}
 
 		// Include SDK for our call
 		require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/vendor/autoload.php';
 		
-		$transaction_data = $this->prepare_data_for_billet();
+		$transaction_data = $this->prepare_data_for_transaction();
 
 		$token 			= $this->gateway_settings['token'];
 		$api_key 		= $this->gateway_settings['api_key'];
 
-		$PagHiperAPI 	= new PagHiper($api_key, $token);
-		$response 		= $PagHiperAPI->transaction()->create($transaction_data);
-
 		try {
+
+			$PagHiperAPI 	= new PagHiper($api_key, $token);
+			$response 		= $PagHiperAPI->transaction()->create($transaction_data);
 
 			$billet_data = get_post_meta( $this->order_id, 'wc_paghiper_data', true );
 
-			$current_billet = array(
-				'transaction_id'			=> $response['transaction_id'],
-				'value_cents'				=> $this->_convert_to_currency($response['value_cents']),
-				'status'					=> $response['status'],
-				'order_id'					=> $response['order_id'],
-				'current_billet_due_date'	=> $response['due_date'],
-				'digitable_line'			=> $response['bank_slip']['digitable_line'],
-				'url_slip'					=> $response['bank_slip']['url_slip'],
-				'url_slip_pdf'				=> $response['bank_slip']['url_slip_pdf'],
-				'barcode'					=> $response['bank_slip']['bar_code_number_to_image']
+			$transaction_base_data = array(
+				'transaction_id'				=> $response['transaction_id'],
+				'value_cents'					=> $this->_convert_to_currency($response['value_cents']),
+				'status'						=> $response['status'],
+				'order_id'						=> $response['order_id'],
+				'current_transaction_due_date'	=> $response['due_date'],
 			);
 
+
+			if($this->gateway_name == 'paghiper_pix') {
+				$transaction = array(
+					'qrcode_base64'		        => $response['pix_code']['qrcode_base64'],
+					'qrcode_image_url'	        => $response['pix_code']['qrcode_image_url'],
+					'emv'				        => $response['pix_code']['emv'],
+					'bacen_url'			        => $response['pix_code']['bacen_url'],
+					'pix_url'			        => $response['pix_code']['pix_url'],
+					'transaction_type'			=> 'pix'
+				);
+			} else {
+				$transaction = array(
+					'digitable_line'			=> $response['bank_slip']['digitable_line'],
+					'url_slip'					=> $response['bank_slip']['url_slip'],
+					'url_slip_pdf'				=> $response['bank_slip']['url_slip_pdf'],
+					'barcode'					=> $response['bank_slip']['bar_code_number_to_image'],
+					'transaction_type'			=> 'billet'
+				);
+			}
+
+			$current_billet = array_merge($transaction_base_data, $transaction);
+
 			// Define a due date for storing on the order, for future reference
-			if(!array_key_exists('order_billet_due_date', $this->order_data)) {
-				$current_billet['order_billet_due_date'] = $response['due_date'];
+			if(!array_key_exists('order_transaction_due_date', $this->order_data)) {
+				$current_billet['order_transaction_due_date'] = $response['due_date'];
 			}
 
 			$order_data = (is_array($this->order_data)) ? $this->order_data : array();
@@ -400,7 +434,8 @@ class WC_PagHiper_Transaction {
 
 			$billet_pdf_file = $upload_dir.'/'.$transaction_id.'.pdf';
 
-			if(!file_exists($billet_pdf_file)) {
+			// Don't try downloading PDF files for PIX transacitons
+			if(in_array($this->gateway_name, ['paghiper_billet', 'paghiper']) && !file_exists($billet_pdf_file)) {
 
 				global $wp_filesystem;
 				require_once ABSPATH . 'wp-admin/includes/file.php'; // for get_filesystem_method(), request_filesystem_credentials()
@@ -444,7 +479,7 @@ class WC_PagHiper_Transaction {
 
 	}
 
-	public function print_billet_html() {
+	public function print_transaction_html() {
 		
 		// Temos um boleto ja emitido com data de vencimento válida, só pegamos uma cópia
 		$response = wp_remote_get($this->order_data['url_slip']);
@@ -471,7 +506,7 @@ class WC_PagHiper_Transaction {
 
 	}
 
-	public function print_billet_barcode($print = FALSE) {
+	public function print_transaction_barcode($print = FALSE) {
 
 		$digitable_line = $this->_get_digitable_line();
 		$barcode_number = $this->_get_barcode();
@@ -493,13 +528,13 @@ class WC_PagHiper_Transaction {
 	}
 
 	public function printToScreen() {
-		$this->create_billet();
-		$this->print_billet_html();
+		$this->create_transaction();
+		$this->print_transaction_html();
 	}
 
 	public function printBarCode($print = FALSE) {
-		$this->create_billet();
-		$barcode = $this->print_billet_barcode($print);
+		$this->create_transaction();
+		$barcode = $this->print_transaction_barcode($print);
 
 		if($print) 
 			echo $barcode;

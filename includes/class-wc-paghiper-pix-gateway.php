@@ -18,20 +18,26 @@ class WC_Paghiper_Pix_Gateway extends WC_Payment_Gateway {
 	 */
 	public function __construct() {
 		$this->id                 = 'paghiper_pix';
-		$this->icon               = apply_filters( 'woo_paghiper_icon', plugins_url( 'assets/images/boleto.png', plugin_dir_path( __FILE__ ) ) );
+		$this->icon               = apply_filters( 'woo_paghiper_pix_icon', plugins_url( 'assets/images/pix.png', plugin_dir_path( __FILE__ ) ) );
 		$this->has_fields         = false;
 		$this->method_title       = __( 'PagHiper PIX', 'woo-boleto-paghiper' );
 		$this->method_description = __( 'Receba pagamentos por PIX usando PagHiper.', 'woo-boleto-paghiper' );
 
-		// Carrega as configurações
-		require_once('class-wc-paghiper-base-gateway.php');
-		$paghiper_gateway = new WC_Paghiper_Base_Gateway($this);
+		// Define as variáveis que vamos usar e popula com os dados de configuração
+		$this->title       				= $this->get_option( 'title' );
+		$this->description 				= $this->get_option( 'description' );
 
 		// Carrega as configurações
-		$this->form_fields = $paghiper_gateway->init_form_fields();
+		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-base-gateway.php';
+		$this->paghiper_gateway = new WC_Paghiper_Base_Gateway($this);
+
+		// Carrega as configurações
+		$this->form_fields = $this->paghiper_gateway->init_form_fields();
 		$this->init_settings();
 
 		// Ações
+		add_action( 'woocommerce_thankyou_paghiper_pix', array( $this->paghiper_gateway, 'thankyou_page' ) );
+		add_action( 'woocommerce_email_after_order_table', array( $this->paghiper_gateway, 'email_instructions' ), 10, 2 );
 		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
 	}
 
@@ -44,9 +50,20 @@ class WC_Paghiper_Pix_Gateway extends WC_Payment_Gateway {
 	 */
 	public function is_available() {
 		// Test if is valid for use.
-		$available = ( 'yes' == $this->get_option( 'enabled' ) ) && $paghiper_gateway->using_supported_currency();
+		$available = ( 'yes' == $this->get_option( 'enabled' ) ) && $this->paghiper_gateway->using_supported_currency();
 
 		return $available;
+	}
+
+	/**
+	 * Process the payment and return the result.
+	 *
+	 * @param int    $order_id Order ID.
+	 *
+	 * @return array           Redirect.
+	 */
+	public function process_payment( $order_id ) {
+		return $this->paghiper_gateway->process_payment( $order_id );
 	}
 
 }

@@ -10,8 +10,6 @@ class WC_Paghiper_Base_Gateway {
 		$this->gateway = $gateway;
 
 		// Define as variáveis que vamos usar e popula com os dados de configuração
-		$this->title       				= $this->gateway->get_option( 'title' );
-		$this->description 				= $this->gateway->get_option( 'description' );
 		$this->days_due_date 			= $this->gateway->get_option( 'days_due_date' );
 		$this->skip_non_workdays		= $this->gateway->get_option( 'skip_non_workdays' );
 		$this->set_status_when_waiting 	= $this->gateway->get_option( 'set_status_when_waiting' );
@@ -20,8 +18,6 @@ class WC_Paghiper_Base_Gateway {
 		$this->log = wc_paghiper_initialize_log( $this->gateway->get_option( 'debug' ) );
 
 		// Ações
-		add_action( 'woocommerce_thankyou_paghiper', array( $this, 'thankyou_page' ) );
-		add_action( 'woocommerce_email_after_order_table', array( $this, 'email_instructions' ), 10, 2 );
 
 		// Definimos o offset a ser utilizado para as operações de data
 		$this->timezone = new DateTimeZone('America/Sao_Paulo');
@@ -37,7 +33,7 @@ class WC_Paghiper_Base_Gateway {
 	 *
 	 * @return bool
 	 */
-	protected function using_supported_currency() {
+	public function using_supported_currency() {
 		return ( 'BRL' == get_woocommerce_currency() );
 	}
  
@@ -261,13 +257,12 @@ class WC_Paghiper_Base_Gateway {
 		}
 
 		// Gera um boleto e guarda os dados, pra reutilizarmos.
-		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
+		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
 
+		$paghiperTransaction = new WC_PagHiper_Transaction( $order_id );
+		$transaction = $paghiperTransaction->create_transaction();
 
-		$paghiperBoleto = new WC_PagHiper_Transaction( $order_id );
-		$billet = $paghiperBoleto->create_billet();
-
-		if($billet) {
+		if($transaction) {
 			// Mark as on-hold (we're awaiting the ticket).
 			$waiting_status = (!empty($this->set_status_when_waiting)) ? $this->set_status_when_waiting : 'on-hold';
 			$order->update_status( $waiting_status, __( 'Boleto PagHiper: Boleto gerado e enviado por e-mail.', 'woo-boleto-paghiper' ) );
@@ -275,7 +270,7 @@ class WC_Paghiper_Base_Gateway {
 		} else {
 
 			if ( 'yes' === $this->debug ) {
-				wc_paghiper_add_log( $this->log, sprintf( 'Pedido %s: Não foi possível gerar o boleto. Detalhes: %s', var_export($billet, true) ) );
+				wc_paghiper_add_log( $this->log, sprintf( 'Pedido %s: Não foi possível gerar o boleto. Detalhes: %s', var_export($transaction, true) ) );
 			}
 
 		}
@@ -294,13 +289,13 @@ class WC_Paghiper_Base_Gateway {
 	 */
 	public function thankyou_page($order_id) {
 
-		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
+		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
 
-		$paghiperBoleto = new WC_PagHiper_Transaction( $order_id );
-		$paghiperBoleto->printBarCode(true);
+		$paghiperTransaction = new WC_PagHiper_Transaction( $order_id );
+		$paghiperTransaction->printBarCode(true);
 
 		$html = '<div class="woocommerce-message">';
-		$html .= sprintf( '<a class="button" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $_GET['key'] ) ), __( 'Pagar o Boleto &rarr;', 'woo-boleto-paghiper' ) );
+		$html .= sprintf( '<a class="button button-primary wc-forward" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $_GET['key'] ) ), __( 'Pagar o Boleto', 'woo-boleto-paghiper' ) );
 
 		$message = sprintf( __( '%sAtenção!%s Você NÃO vai receber o boleto pelos Correios.', 'woo-boleto-paghiper' ), '<strong>', '</strong>' ) . '<br />';
 		$message .= __( 'Clique no link abaixo e pague o boleto pelo seu aplicativo de Internet Banking .', 'woo-boleto-paghiper' ) . '<br />';
@@ -326,16 +321,17 @@ class WC_Paghiper_Base_Gateway {
 		// Ticket data.
 		$data				= array();
 		$due_date_config 	= absint( $this->days_due_date );
+		$gateway_name 		= $order->get_payment_method();
 		
-		$billet_due_date = new DateTime;
-		$billet_due_date->setTimezone($this->timezone);
+		$transaction_due_date = new DateTime;
+		$transaction_due_date->setTimezone($this->timezone);
 		if($due_date_config > 0)
-			$billet_due_date->modify( "+{$due_date_config} days" );
+			$transaction_due_date->modify( "+{$due_date_config} days" );
 
 		// Maybe skip non-workdays as per configuration
-		$billet_due_date = wc_paghiper_add_workdays($billet_due_date, $order, $this->skip_non_workdays, 'date');
-		
-		$data['order_billet_due_date'] = $billet_due_date->format('Y-m-d');
+		$transaction_due_date = wc_paghiper_add_workdays($transaction_due_date, $order, $this->skip_non_workdays, 'date');
+		$data['order_transaction_due_date'] = $transaction_due_date->format('Y-m-d');
+		$data['transaction_type'] = ($gateway_name == 'paghiper_pix') ? 'pix' : 'billet';
 
 		update_post_meta( $order->id, 'wc_paghiper_data', $data );
 		if(function_exists('update_meta_cache'))
@@ -358,14 +354,14 @@ class WC_Paghiper_Base_Gateway {
 		}
 
 		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
-		$paghiperBoleto = new WC_PagHiper_Transaction( $order->id );
+		$paghiperTransaction = new WC_PagHiper_Transaction( $order->id );
 
 		$html = '<div class="woo-paghiper-boleto-details">';
 		$html .= '<h2>' . __( 'Pagamento', 'woo-boleto-paghiper' ) . '</h2>';
 
 		$html .= '<p class="order_details">';
 
-		$message = $paghiperBoleto->printBarCode();
+		$message = $paghiperTransaction->printBarCode();
 
 		$message .= sprintf( __( '%sAtenção!%s Você NÃO vai receber o boleto pelos Correios.', 'woo-boleto-paghiper' ), '<strong>', '</strong>' ) . '<br />';
 		$message .= __( 'Se preferir, você pode imprimir e pagar o boleto em qualquer agência bancária ou lotérica.', 'woo-boleto-paghiper' ) . '<br />';
