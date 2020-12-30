@@ -125,7 +125,7 @@ class Transaction extends PagHiper {
      */
     public function process_ipn_notification(string $notification_id, string $transaction_id, string $transaction_type) {
 
-        $transaction_type = ( (!is_null($transaction_type)) ? $transaction_type : 'pix');
+        $transaction_type = ( (!is_null($transaction_type)) ? $transaction_type : 'billet');
         $ipn_request = $this->paghiper->request(
             (($transaction_type == 'pix') ? self::NOTIFICATION_PIX_ENDPOINT : self::NOTIFICATION_BILLET_ENDPOINT ),
             [

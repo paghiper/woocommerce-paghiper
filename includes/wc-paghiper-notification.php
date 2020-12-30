@@ -82,7 +82,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 
 function woocommerce_boleto_paghiper_check_ipn_response() {
 
-    $is_pix = (isset($_GET) && array_key_exists('gateway', $_GET) && $_GET['gateway'] == 'pix') ? true : false;
+    $transaction_type = (isset($_GET) && array_key_exists('gateway', $_GET)) ? sanitize_text_field($_GET['gateway']) : 'billet';
     $settings = ($is_pix) ? get_option( 'woocommerce_paghiper_pix_settings' ) : get_option( 'woocommerce_paghiper_billet_settings' );
     $log = wc_paghiper_initialize_log( $settings[ 'debug' ] );
 
@@ -90,7 +90,7 @@ function woocommerce_boleto_paghiper_check_ipn_response() {
     $api_key 		= $settings['api_key'];
 
     $PagHiperAPI 	= new PagHiper($api_key, $token);
-    $response 		= $PagHiperAPI->transaction()->process_ipn_notification($_POST['notification_id'], $_POST['transaction_id']);
+    $response 		= $PagHiperAPI->transaction()->process_ipn_notification($_POST['notification_id'], $_POST['transaction_id'], $transaction_type);
 
     if($response['result'] == 'success') {
 
