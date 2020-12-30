@@ -254,7 +254,7 @@ class WC_PagHiper_Transaction {
 			$product_id 		= ($item->is_type( 'variable' )) ? $item->get_variation_id() : $item->get_product_id() ;
 			$product_name		= $item->get_name();
 			$product_quantity	= $item->get_quantity();
-			$individual_price	= $item->get_total() / $product_quantity;
+			$individual_price	= $item->get_subtotal() / $product_quantity;
 			$product_price		= $this->_convert_to_cents(($individual_price > 0) ? $individual_price : 0);
 
 			$data['items'][] = array(
@@ -297,8 +297,8 @@ class WC_PagHiper_Transaction {
 		$taxes_description 	= 'Taxas e impostos';
 
 		// Conciliate order, in order to avoind conflict with third-party plugins and custom solutions
-		// We do this to facilitate integration, even when users implement stuff using unorthodox methos
-		$order_total 		= round(floatval($this->order->get_total()), 2);
+		// We do this to facilitate integration, even when users implement stuff using unorthodox methods
+		$order_total 		= round(floatval($this->order->get_subtotal()), 2);
 		$simulated_total	= round(($order_line_total + $order_shipping + $order_taxes), 2);
 
 		// If our sum is lower than the order total:
