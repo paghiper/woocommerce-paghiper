@@ -15,7 +15,7 @@ $reviews_url = '';
 <?php
 	if ( 'yes' == $this->get_option( 'enabled' ) ) {
 		if ( ! $this->using_supported_currency() && ! class_exists( 'woocommerce_wpml' ) ) {
-			include 'html-notice-currency-not-supported.php';
+			include 'notices/html-notice-currency-not-supported.php';
 		}
 	}
 ?>
