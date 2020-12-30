@@ -73,24 +73,19 @@ class WC_Paghiper {
 			add_filter( 'woocommerce_new_order', array($this, 'generate_transaction') );
 			add_filter( 'woocommerce_email_attachments', array($this, 'attach_billet'), 10, 3 );
 			add_action( 'wp_enqueue_scripts', array( $this, 'load_plugin_assets' ) );
+
+			// Inicializa logs, caso ativados
+			$this->log = wc_paghiper_initialize_log( $this->gateway_settings[ 'debug' ] );
 			
-
-			/* */
-		} else {
-			add_action( 'admin_notices', array( $this, 'woocommerce_missing_notice' ) );
 		}
 
-		if (!function_exists('json_decode')) {
-			add_action( 'admin_notices', array( $this, 'json_missing_notice' ) );
-		}
+		/* Print some notices */
+		add_action( 'admin_notices', array( $this, 'print_requirement_notices' ) );
 
 		// Ativa os logs
 
 		// Pega a configuração atual do plug-in.
 		$this->gateway_settings = get_option( 'woocommerce_paghiper_settings' );
-
-		// Inicializa logs, caso ativados
-		$this->log = wc_paghiper_initialize_log( $this->gateway_settings[ 'debug' ] );
 
 	}
 
@@ -531,21 +526,60 @@ class WC_Paghiper {
 	}
 
 	/**
-	 * WooCommerce fallback notice.
-	 *
-	 * @return string
-	 */
-	public function woocommerce_missing_notice() {
-		include_once 'includes/views/html-notice-woocommerce-missing.php';
-	}
-
-	/**
 	 * JSON missing notice.
 	 *
 	 * @return string
 	 */
-	public function json_missing_notice() {
-		include_once 'includes/views/html-notice-json-missing.php';
+	public function print_requirement_notices() {
+
+		/**
+		 * Woocommerce missing notice.
+		 * 
+		 * @return string
+		 */
+
+		if ( !class_exists( 'WC_Payment_Gateway' ) ) {
+			include_once 'includes/views/notices/html-notice-woocommerce-missing.php';
+		}
+
+		/**
+		 * JSON missing notice.
+		 *
+		 * @return string
+		 */
+		if (!function_exists('json_decode')) {
+			include_once 'includes/views/notices/html-notice-json-missing.php';
+		}
+
+		/**
+		 * GD missing notice.
+		 *
+		 * @return string
+		 */
+		if (!function_exists('imagecreate')) {
+			include_once 'includes/views/notices/html-notice-gd-missing.php';
+		}
+
+		/**
+		 * Paghiper directory is not writable
+		 * 
+		 * @return string
+		 */
+		$uploads = wp_upload_dir();
+		$upload_dir = $uploads['basedir'];
+		$upload_dir = $upload_dir . '/paghiper';
+
+		$test_filename = $upload_dir.'/'.time ();
+        if (touch($test_filename)) {
+            if (!chmod($test_filename, 0666)) {
+				include_once 'includes/views/notices/html-notice-paghiper-folder-not-writable.php';
+			}
+		}
+
+		if(file_exists($test_filename)) {
+			unlink($test_filename);
+		}
+
 	}
 }
 
