@@ -44,6 +44,43 @@ class WC_Paghiper_Base_Gateway {
 		echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __(($this->gateway->id == 'paghiper_pix') ? 'PIX Paghiper' : 'Boleto Paghiper'), __('A moeda-padrão do seu Woocommerce não é o R$. Ajuste suas configurações aqui:'), admin_url('admin.php?page=wc-settings&tab=general'), __('Configurações de moeda'));
 	}
 
+	/**
+	 * Returns a value indicating the the Gateway is available or not. It's called
+	 * automatically by WooCommerce before allowing customers to use the gateway
+	 * for payment.
+	 *
+	 * @return bool
+	 */
+	public function is_available() {
+		// Test if is valid for use.
+		$available = ( 'yes' == $this->gateway->get_option( 'enabled' ) ) && $this->using_supported_currency();
+		$has_met_min_amount = false;
+		$has_met_max_amount = false;
+
+		$total = 0;
+
+		$min_value = apply_filters( "woo_{$this->gateway->id}_max_value", 3, $cart );
+		$max_value = apply_filters( "woo_{$this->gateway->id}_max_value", PHP_INT_MAX, $cart );
+
+		if ( WC()->cart ) {
+			$total = $this->gateway->retrieve_order_total();
+		}
+
+		if ( $total >= $min_value ) {
+			$has_met_min_amount = true;
+		}
+
+		if ( $total >= $max_value ) {
+			$has_met_max_amount = true;
+		}
+
+		if($available && $has_met_min_amount && !$has_met_max_amount) {
+			return true;
+		}
+
+		return false;
+	}
+
 
 	/**
 	 * Admin Panel Options.

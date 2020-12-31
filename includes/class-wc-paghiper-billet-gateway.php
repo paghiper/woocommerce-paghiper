@@ -54,10 +54,12 @@ class WC_Paghiper_Billet_Gateway extends WC_Payment_Gateway {
 	 * @return bool
 	 */
 	public function is_available() {
-		// Test if is valid for use.
-		$available = ( 'yes' == $this->get_option( 'enabled' ) ) && $this->paghiper_gateway->using_supported_currency();
+		return $this->paghiper_gateway->is_available();
+	}
 
 		return $available;
+	public function retrieve_order_total() {
+		return $this->get_order_total();
 	}
 
 	/**
