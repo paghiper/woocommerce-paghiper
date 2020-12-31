@@ -1,18 +1,31 @@
 <?php
 /**
- * CPF/CNPJ validator
+ * CPF/CNPJ fields and validation for WC checkout
  *
  * @author 	Henrique Cruz <eu@henriquecruz.com.br>
- * @version	2.0
+ * @version	2.1
  * @package	woo-boleto-paghiper
- * @since	2.0
+ * @since	2.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
-class WC_PagHiper_Data_Formatting {
+class WC_PagHiper_Validation {
+
+	public function validate_taxid( $taxid ) {
+
+		$taxid_value = preg_replace('/\D/', '', $taxid);
+
+		if(strlen( $taxid_value ) > 11) {
+			return $this->is_valid_cnpj($taxid_value);
+		} else {
+			return $this->is_valid_cpf($taxid_value);
+		}
+
+		return false;
+	}
 
 	/**
 	 * Checa se o CNPJ informado é válido
@@ -21,7 +34,7 @@ class WC_PagHiper_Data_Formatting {
 	 *
 	 * @return bool
 	 */
-	public static function is_valid_cpf( $cpf ) {
+	public function is_valid_cpf( $cpf ) {
 		$cpf = preg_replace( '/[^0-9]/', '', $cpf );
 
 		if ( 11 !== strlen( $cpf ) || preg_match( '/^([0-9])\1+$/', $cpf ) ) {
@@ -51,7 +64,7 @@ class WC_PagHiper_Data_Formatting {
 	 *
 	 * @return bool
 	 */
-	public static function is_valid_cnpj( $cnpj ) {
+	public function is_valid_cnpj( $cnpj ) {
 		$cnpj = sprintf( '%014s', preg_replace( '{\D}', '', $cnpj ) );
 
 		if ( 14 !== strlen( $cnpj ) || 0 === intval( substr( $cnpj, -4 ) ) ) {

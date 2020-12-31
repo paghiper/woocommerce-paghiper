@@ -98,7 +98,6 @@ function woocommerce_boleto_paghiper_check_ipn_response() {
             wc_paghiper_add_log( $log, sprintf('Pedido #%s: Post de retorno da PagHiper confirmado.', $response['order_id']) );
         }
 
-
         // Print a 200 HTTP code for the notification engine
         header( 'HTTP/1.1 200 OK' );
 
