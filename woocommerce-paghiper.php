@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WooCommerce Boleto e PIX PagHiper
  * Plugin URI: https://github.com/paghiper/woocommerce-paghiper/
- * Description: Ofereça a seus clientes pagamento boleto bancário com a PagHiper. Fácil, prático e rapido!
+ * Description: Ofereça a seus clientes pagamento por PIX e boleto bancário com a PagHiper. Fácil, prático e rapido!
  * Author: PagHiper Pagamentos
  * Author URI: https://www.paghiper.com
  * Version: 2.1
@@ -170,29 +170,52 @@ class WC_Paghiper {
 		// Include SDK for our call
 		require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/vendor/autoload.php';
 
-		$gateway_settings = get_option( 'woocommerce_paghiper_settings' );
+		$gateways = ['woocommerce_paghiper_pix_settings', 'woocommerce_paghiper_billet_settings'];
+		foreach($gateways as $gateway) {
+			$gateway_settings = get_option( $gateway );
+			$is_pix = ($gateway == 'woocommerce_paghiper_pix_settings') ? true : false;
 
-		if(!array_key_exists('api_key', $gateway_settings) || empty($gateway_settings['api_key'])) {
-			add_action( 'admin_notices', function() {
-				echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __('Boleto PagHiper'), __('Você ainda não configurou sua apiKey! Finalize a configuração do seu plug-in aqui:'), admin_url('admin.php?page=wc-settings&tab=checkout&section=wc_paghiper_gateway'), __('Configurações de integração PagHiper'));
-			});
+			$gateway_name = ($is_pix) ? 'PIX PagHiper' : 'Boleto PagHiper';
+			$gateway_class = ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
 
-			return;
-		}
-
-		if(!get_transient( 'woo_boleto_paghiper_apikey_valid' )) {
+			if(!array_key_exists('api_key', $gateway_settings) || empty($gateway_settings['api_key'])) {
+				add_action( 'admin_notices', function() {
+					echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __($gateway_name), __('Você ainda não configurou sua apiKey! Finalize a configuração do seu plug-in aqui:'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), __("Configurações de integração {$gateway_name}"));
+				});
 	
-			try {
-				$PagHiperAPI = new PagHiper($gateway_settings['api_key'], $gateway_settings['token']);
-				$response = $PagHiperAPI->transaction()->status('0000000000000000');
-				set_transient( 'woo_boleto_paghiper_apikey_valid', 1, 12 * 60 * 60 );
-			} catch(Exception $e) {
+				return;
+			}
 
-				if (strpos($e->getMessage(), 'apiKey') !== false) {
-					add_action( 'admin_notices', function() {
-						echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __('Boleto PagHiper'), __('Sua apiKey é inválida! Confira novamente seus dados aqui:'), admin_url('admin.php?page=wc-settings&tab=checkout&section=wc_paghiper_gateway'), __('Configurações de integração PagHiper'));
-					});
+		};
+
+
+
+		if(!get_transient( 'woo_paghiper_apikey_valid' )) {
+
+			$valid_gateway_apis = [];
+			foreach($gateways as $gateway) {
+				$gateway_settings = get_option( $gateway );
+				$is_pix = ($gateway == 'woocommerce_paghiper_pix_settings') ? true : false;
+
+				$gateway_name = ($is_pix) ? 'PIX PagHiper' : 'Boleto PagHiper';
+				$gateway_class = ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
+	
+				try {
+					$PagHiperAPI = new PagHiper($gateway_settings['api_key'], $gateway_settings['token']);
+					$response = $PagHiperAPI->transaction()->status('0000000000000000');
+					$valid_gateway_apis[] = $gateway;
+				} catch(Exception $e) {
+	
+					if (strpos($e->getMessage(), 'apiKey') !== false) {
+						add_action( 'admin_notices', function() {
+							echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __($gateway_name), __('Sua apiKey é inválida! Confira novamente seus dados aqui:'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), __("Configurações de integração {$gateway_name}"));
+						});
+					}
 				}
+			}
+
+			if(sizeof($valid_gateway_apis) == sizeof($gateways)) {
+				set_transient( 'woo_paghiper_apikey_valid', 1, 12 * 60 * 60 );
 			}
 		}
 
@@ -578,6 +601,15 @@ class WC_Paghiper {
 
 		if(file_exists($test_filename)) {
 			unlink($test_filename);
+		}
+
+		/**
+		 * PHP Version notices.
+		 * 
+		 * @return string
+		 */
+		if (version_compare(PHP_VERSION, '5.6.0', '<')) {
+			include_once 'includes/views/notices/html-notice-min-php-version.php';
 		}
 
 	}
