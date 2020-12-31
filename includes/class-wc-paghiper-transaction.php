@@ -232,9 +232,27 @@ class WC_PagHiper_Transaction {
 				$data['payer_name'] = $this->order->billing_company;
 				$data['payer_cpf_cnpj'] = $this->order->billing_cnpj;
 			} else {
-				$data['payer_name'] = $this->order->billing_first_name . ' ' . $this->order->billing_last_name;
-				$data['payer_cpf_cnpj'] = $this->order->billing_cpf;
+
+				// Get default field options if not using Brazilian Market on WooCommerce
+				if(!empty($this->order->billing_cnpj) && !empty($this->order->billing_company)) {
+					$data['payer_name'] = $this->order->billing_company;
+					$data['payer_cpf_cnpj'] = $this->order->billing_cnpj;
+				} else {
+					$data['payer_name'] = $this->order->billing_first_name . ' ' . $this->order->billing_last_name;
+					$data['payer_cpf_cnpj'] = $this->order->billing_cpf;
+				}
 			}
+		}
+
+		// Override data with our gateway fields
+		$checkout_payer_cpf_cnpj = get_post_meta($this->order_id, '_'.$this->gateway_id.'_cpf_cnpj', true);
+		if(!empty($checkout_payer_cpf_cnpj)) {
+			$data['payer_cpf_cnpj'] = $checkout_payer_cpf_cnpj;
+		}
+
+		$checkout_payer_name = get_post_meta($this->order_id, '_'.$this->gateway_id.'_payer_name', true);
+		if(!empty($checkout_payer_name)) {
+			$data['payer_name'] = $checkout_payer_name;
 		}
 
 		// Address
@@ -284,7 +302,6 @@ class WC_PagHiper_Transaction {
 			$shipping_method = (empty($shipping_method) && !empty($shipping_method_title)) ? $shipping_method_title : '';
 		}
 
-
 		$order_shipping					= $this->order->get_total_shipping();
 		$data['shipping_methods']		= $shipping_method;
 		$data['shipping_price_cents']	= $this->_convert_to_cents($order_shipping);
@@ -332,7 +349,7 @@ class WC_PagHiper_Transaction {
 
 		// Seller/Order variable description
 		$billet_description = sprintf("Referente a pedido #%s na loja %s", $this->order_id, $shop_name);
-		$data['seller_description'] = apply_filters('woo_paghiper_billet_description', $billet_description, $this->order_id);
+		$data['seller_description'] = apply_filters('woo_paghiper_transaction_description', $billet_description, $this->order_id);
 
 		// Fixed data (doesn't change per request)
 		$data['type_bank_slip']					= 'boletoA4';
@@ -343,7 +360,7 @@ class WC_PagHiper_Transaction {
 		$data['notification_url']				= get_site_url(null, $this->base_url.'wc-api/WC_Gateway_Paghiper/?gateway=').(($this->gateway_id == 'paghiper_pix') ? 'pix' : 'billet');
 		$data['transaction_type']				= ($this->gateway_id == 'paghiper_pix') ? 'pix' : 'billet';
 
-		$data = apply_filters( 'paghiper_billet_data', $data, $this->order_id );
+		$data = apply_filters( 'paghiper_transaction_data', $data, $this->order_id );
 
 		if ( $this->log ) {
 			wc_paghiper_add_log( $this->log, sprintf( 'Dados preparados para envio: %s', var_export($data, true) ) );

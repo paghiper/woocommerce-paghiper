@@ -249,6 +249,119 @@ class WC_Paghiper_Base_Gateway {
 
 	}
 
+	public function payment_fields() {
+
+		echo wpautop( wp_kses_post( $this->gateway->description ) );
+	 
+		echo '<fieldset id="wc-' . esc_attr( $this->gateway->id ) . '-cc-form" class="wc-credit-card-form wc-payment-form" style="background:transparent;">';
+	 
+		// Add this action hook if you want your custom payment gateway to support it
+		do_action( 'woocommerce_paghiper_taxid_form_start', $this->gateway->id );
+	 
+		// Print fields only if there are no fields for the same purpose on the checkout
+		parse_str( $_POST['post_data'], $post_data );
+		if(!isset($post_data['billing_cpf'], $post_data['billing_cnpj'])) {
+			echo '<div class="form-row form-row-wide">
+				<label>Número de CPF/CNPJ <span class="required">*</span>
+					<input id="'.$this->gateway->id.'_cpf_cnpj" name="_'.$this->gateway->id.'_cpf_cnpj" type="text" autocomplete="off">
+				</label>
+				</div>
+				<div class="clear"></div>';
+		}
+
+		$payer_cpf_cnpj = preg_replace('/\D/', '', sanitize_text_field(
+			(isset($_POST['_'.$this->gateway->id.'_cpf_cnpj'])) ? $_POST['_'.$this->gateway->id.'_cpf_cnpj'] : (
+				(
+					(isset($post_data['billing_cpf'])) ? $post_data['billing_cpf'] : $post_data['billing_cnpj'])
+				)
+			)
+		);
+
+		$has_payer_fields = false;
+
+		if(absint( get_query_var( 'order-pay' ) )) {
+			$order_id = absint( get_query_var( 'order-pay' ) );
+			$order = ($order_id > 0) ? wc_get_order($order_id) : null;
+
+			$has_payer_fields = ($order && (!empty($order->billing_first_name) || !empty($order->billing_company) || !empty($order->{'_'.$order->get_payment_method().'_payer_name'})));
+			
+			if( (strlen($payer_cpf_cnpj) > 11 && ( empty($order->billing_company) && empty($order->{'_'.$order->get_payment_method().'_payer_name'})) ) ) {
+				$has_payer_fields = false;
+			}
+		} else {
+			$has_payer_fields = ((strlen($payer_cpf_cnpj) > 11 && !isset($post_data['billing_company'])) || !isset($post_data['_'.$this->gateway->id.'_payer_name']));
+		}
+
+		if(!$has_payer_fields) {
+				
+			echo '<div class="form-row form-row-wide">
+				<label>Nome do pagador <span class="required">*</span>
+					<input id="'.$this->gateway->id.'_payer_name" name="_'.$this->gateway->id.'_payer_name" type="text" autocomplete="off">
+				</label>
+				</div>
+				<div class="clear"></div>';
+		}
+	 
+		do_action( 'woocommerce_paghiper_taxid_form_end', $this->gateway->id );
+	 
+		echo '<div class="clear"></div></fieldset>';
+	}
+
+	public function validate_fields() {
+
+		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-validation.php';
+		$validateAPI = new WC_PagHiper_Validation;
+
+		$taxid_post_keys = ['_'.$this->gateway->id.'_cpf_cnpj', 'billing_cpf', 'billing_cnpj'];
+		$not_empty_keys = [];
+		$valid_keys = [];
+		$current_taxid = null;
+
+		foreach($taxid_post_keys as $taxid_post_key) {
+			if( (array_key_exists($taxid_post_key, $_POST) && !empty($_POST[$taxid_post_key])) ) {
+				$not_empty_keys[] = $taxid_post_key;
+
+				$maybe_valid_taxid = preg_replace('/\D/', '', sanitize_text_field($_POST[$taxid_post_key]));
+
+				if($validateAPI->validate_taxid($maybe_valid_taxid)) {
+					$valid_keys[] = $taxid_post_key;
+					$current_taxid = (strlen($taxid) < strlen($maybe_valid_taxid)) ? $maybe_valid_taxid : $current_taxid;
+				}
+			}
+		}
+ 
+		if( empty($not_empty_keys) ) {
+			wc_add_notice(  'CPF não informado!', 'error' );
+		}
+
+		if( empty($valid_keys) ) {
+			if(strlen($current_taxid) > 11) {
+				wc_add_notice(  'CNPJ inválido!', 'error' );
+
+				$taxid_payer_keys 	= ['_'.$this->gateway->id.'_payer_name', 'company_name', 'billing_first_name', 'billing_last_name'];
+				$taxid_payer 		= null;
+				foreach($taxid_payer_keys as $taxid_payer_key) {
+					if( (array_key_exists($taxid_payer_key, $_POST) && !empty($_POST[$taxid_payer_key])) ) {
+						$taxid_payer = sanitize_text_field($_POST[$taxid_payer_key]);
+					}
+				}
+
+				if(!$taxid_payer || empty($taxid_payer)) {
+					wc_add_notice(  'Precisamos também do nome do pagador', 'error' );
+				}
+			} else {
+				wc_add_notice(  'CPF inválido!', 'error' );
+			}
+		}
+
+		if( empty($not_empty_keys) || empty($valid_keys) ) {
+			return false;
+		}
+
+		return true;
+
+	}
+
 	/**
 	 * Process the payment and return the result.
 	 *
@@ -257,7 +370,18 @@ class WC_Paghiper_Base_Gateway {
 	 * @return array           Redirect.
 	 */
 	public function process_payment( $order_id ) {
+
 		$order = new WC_Order( $order_id );
+		$taxid_keys = ["_{$this->gateway->id}_cpf_cnpj", "_{$this->gateway->id}_payer_name"];
+
+		foreach($taxid_keys as $taxid_key) {
+			if(isset($_POST[$taxid_key]) && !empty($_POST[$taxid_key])) {
+
+				$taxid_value = sanitize_text_field($_POST[$taxid_key]);
+				$order->update_meta_data( $taxid_key, $taxid_value );
+				$order->save();
+			}
+		}
 
 		// Reduce stock levels.
 		// Support for WooCommerce 2.7.

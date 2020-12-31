@@ -19,7 +19,7 @@ class WC_Paghiper_Billet_Gateway extends WC_Payment_Gateway {
 	public function __construct() {
 		$this->id                 = 'paghiper_billet';
 		$this->icon               = apply_filters( 'woo_paghiper_billet_icon', plugins_url( 'assets/images/billet.png', plugin_dir_path( __FILE__ ) ) );
-		$this->has_fields         = false;
+		$this->has_fields         = true;
 		$this->method_title       = __( 'PagHiper Boleto', 'woo-boleto-paghiper' );
 		$this->method_description = __( 'Ativa a emissão e recebimento de boletos via PagHiper.', 'woo-boleto-paghiper' );
 
@@ -57,7 +57,14 @@ class WC_Paghiper_Billet_Gateway extends WC_Payment_Gateway {
 		return $this->paghiper_gateway->is_available();
 	}
 
-		return $available;
+	public function payment_fields() {
+		return $this->paghiper_gateway->payment_fields();
+	}
+
+	public function validate_fields() {
+		return $this->paghiper_gateway->validate_fields();
+	}
+
 	public function retrieve_order_total() {
 		return $this->get_order_total();
 	}
