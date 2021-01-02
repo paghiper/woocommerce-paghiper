@@ -63,6 +63,7 @@ class WC_Paghiper {
 
 			add_filter( 'woocommerce_payment_gateways', array( $this, 'add_gateway' ) );
 			add_action( 'init', array( __CLASS__, 'add_paghiper_endpoint' ) );
+			add_action( 'init', array( __CLASS__, 'maybe_deactivate_other_plugins' ) );
 			add_action( 'admin_notices', array( __CLASS__, 'check_paghiper_credentials' ) );
 			add_action( 'admin_init', array( __CLASS__, 'print_notices' ) );
 			add_action( 'wp_ajax_paghiper_dismiss_notice', array( __CLASS__, 'dismiss_notices') );
@@ -81,8 +82,6 @@ class WC_Paghiper {
 
 		/* Print some notices */
 		add_action( 'admin_notices', array( $this, 'print_requirement_notices' ) );
-
-		// Ativa os logs
 
 		// Pega a configuração atual do plug-in.
 		$this->gateway_settings = get_option( 'woocommerce_paghiper_settings' );
@@ -163,6 +162,49 @@ class WC_Paghiper {
 	}
 
 	/**
+	 * Check if other outdated or deprecated plug-ins are active
+	 * 
+	 * @return string
+	 */
+
+	public static function maybe_deactivate_other_plugins() {
+
+		// Get all plugins
+		include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+		$all_plugins = get_plugins();
+
+		// Get active plugins
+		$active_plugins = get_option('active_plugins');
+		$multiple_instances = false;
+
+		$current_plugin_path = plugin_dir_path( __FILE__ ).'woocommerce-paghiper.php';
+		$other_plugins = ['woo-paghiper-pix.php', 'woocommerce-paghiper.php'];
+
+		// Assemble array of name, version, and whether plugin is active (boolean)
+		foreach ( $all_plugins as $key => $value ) {
+			$is_active = ( in_array( $key, $active_plugins ) ) ? true : false;
+
+			if(stripos($current_plugin_path, $key) === FALSE) {
+
+				foreach($other_plugins as $to_be_deactivated) {
+					if(stripos($key, $to_be_deactivated) !== FALSE) {
+
+						$multiple_instances = true;
+						deactivate_plugins($key);
+					}
+				}
+			}
+		}
+
+		if($multiple_instances) {
+
+			add_action( 'admin_notices', function() {
+				include_once 'includes/views/notices/html-notice-multiple-instances.php';
+			});
+		}
+	}
+
+	/**
 	 * Check saved credentials on admin space.
 	 */
 	public static function check_paghiper_credentials() {
@@ -187,8 +229,6 @@ class WC_Paghiper {
 			}
 
 		};
-
-
 
 		if(!get_transient( 'woo_paghiper_apikey_valid' )) {
 
@@ -222,7 +262,7 @@ class WC_Paghiper {
 	}
 
 	/**
-	 * 
+	 * Print notices for the admin on the wp-admin section
 	 */
 	public static function print_notices() {
 
@@ -246,12 +286,12 @@ class WC_Paghiper {
 				echo sprintf('<div class="error notice paghiper-dismiss-notice is-dismissible" data-notice-id="notice_2_1"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __('PIX PagHiper'), __('Você ja pode receber pagamentos por PIX! Configure aqui:'), admin_url('admin.php?page=wc-settings&tab=checkout&section=wc_paghiper_pix_gateway'), __('Configurações do PIX PagHiper'));
 			});
 			
-		}		
+		}
 
 	}
 
 	/**
-	 * 
+	 * Allow for notice dismissal via AJAX
 	 */
 	public static function dismiss_notices() {
 		if(isset($_POST) && array_key_exists('notice', $_POST)) {
@@ -271,6 +311,8 @@ class WC_Paghiper {
 	 * Plugin activate method.
 	 */
 	public static function activate() {
+
+		// Deactivate other instances of the plugin
 
 		// Migrate gateway settings
 		self::migrate_gateway_settings();
