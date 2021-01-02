@@ -347,7 +347,7 @@ class WC_Paghiper_Base_Gateway {
 				}
 
 				if(!$taxid_payer || empty($taxid_payer)) {
-					wc_add_notice(  'Precisamos também do nome do pagador', 'error' );
+					wc_add_notice(  'Ops! Precisamos também do seu nome.', 'error' );
 				}
 			} else {
 				wc_add_notice(  'CPF inválido!', 'error' );
