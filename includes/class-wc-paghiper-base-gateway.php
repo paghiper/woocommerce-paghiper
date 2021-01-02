@@ -424,12 +424,12 @@ class WC_Paghiper_Base_Gateway {
 		if($transaction) {
 			// Mark as on-hold (we're awaiting the ticket).
 			$waiting_status = (!empty($this->set_status_when_waiting)) ? $this->set_status_when_waiting : 'on-hold';
-			$order->update_status( $waiting_status, __( 'Boleto PagHiper: Boleto gerado e enviado por e-mail.', 'woo-boleto-paghiper' ) );
+			$order->update_status( $waiting_status, __( 'PagHiper: '. ($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'Boleto' .' gerado e enviado por e-mail.', 'woo-boleto-paghiper' ) );
 
 		} else {
 
 			if ( 'yes' === $this->debug ) {
-				wc_paghiper_add_log( $this->log, sprintf( 'Pedido %s: Não foi possível gerar o boleto. Detalhes: %s', var_export($transaction, true) ) );
+				wc_paghiper_add_log( $this->log, sprintf( 'Pedido %s: Não foi possível gerar o '. ($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto' .'. Detalhes: %s', var_export($transaction, true) ) );
 			}
 
 		}
