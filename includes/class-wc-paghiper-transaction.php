@@ -315,7 +315,7 @@ class WC_PagHiper_Transaction {
 
 		// Conciliate order, in order to avoind conflict with third-party plugins and custom solutions
 		// We do this to facilitate integration, even when users implement stuff using unorthodox methods
-		$order_total 		= round(floatval($this->order->get_subtotal()), 2);
+		$order_total 		= round(floatval($this->order->get_total()), 2);
 		$simulated_total	= round(($order_line_total + $order_shipping + $order_taxes), 2);
 
 		// If our sum is lower than the order total:
