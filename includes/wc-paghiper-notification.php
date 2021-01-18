@@ -6,7 +6,11 @@ use PagHiper\PagHiper;
 require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/vendor/autoload.php';
 
 $wp_api_url = add_query_arg( 'wc-api', 'WC_Gateway_Paghiper', home_url( '/' ) );
-add_action( 'woocommerce_api_wc_gateway_paghiper', 'woocommerce_boleto_paghiper_check_ipn_response' );
+add_action( 'woocommerce_api_wc_gateway_paghiper', 'woocommerce_paghiper_check_ipn_response' );
+
+// Fallback suport for older PIX module endpoint notifications
+add_action('wp_ajax_woo_paghiper_pix_webhook', 'woocommerce_paghiper_check_ipn_response');
+add_action('wp_ajax_nopriv_woo_paghiper_pix_webhook','woocommerce_paghiper_check_ipn_response');
 
 function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 
@@ -80,10 +84,14 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
     }
 }
 
-function woocommerce_boleto_paghiper_check_ipn_response() {
+function woocommerce_paghiper_check_ipn_response() {
 
     $transaction_type = (isset($_GET) && array_key_exists('gateway', $_GET)) ? sanitize_text_field($_GET['gateway']) : 'billet';
-    $settings = ($is_pix) ? get_option( 'woocommerce_paghiper_pix_settings' ) : get_option( 'woocommerce_paghiper_billet_settings' );
+    if (defined('DOING_AJAX') && DOING_AJAX) { 
+        $transaction_type = 'pix'; 
+    }
+
+    $settings = ($transaction_type == 'pix') ? get_option( 'woocommerce_paghiper_pix_settings' ) : get_option( 'woocommerce_paghiper_billet_settings' );
     $log = wc_paghiper_initialize_log( $settings[ 'debug' ] );
 
     $token 			= $settings['token'];
