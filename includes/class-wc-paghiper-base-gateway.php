@@ -253,7 +253,7 @@ class WC_Paghiper_Base_Gateway {
 
 		echo wpautop( wp_kses_post( $this->gateway->description ) );
 	 
-		echo '<fieldset id="wc-' . esc_attr( $this->gateway->id ) . '-cc-form" class="wc-credit-card-form wc-payment-form" style="background:transparent;">';
+		echo '<fieldset id="wc-' . esc_attr( $this->gateway->id ) . '-form" class="wc-paghiper-form wc-payment-form" style="background:transparent;">';
 	 
 		// Add this action hook if you want your custom payment gateway to support it
 		do_action( 'woocommerce_paghiper_taxid_form_start', $this->gateway->id );
@@ -262,9 +262,8 @@ class WC_Paghiper_Base_Gateway {
 		parse_str( $_POST['post_data'], $post_data );
 		if(!isset($post_data['billing_cpf'], $post_data['billing_cnpj'])) {
 			echo '<div class="form-row form-row-wide">
-				<label>Número de CPF/CNPJ <span class="required">*</span>
-					<input id="'.$this->gateway->id.'_cpf_cnpj" name="_'.$this->gateway->id.'_cpf_cnpj" type="text" autocomplete="off">
-				</label>
+				<label>Número de CPF/CNPJ <span class="required">*</span></label>
+				<input id="'.$this->gateway->id.'_cpf_cnpj" name="_'.$this->gateway->id.'_cpf_cnpj" type="text" autocomplete="off">
 				</div>
 				<div class="clear"></div>';
 		}
@@ -295,9 +294,8 @@ class WC_Paghiper_Base_Gateway {
 		if(!$has_payer_fields) {
 				
 			echo '<div class="form-row form-row-wide">
-				<label>Nome do pagador <span class="required">*</span>
-					<input id="'.$this->gateway->id.'_payer_name" name="_'.$this->gateway->id.'_payer_name" type="text" autocomplete="off">
-				</label>
+				<label>Nome do pagador <span class="required">*</span></label>
+				<input id="'.$this->gateway->id.'_payer_name" name="_'.$this->gateway->id.'_payer_name" type="text" autocomplete="off">
 				</div>
 				<div class="clear"></div>';
 		}
