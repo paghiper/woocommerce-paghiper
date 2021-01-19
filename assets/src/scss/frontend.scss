@@ -102,3 +102,10 @@
 		}
 	}
 }
+
+.payment_method_paghiper_billet,
+.payment_method_paghiper_pix {
+	img {
+		max-height: 40px;
+	}
+}
