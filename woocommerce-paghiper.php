@@ -1,17 +1,17 @@
 <?php
 /**
- * Plugin Name: WooCommerce Boleto PagHiper
+ * Plugin Name: WooCommerce Boleto e PIX PagHiper
  * Plugin URI: https://github.com/paghiper/woocommerce-paghiper/
- * Description: Ofereça a seus clientes pagamento boleto bancário com a PagHiper. Fácil, prático e rapido!
- * Author: PagHiper, Henrique Cruz
+ * Description: Ofereça a seus clientes pagamento por PIX e boleto bancário com a PagHiper. Fácil, prático e rapido!
+ * Author: PagHiper Pagamentos
  * Author URI: https://www.paghiper.com
- * Version: 2.0.5
- * Tested up to: 5.5.3
+ * Version: 2.1
+ * Tested up to: 5.6
  * License: GPLv2 or later
  * Text Domain: woo-boleto-paghiper
  * Domain Path: /languages/
  * WC requires at least: 3.5
- * WC tested up to: 4.6.2
+ * WC tested up to: 4.8.0
  */	
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -32,7 +32,7 @@ class WC_Paghiper {
 	 *
 	 * @var string
 	 */
-	const VERSION = '2.0.5';
+	const VERSION = '2.1';
 
 	/**
 	 * Instance of this class.
@@ -63,30 +63,28 @@ class WC_Paghiper {
 
 			add_filter( 'woocommerce_payment_gateways', array( $this, 'add_gateway' ) );
 			add_action( 'init', array( __CLASS__, 'add_paghiper_endpoint' ) );
-			add_action( 'admin_init', array( __CLASS__, 'check_paghiper_credentials' ) );
+			add_action( 'init', array( __CLASS__, 'maybe_deactivate_other_plugins' ) );
+			add_action( 'admin_notices', array( __CLASS__, 'check_paghiper_credentials' ) );
+			add_action( 'admin_init', array( __CLASS__, 'print_notices' ) );
+			add_action( 'wp_ajax_paghiper_dismiss_notice', array( __CLASS__, 'dismiss_notices') );
+
 			add_filter( 'template_include', array( $this, 'paghiper_template' ), 9999 );
 			add_action( 'woocommerce_view_order', array( $this, 'pending_payment_message' ) );
 			add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( $this, 'plugin_action_links' ) );
-			add_filter( 'woocommerce_new_order', array($this, 'generate_billet') );
+			add_filter( 'woocommerce_new_order', array($this, 'generate_transaction') );
 			add_filter( 'woocommerce_email_attachments', array($this, 'attach_billet'), 10, 3 );
+			add_action( 'wp_enqueue_scripts', array( $this, 'load_plugin_assets' ) );
+
+			// Inicializa logs, caso ativados
+			$this->log = wc_paghiper_initialize_log( $this->gateway_settings[ 'debug' ] );
 			
-
-			/* */
-		} else {
-			add_action( 'admin_notices', array( $this, 'woocommerce_missing_notice' ) );
 		}
 
-		if (!function_exists('json_decode')) {
-			add_action( 'admin_notices', array( $this, 'json_missing_notice' ) );
-		}
-
-		// Ativa os logs
+		/* Print some notices */
+		add_action( 'admin_notices', array( $this, 'print_requirement_notices' ) );
 
 		// Pega a configuração atual do plug-in.
 		$this->gateway_settings = get_option( 'woocommerce_paghiper_settings' );
-
-		// Inicializa logs, caso ativados
-		$this->log = wc_paghiper_initialize_log( $this->gateway_settings[ 'debug' ] );
 
 	}
 
@@ -130,7 +128,8 @@ class WC_Paghiper {
 
 		include_once 'includes/wc-paghiper-functions.php';
 		include_once 'includes/wc-paghiper-notification.php';
-		include_once 'includes/class-wc-paghiper-gateway.php';
+		include_once 'includes/class-wc-paghiper-billet-gateway.php';
+		include_once 'includes/class-wc-paghiper-pix-gateway.php';
 
 	}
 
@@ -149,7 +148,8 @@ class WC_Paghiper {
 	 * @return array          Payment methods with Boleto.
 	 */
 	public function add_gateway( $methods ) {
-		$methods[] = 'WC_Paghiper_Gateway';
+		$methods[] = 'WC_Paghiper_Billet_Gateway';
+		$methods[] = 'WC_Paghiper_Pix_Gateway';
 
 		return $methods;
 	}
@@ -162,6 +162,49 @@ class WC_Paghiper {
 	}
 
 	/**
+	 * Check if other outdated or deprecated plug-ins are active
+	 * 
+	 * @return string
+	 */
+
+	public static function maybe_deactivate_other_plugins() {
+
+		// Get all plugins
+		include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+		$all_plugins = get_plugins();
+
+		// Get active plugins
+		$active_plugins = get_option('active_plugins');
+		$multiple_instances = false;
+
+		$current_plugin_path = plugin_dir_path( __FILE__ ).'woocommerce-paghiper.php';
+		$other_plugins = ['woo-paghiper-pix.php', 'woocommerce-paghiper.php'];
+
+		// Assemble array of name, version, and whether plugin is active (boolean)
+		foreach ( $all_plugins as $key => $value ) {
+			$is_active = ( in_array( $key, $active_plugins ) ) ? true : false;
+
+			if(stripos($current_plugin_path, $key) === FALSE) {
+
+				foreach($other_plugins as $to_be_deactivated) {
+					if(stripos($key, $to_be_deactivated) !== FALSE) {
+
+						$multiple_instances = true;
+						deactivate_plugins($key);
+					}
+				}
+			}
+		}
+
+		if($multiple_instances) {
+
+			add_action( 'admin_notices', function() {
+				include_once 'includes/views/notices/html-notice-multiple-instances.php';
+			});
+		}
+	}
+
+	/**
 	 * Check saved credentials on admin space.
 	 */
 	public static function check_paghiper_credentials() {
@@ -169,42 +212,116 @@ class WC_Paghiper {
 		// Include SDK for our call
 		require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/vendor/autoload.php';
 
-		$gateway_settings = get_option( 'woocommerce_paghiper_settings' );
+		$gateways = ['woocommerce_paghiper_pix_settings', 'woocommerce_paghiper_billet_settings'];
+		foreach($gateways as $gateway) {
+			$gateway_settings = get_option( $gateway );
+			$is_pix = ($gateway == 'woocommerce_paghiper_pix_settings') ? true : false;
 
-		if(!array_key_exists('api_key', $gateway_settings) || empty($gateway_settings['api_key'])) {
-			add_action( 'admin_notices', function() {
-				echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __('Boleto PagHiper'), __('Você ainda não configurou sua apiKey! Finalize a configuração do seu plug-in aqui:'), admin_url('admin.php?page=wc-settings&tab=checkout&section=wc_paghiper_gateway'), __('Configurações de integração PagHiper'));
-			});
+			$gateway_name = ($is_pix) ? 'PIX PagHiper' : 'Boleto PagHiper';
+			$gateway_class = ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
 
-			return;
-		}
-
-		if(!get_transient( 'woo_boleto_paghiper_apikey_valid' )) {
+			if(!array_key_exists('api_key', $gateway_settings) || empty($gateway_settings['api_key'])) {
+				add_action( 'admin_notices', function() {
+					echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __($gateway_name), __('Você ainda não configurou sua apiKey! Finalize a configuração do seu plug-in aqui:'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), __("Configurações de integração {$gateway_name}"));
+				});
 	
-			try {
-				$PagHiperAPI = new PagHiper($gateway_settings['api_key'], $gateway_settings['token']);
-				$response = $PagHiperAPI->transaction()->status('0000000000000000');
-				set_transient( 'woo_boleto_paghiper_apikey_valid', 1, 12 * 60 * 60 );
-			} catch(Exception $e) {
+				return;
+			}
 
-				if (strpos($e->getMessage(), 'apiKey') !== false) {
-					add_action( 'admin_notices', function() {
-						echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __('Boleto PagHiper'), __('Sua apiKey é inválida! Confira novamente seus dados aqui:'), admin_url('admin.php?page=wc-settings&tab=checkout&section=wc_paghiper_gateway'), __('Configurações de integração PagHiper'));
-					});
+		};
+
+		if(!get_transient( 'woo_paghiper_apikey_valid' )) {
+
+			$valid_gateway_apis = [];
+			foreach($gateways as $gateway) {
+				$gateway_settings = get_option( $gateway );
+				$is_pix = ($gateway == 'woocommerce_paghiper_pix_settings') ? true : false;
+
+				$gateway_name = ($is_pix) ? 'PIX PagHiper' : 'Boleto PagHiper';
+				$gateway_class = ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
+	
+				try {
+					$PagHiperAPI = new PagHiper($gateway_settings['api_key'], $gateway_settings['token']);
+					$response = $PagHiperAPI->transaction()->status('0000000000000000');
+					$valid_gateway_apis[] = $gateway;
+				} catch(Exception $e) {
+	
+					if (strpos($e->getMessage(), 'apiKey') !== false) {
+						add_action( 'admin_notices', function() {
+							echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __($gateway_name), __('Sua apiKey é inválida! Confira novamente seus dados aqui:'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), __("Configurações de integração {$gateway_name}"));
+						});
+					}
 				}
+			}
+
+			if(sizeof($valid_gateway_apis) == sizeof($gateways)) {
+				set_transient( 'woo_paghiper_apikey_valid', 1, 12 * 60 * 60 );
 			}
 		}
 
 	}
 
 	/**
+	 * Print notices for the admin on the wp-admin section
+	 */
+	public static function print_notices() {
+
+		$is_updated = get_transient( 'woo_paghiper_notice_2_1' );
+
+		if($is_updated) {
+
+			// Enqueue scripts
+			add_action( 'admin_enqueue_scripts', function() {
+				wp_register_script( 'paghiper_admin_js', wc_paghiper_assets_url() . 'js/admin.min.js','','1.0', false );
+				
+				wp_localize_script( 'paghiper_admin_js', 'notice_params', array(
+					'ajaxurl' => get_admin_url() . 'admin-ajax.php', 
+				));
+				
+				wp_enqueue_script(  'paghiper_admin_js' );
+			} );
+
+			// Print notices
+			add_action( 'admin_notices', function() {
+				echo sprintf('<div class="error notice paghiper-dismiss-notice is-dismissible" data-notice-id="notice_2_1"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __('PIX PagHiper'), __('Você ja pode receber pagamentos por PIX! Configure aqui:'), admin_url('admin.php?page=wc-settings&tab=checkout&section=wc_paghiper_pix_gateway'), __('Configurações do PIX PagHiper'));
+			});
+			
+		}
+
+	}
+
+	/**
+	 * Allow for notice dismissal via AJAX
+	 */
+	public static function dismiss_notices() {
+		if(isset($_POST) && array_key_exists('notice', $_POST)) {
+
+			$notice_name = str_replace('notice_', '', sanitize_text_field($_POST['notice']));
+			$dismissal = delete_transient("woo_paghiper_notice_{$notice_name}");
+
+			if(!$dismissal) {
+				return false;
+			}
+
+		}
+		return true;
+	}
+
+	/**
 	 * Plugin activate method.
 	 */
 	public static function activate() {
-		self::add_paghiper_endpoint();
 
+		// Deactivate other instances of the plugin
+
+		// Migrate gateway settings
+		self::migrate_gateway_settings();
+
+		// Add our API endpoint for notifications and transactions
+		self::add_paghiper_endpoint();
 		flush_rewrite_rules();
 
+		// Make sure we have our own dir at /wp-content/uploads so we can write our PDFs
 		$uploads = wp_upload_dir();
 		$upload_dir = $uploads['basedir'];
 		$paghiper_dir = $upload_dir . '/paghiper';
@@ -222,14 +339,69 @@ class WC_Paghiper {
 	}
 
 	/**
+	 * Migrate settings from old versions
+	 */
+	public function migrate_gateway_settings() {
+
+		$is_migrated = FALSE;
+
+		// TODO: Check if there are old credentials that need to be migrated
+		$legacy_gateway_settings = get_option( 'woocommerce_paghiper_settings' );
+		if(!is_array($legacy_gateway_settings) || empty($legacy_gateway_settings)) {
+			$legacy_gateway_settings = NULL;
+		}
+
+		// Maybe migrate old gateway settings for the new billet gateway
+		$billet_gateway_settings = get_option( 'woocommerce_paghiper_billet_settings' );
+		$billet_gateway_options = array('enabled', 'title', 'description', 'api_key', 'token', 'paghiper_time', 'debug', 'days_due_date', 'skip_non_workdays', 'open_after_day_due', 'replenish_stock', 'fixed_description', 'set_status_when_waiting', 'set_status_when_paid', 'set_status_when_cancelled');
+		
+		if(!$billet_gateway_settings && $legacy_gateway_settings) {
+			$billet_gateway_settings = [];
+
+			foreach($billet_gateway_options as $billet_gateway_option) {
+				$billet_gateway_settings[$billet_gateway_option] = $legacy_gateway_settings[$billet_gateway_option];
+			}
+
+			add_option( 'woocommerce_paghiper_billet_settings', $billet_gateway_settings, '', 'yes' );
+			$is_migrated = TRUE;
+		}
+	
+
+		// Maybe migrate old gateway settings for the new PIX gateway
+		$pix_gateway_settings = get_option( 'woocommerce_paghiper_pix_settings' );
+
+		if(!$pix_gateway_settings && $legacy_gateway_settings) {
+			$pix_gateway_options = $billet_gateway_options;
+			$pix_gateway_settings = [];
+
+			foreach($pix_gateway_options as $pix_gateway_option) {
+				$pix_gateway_settings[$pix_gateway_option] = $legacy_gateway_settings[$pix_gateway_option];
+			}
+
+			unset($pix_gateway_settings['open_after_day_due']);
+			$pix_gateway_settings['title'] = 'PIX';
+			$pix_gateway_settings['description'] = 'Pague de maneira rápida e prática usando PIX';
+
+			add_option( 'woocommerce_paghiper_pix_settings', $pix_gateway_settings, '', 'yes' );
+			$is_migrated = TRUE;
+		}
+
+		if($is_migrated) {
+			set_transient( 'woo_paghiper_notice_2_1', true, (5 * 24 * 60 * 60) );
+		}
+
+		return $is_migrated;
+	}
+
+	/**
 	 * Generate billet once a new order is placed.
 	 * 
 	 * @param	string $order_id
 	 * 
-	 * @return WC_PagHiper_Boleto
+	 * @return WC_PagHiper_Transaction
 	 */
-	public function generate_billet( $order_id ) {
-		return self::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
+	public function generate_transaction( $order_id ) {
+		return self::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
 	}
 
 	/**
@@ -245,8 +417,7 @@ class WC_Paghiper {
 			wc_paghiper_add_log( $this->log, sprintf( 'Enviando mail: %s', $email_id ) );
 		}
 
-		if ( apply_filters('woo_paghiper_pending_status', 'on-hold', $order) === $order->status && 'paghiper' == $order->payment_method ) {
-		//if( in_array($email_id, array('new_order', 'customer_invoice')) && 'paghiper' == $order->payment_method ){
+		if ( apply_filters('woo_paghiper_pending_status', 'on-hold', $order) === $order->status && in_array($order->payment_method, ['paghiper', 'paghiper_billet']) ) {
 
 			try {
 
@@ -362,11 +533,11 @@ class WC_Paghiper {
 
 			require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
 	
-			$paghiperBoleto = new WC_PagHiper_Boleto( $order_id );
-			$paghiperBoleto->printBarCode(true);
+			$paghiperTransaction = new WC_PagHiper_Transaction( $order_id );
+			$paghiperTransaction->printBarCode(true);
 
 			$html = '<div class="woocommerce-info">';
-			$html .= sprintf( '<a class="button" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Visualizar boleto &rarr;', 'woo-boleto-paghiper' ) );
+			$html .= sprintf( '<a class="button button-primary wc-forward" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Visualizar boleto &rarr;', 'woo-boleto-paghiper' ) );
 
 			$message = sprintf( __( '%sAtenção!%s Ainda não registramos o pagamento deste pedido.', 'woo-boleto-paghiper' ), '<strong>', '</strong>' ) . '<br />';
 			$message .= __( 'Por favor clique no botão ao lado e pague o boleto pelo seu Internet Banking.', 'woo-boleto-paghiper' ) . '<br />';
@@ -382,6 +553,25 @@ class WC_Paghiper {
 	}
 
 	/**
+	 * Enqueue stylesheets and scripts for the front-end
+	 */
+	public function load_plugin_assets() {
+
+		if( !wp_script_is( 'jquery-mask', 'registered' ) ) {
+			wp_register_script( 'jquery-mask', wc_paghiper_assets_url() . 'js/libs/jquery.mask/jquery.mask.min.js', array( 'jquery' ), '1.14.16', false );
+		}
+
+		wp_register_script( 'paghiper_frontend_js', wc_paghiper_assets_url() . 'js/frontend.min.js',array( 'jquery', 'jquery-mask' ),'1.0', false );
+		wp_register_style( 'paghiper_frontend_css', wc_paghiper_assets_url() . 'css/frontend.min.css','','1.0', false );
+
+		if(!is_admin()) {
+			wp_enqueue_script(  'jquery-mask' );
+			wp_enqueue_script(  'paghiper_frontend_js' );
+			wp_enqueue_style( 'paghiper_frontend_css' );
+		}
+	}
+
+	/**
 	 * Action links.
 	 *
 	 * @param  array $links
@@ -392,23 +582,17 @@ class WC_Paghiper {
 		$plugin_links = array();
 
 		if ( defined( 'WC_VERSION' ) && version_compare( WC_VERSION, '2.1', '>=' ) ) {
-			$settings_url = admin_url( 'admin.php?page=wc-settings&tab=checkout&section=wc_paghiper_gateway' );
+			$billet_settings_url = admin_url( 'admin.php?page=wc-settings&tab=checkout&section=wc_paghiper_billet_gateway' );
+			$pix_settings_url = admin_url( 'admin.php?page=wc-settings&tab=checkout&section=wc_paghiper_pix_gateway' );
 		} else {
-			$settings_url = admin_url( 'admin.php?page=woocommerce_settings&tab=payment_gateways&section=WC_Paghiper_Gateway' );
+			$billet_settings_url = admin_url( 'admin.php?page=woocommerce_settings&tab=payment_gateways&section=WC_Paghiper_Billet_Gateway' );
+			$pix_settings_url = admin_url( 'admin.php?page=woocommerce_settings&tab=payment_gateways&section=WC_Paghiper_Pix_Gateway' );
 		}
 
-		$plugin_links[] = '<a href="' . esc_url( $settings_url ) . '">' . __( 'Settings', 'woo-boleto-paghiper' ) . '</a>';
+		$plugin_links[] = '<a href="' . esc_url( $billet_settings_url ) . '">' . __( 'Opções de Boleto', 'woo-boleto-paghiper' ) . '</a>';
+		$plugin_links[] = '<a href="' . esc_url( $pix_settings_url ) . '">' . __( 'Opções de PIX', 'woo-boleto-paghiper' ) . '</a>';
 
 		return array_merge( $plugin_links, $links );
-	}
-
-	/**
-	 * WooCommerce fallback notice.
-	 *
-	 * @return string
-	 */
-	public function woocommerce_missing_notice() {
-		include_once 'includes/views/html-notice-woocommerce-missing.php';
 	}
 
 	/**
@@ -416,8 +600,65 @@ class WC_Paghiper {
 	 *
 	 * @return string
 	 */
-	public function json_missing_notice() {
-		include_once 'includes/views/html-notice-json-missing.php';
+	public function print_requirement_notices() {
+
+		/**
+		 * Woocommerce missing notice.
+		 * 
+		 * @return string
+		 */
+
+		if ( !class_exists( 'WC_Payment_Gateway' ) ) {
+			include_once 'includes/views/notices/html-notice-woocommerce-missing.php';
+		}
+
+		/**
+		 * JSON missing notice.
+		 *
+		 * @return string
+		 */
+		if (!function_exists('json_decode')) {
+			include_once 'includes/views/notices/html-notice-json-missing.php';
+		}
+
+		/**
+		 * GD missing notice.
+		 *
+		 * @return string
+		 */
+		if (!function_exists('imagecreate')) {
+			include_once 'includes/views/notices/html-notice-gd-missing.php';
+		}
+
+		/**
+		 * Paghiper directory is not writable
+		 * 
+		 * @return string
+		 */
+		$uploads = wp_upload_dir();
+		$upload_dir = $uploads['basedir'];
+		$upload_dir = $upload_dir . '/paghiper';
+
+		$test_filename = $upload_dir.'/'.time ();
+        if (touch($test_filename)) {
+            if (!chmod($test_filename, 0666)) {
+				include_once 'includes/views/notices/html-notice-paghiper-folder-not-writable.php';
+			}
+		}
+
+		if(file_exists($test_filename)) {
+			unlink($test_filename);
+		}
+
+		/**
+		 * PHP Version notices.
+		 * 
+		 * @return string
+		 */
+		if (version_compare(PHP_VERSION, '5.6.0', '<')) {
+			include_once 'includes/views/notices/html-notice-min-php-version.php';
+		}
+
 	}
 }
 

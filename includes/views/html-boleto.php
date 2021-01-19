@@ -33,13 +33,13 @@ if ( isset( $boleto_code ) ) {
 
 	if ( $order_id ) {
 
-		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
+		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
 
-		$paghiperBoleto = new WC_PagHiper_Boleto( $order_id );
-		$paghiperBoleto->has_issued_valid_billet();
+		$paghiperTransaction = new WC_PagHiper_Transaction( $order_id );
+		$paghiperTransaction->has_issued_valid_transaction();
 
-		$order = $paghiperBoleto->_get_order();
-		$dias_vencimento = $paghiperBoleto->_get_past_due_days();
+		$order = $paghiperTransaction->_get_order();
+		$dias_vencimento = $paghiperTransaction->_get_past_due_days();
 
 		// Somamos os dias de tolerância para evitar bloqueios na retirada de segunda via.
 		$dias_vencimento += (!empty($settings['open_after_day_due']) && $settings['open_after_day_due'] >= 5 && $settings['open_after_day_due'] < 31) ? $settings['open_after_day_due'] : '0';
@@ -92,7 +92,7 @@ if ( isset( $boleto_code ) ) {
 		}
 
 
-		$paghiperBoleto->printToScreen();
+		$paghiperTransaction->printToScreen();
 
 		exit();
 	}

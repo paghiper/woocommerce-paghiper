@@ -6,9 +6,13 @@ use PagHiper\PagHiper;
 require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/vendor/autoload.php';
 
 $wp_api_url = add_query_arg( 'wc-api', 'WC_Gateway_Paghiper', home_url( '/' ) );
-add_action( 'woocommerce_api_wc_gateway_paghiper', 'woocommerce_boleto_paghiper_check_ipn_response' );
+add_action( 'woocommerce_api_wc_gateway_paghiper', 'woocommerce_paghiper_check_ipn_response' );
 
-function woocommerce_boleto_paghiper_valid_ipn_request($return, $order_no, $settings) {
+// Fallback suport for older PIX module endpoint notifications
+add_action('wp_ajax_woo_paghiper_pix_webhook', 'woocommerce_paghiper_check_ipn_response');
+add_action('wp_ajax_nopriv_woo_paghiper_pix_webhook','woocommerce_paghiper_check_ipn_response');
+
+function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 
     $order          = new WC_Order($order_no);
     $order_status   = $order->get_status();
@@ -67,7 +71,7 @@ function woocommerce_boleto_paghiper_valid_ipn_request($return, $order_no, $sett
                 $order->payment_complete();
 
                 if(strpos('paid', $settings['set_status_when_paid']) === FALSE) {
-                    $order->update_status( $settings['set_status_when_paid'], __( 'PagHiper: Boleto Cancelado.', 'woo_paghiper' ) );
+                    $order->update_status( $settings['set_status_when_paid'], __( 'PagHiper: Boleto Pago.', 'woo_paghiper' ) );
                 } else {
                     $order->add_order_note( __( 'PagHiper: Pagamento compensado.', 'woo_paghiper' ) );
                 }
@@ -80,16 +84,21 @@ function woocommerce_boleto_paghiper_valid_ipn_request($return, $order_no, $sett
     }
 }
 
-function woocommerce_boleto_paghiper_check_ipn_response() {
+function woocommerce_paghiper_check_ipn_response() {
 
-    $settings = get_option( 'woocommerce_paghiper_settings' );
+    $transaction_type = (isset($_GET) && array_key_exists('gateway', $_GET)) ? sanitize_text_field($_GET['gateway']) : 'billet';
+    if (defined('DOING_AJAX') && DOING_AJAX) { 
+        $transaction_type = 'pix'; 
+    }
+
+    $settings = ($transaction_type == 'pix') ? get_option( 'woocommerce_paghiper_pix_settings' ) : get_option( 'woocommerce_paghiper_billet_settings' );
     $log = wc_paghiper_initialize_log( $settings[ 'debug' ] );
 
     $token 			= $settings['token'];
     $api_key 		= $settings['api_key'];
 
     $PagHiperAPI 	= new PagHiper($api_key, $token);
-    $response 		= $PagHiperAPI->transaction()->process_ipn_notification($_POST['notification_id'], $_POST['transaction_id']);
+    $response 		= $PagHiperAPI->transaction()->process_ipn_notification($_POST['notification_id'], $_POST['transaction_id'], $transaction_type);
 
     if($response['result'] == 'success') {
 
@@ -97,12 +106,11 @@ function woocommerce_boleto_paghiper_check_ipn_response() {
             wc_paghiper_add_log( $log, sprintf('Pedido #%s: Post de retorno da PagHiper confirmado.', $response['order_id']) );
         }
 
-
         // Print a 200 HTTP code for the notification engine
         header( 'HTTP/1.1 200 OK' );
 
         // Carry on with the operation
-        woocommerce_boleto_paghiper_valid_ipn_request( $response, $response['order_id'], $settings );
+        woocommerce_paghiper_valid_ipn_request( $response, $response['order_id'], $settings );
 
 
     } else {

@@ -55,26 +55,34 @@ class WC_Paghiper_Admin {
 		// Use nonce for verification.
 		wp_nonce_field( basename( __FILE__ ), 'woo_paghiper_metabox_nonce' );
 
-		if ( 'paghiper' == $order->payment_method ) {
+		if ( in_array($order->payment_method, ['paghiper', 'paghiper_pix', 'paghiper_billet']) ) {
 			$paghiper_data = get_post_meta( $post->ID, 'wc_paghiper_data', true );
 
-			// Save the ticket data if don't have.
-			if ( ! isset( $paghiper_data['order_billet_due_date'] ) ) {
+			// Compatibility with pre v2.1 keys
+			if( isset($paghiper_data['order_billet_due_date']) && !isset($paghiper_data['order_transaction_due_date']) ) {
+				$paghiper_data['order_transaction_due_date'] = $paghiper_data['order_billet_due_date'];
+			}
 
-				$settings               		= get_option( 'woocommerce_paghiper_settings', array() );
-				$order_billet_due_date			= isset( $settings['order_billet_due_date'] ) ? absint( $settings['order_billet_due_date'] ) : 5;
-				$data                   		= array();
-				$data['order_billet_due_date']  = date( 'Y-m-d', time() + ( $order_billet_due_date * 86400 ) );
+			// Save the ticket data if don't have.
+			if ( !isset($paghiper_data['order_transaction_due_date']) ) {
+
+				// Pega a configuração atual do plug-in.
+				$gateway_name = $order->get_payment_method();
+				$settings = ($gateway_name == 'paghiper_pix') ? get_option( 'woocommerce_paghiper_pix_settings' ) : get_option( 'woocommerce_paghiper_billet_settings' );
+
+				$order_transaction_due_date			= isset( $settings['days_due_date'] ) ? absint( $settings['days_due_date'] ) : 5;
+				$data                   			= array();
+				$data['order_transaction_due_date']	= date( 'Y-m-d', time() + ( $order_transaction_due_date * 86400 ) );
 
 				update_post_meta( $post->ID, 'wc_paghiper_data', $data );
 				if(function_exists('update_meta_cache'))
 					update_meta_cache( 'shop_order', $post->ID );
 
-				$paghiper_data['order_billet_due_date'] = $data['order_billet_due_date'];
+				$paghiper_data['order_transaction_due_date'] = $data['order_transaction_due_date'];
 			}
 
-			$order_billet_due_date = DateTime::createFromFormat('Y-m-d', $paghiper_data['order_billet_due_date'], $this->timezone);
-			$formatted_due_date = ($order_billet_due_date) ? $order_billet_due_date->format('d/m/Y') : __("Boleto indisponível");
+			$order_transaction_due_date = DateTime::createFromFormat('Y-m-d', $paghiper_data['order_transaction_due_date'], $this->timezone);
+			$formatted_due_date = ($order_transaction_due_date) ? $order_transaction_due_date->format('d/m/Y') : __("Boleto indisponível");
 
 			$html = '<p><strong>' . __( 'Data de Vencimento:', 'woo_paghiper' ) . '</strong> ' . $formatted_due_date . '</p>';
 			$html .= '<p><strong>' . __( 'URL:', 'woo_paghiper' ) . '</strong> <a target="_blank" href="' . esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ) . '">' . __( 'Visualizar boleto', 'woo_paghiper' ) . '</a></p>';
@@ -169,7 +177,7 @@ class WC_Paghiper_Admin {
 			}
 
 			// Update ticket data.
-			$paghiper_data['order_billet_due_date'] = $new_due_date->format('Y-m-d');
+			$paghiper_data['order_transaction_due_date'] = $new_due_date->format('Y-m-d');
 			update_post_meta( $post_id, 'wc_paghiper_data', $paghiper_data );
 			if(function_exists('update_meta_cache'))
 				update_meta_cache( 'shop_order', $post_id );
@@ -215,18 +223,18 @@ class WC_Paghiper_Admin {
 		// Billet re-emission
 		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
 
-		$paghiperBoleto = new WC_PagHiper_Boleto( $order->id );
+		$paghiperTransaction = new WC_PagHiper_Transaction( $order->id );
 
 		// Body message.
 		$main_message = '<p>' . sprintf( __( 'A data de vencimento do seu boleto foi atualizada para: %s', 'woo_paghiper' ), '<code>' . $expiration_date . '</code>' ) . '</p>';
-		$main_message .= $paghiperBoleto->printBarCode();
+		$main_message .= $paghiperTransaction->printBarCode();
 		$main_message .= '<p>' . sprintf( '<a class="button" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Pagar o boleto &rarr;', 'woo_paghiper' ) ) . '</p>';
 
 		// Sets message template.
 		$message = $mailer->wrap_message( __( 'Nova data de vencimento para o seu boleto', 'woo_paghiper' ), $main_message );
 
 		// Send email.
-		$mailer->send( $order->billing_email, $subject, $message, $headers, '' );
+		$mailer->send( $order->get_billing_email, $subject, $message, $headers, '' );
 	}
 }
 
