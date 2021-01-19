@@ -44,6 +44,18 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
 * Implementação de funcionalidade de boleto parcelado
 
+## 2.1.0 - 2021/01/18
+
+* Nova funcionalidade: Receba seus pedidos usando pagamento por PIX
+* Melhoria: Campo próprio de CPF/CNPJ (Não é mais necessário uso do Brazilian Market on WooCommerce) e validação
+* Melhoria: Checagem de múltiplas instâncias do plugin (desatualizadas ou não)
+* Melhoria: Melhor indicação dos descontos do pedido no painel da Paghiper 
+* Melhoria: Avisos na área administrativa sobre potenciais problemas de funcionamento
+* Melhoria: Informações de pagamento dentro do pedido, na área de "Meus pedidos"
+* Melhoria: Opções dos métodos de pagamento disponíveis direto da lista de plug-ins
+* Bugfix: Mensagem incorreta nas notas de pedido, ao confirmar pagamento
+* Bugfix: Gateways ainda ficavam disponíveis, mesmo para pedidos abaixo do valor mínimo, causando tela branca no checkout
+
 ## 2.0.5 - 2020/11/10
 
 * Bugfix: Melhor tratativa de descontos (quando há um item com valor negativo no carrinho)
@@ -52,7 +64,6 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 ## 2.0.4 - 2020/10/05
 
-* Melhoria: Uso opcional do plug-in Brazilian Market on WooCommerce (antigo WooCommerce Extra Checkout Fields for Brazil)
 * Melhoria: UX e acessibilidade na página de finalização de pedido
 * Melhoria: Downgrade da versão do GuzzleHttp (evita conflitos com outros plug-ins que também usam a lib)
 * Bugfix: Estabilidade e tratamento de erro na emissão e baixa de pagamentos
