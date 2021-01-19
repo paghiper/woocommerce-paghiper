@@ -3,7 +3,7 @@ Contributors: henriqueccruz
 Tags: woocommerce, boleto, paghiper, pagamento
 Requires at least: 3.5
 Tested up to: 5.5.3
-Stable tag: 2.0.5
+Stable tag: 2.1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,7 +17,7 @@ O plug-in anexa o boleto, mostra código de barras e linha digitável nos e-mail
 
 Fácil, prático e rápido!
 
-* **Versão mais Recente:** 2.1
+* **Versão mais Recente:** 2.1.1
 * **Requer WooCommerce** versão mínima 3.5
 * **Requer Wordpress** preferencialmente atualizado
 * **Requisitos:** PHP >= 5.6, cURL ativado.
@@ -52,6 +52,10 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 - Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
 - Implementação de funcionalidade de boleto parcelado
+
+## 2.1.1 - 2021/01/19
+
+- Bugfix: Credenciais não estavam sendo trazidas da versão anterior
 
 ## 2.1.0 - 2021/01/18
 

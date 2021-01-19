@@ -5,7 +5,7 @@
  * Description: Ofereça a seus clientes pagamento por PIX e boleto bancário com a PagHiper. Fácil, prático e rapido!
  * Author: PagHiper Pagamentos
  * Author URI: https://www.paghiper.com
- * Version: 2.1
+ * Version: 2.1.1
  * Tested up to: 5.6
  * License: GPLv2 or later
  * Text Domain: woo-boleto-paghiper
@@ -32,7 +32,7 @@ class WC_Paghiper {
 	 *
 	 * @var string
 	 */
-	const VERSION = '2.1';
+	const VERSION = '2.1.1';
 
 	/**
 	 * Instance of this class.
@@ -74,6 +74,9 @@ class WC_Paghiper {
 			add_filter( 'woocommerce_new_order', array($this, 'generate_transaction') );
 			add_filter( 'woocommerce_email_attachments', array($this, 'attach_billet'), 10, 3 );
 			add_action( 'wp_enqueue_scripts', array( $this, 'load_plugin_assets' ) );
+
+			// Migra configurações das chaves antigas ao atualizar
+			add_action( 'init', array( $this, 'migrate_gateway_settings' ));
 
 			// Inicializa logs, caso ativados
 			$this->log = wc_paghiper_initialize_log( $this->gateway_settings[ 'debug' ] );
@@ -312,11 +315,6 @@ class WC_Paghiper {
 	 */
 	public static function activate() {
 
-		// Deactivate other instances of the plugin
-
-		// Migrate gateway settings
-		self::migrate_gateway_settings();
-
 		// Add our API endpoint for notifications and transactions
 		self::add_paghiper_endpoint();
 		flush_rewrite_rules();
@@ -342,6 +340,11 @@ class WC_Paghiper {
 	 * Migrate settings from old versions
 	 */
 	public function migrate_gateway_settings() {
+
+		$plugin_db_version = (float) get_option( 'woocommerce_paghiper_db_version');
+		if(get_option( 'woocommerce_paghiper_db_version' ) == 1.1) {
+			return false;
+		}
 
 		$is_migrated = FALSE;
 
@@ -388,6 +391,13 @@ class WC_Paghiper {
 
 		if($is_migrated) {
 			set_transient( 'woo_paghiper_notice_2_1', true, (5 * 24 * 60 * 60) );
+		}
+
+		$billet_gateway_settings = get_option( 'woocommerce_paghiper_billet_settings' );
+		$pix_gateway_settings = get_option( 'woocommerce_paghiper_pix_settings' );
+
+		if(!empty($billet_gateway_settings['api_key']) || !empty($pix_gateway_settings['api_key'])) {
+			update_option( 'woocommerce_paghiper_db_version', 1.1, '', 'yes');
 		}
 
 		return $is_migrated;
