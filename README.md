@@ -6,7 +6,7 @@ O plug-in anexa o boleto, mostra código de barras e linha digitável nos e-mail
 
 Fácil, prático e rápido!
 
-* **Versão mais Recente:** 2.0.5
+* **Versão mais Recente:** 2.1
 * **Requer WooCommerce** versão mínima 3.5
 * **Requer Wordpress** preferencialmente atualizado
 * **Requisitos:** PHP >= 5.6.0, Suporte a JSON e permissões de escrita na pasta uploads.
