@@ -557,10 +557,15 @@ class WC_Paghiper {
 	 */
 	public function load_plugin_assets() {
 
-		wp_register_script( 'paghiper_frontend_js', wc_paghiper_assets_url() . 'js/frontend.min.js','','1.0', false );
+		if( !wp_script_is( 'jquery-mask', 'registered' ) ) {
+			wp_register_script( 'jquery-mask', wc_paghiper_assets_url() . 'js/libs/jquery.mask/jquery.mask.min.js', array( 'jquery' ), '1.14.16', false );
+		}
+
+		wp_register_script( 'paghiper_frontend_js', wc_paghiper_assets_url() . 'js/frontend.min.js',array( 'jquery', 'jquery-mask' ),'1.0', false );
 		wp_register_style( 'paghiper_frontend_css', wc_paghiper_assets_url() . 'css/frontend.min.css','','1.0', false );
 
 		if(!is_admin()) {
+			wp_enqueue_script(  'jquery-mask' );
 			wp_enqueue_script(  'paghiper_frontend_js' );
 			wp_enqueue_style( 'paghiper_frontend_css' );
 		}

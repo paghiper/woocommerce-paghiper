@@ -263,7 +263,7 @@ class WC_Paghiper_Base_Gateway {
 		if(!isset($post_data['billing_cpf'], $post_data['billing_cnpj'])) {
 			echo '<div class="form-row form-row-wide">
 				<label>Número de CPF/CNPJ <span class="required">*</span></label>
-				<input id="'.$this->gateway->id.'_cpf_cnpj" name="_'.$this->gateway->id.'_cpf_cnpj" type="text" autocomplete="off">
+				<input id="'.$this->gateway->id.'_cpf_cnpj" name="_'.$this->gateway->id.'_cpf_cnpj" class="paghiper_tax_id" type="text" autocomplete="off">
 				</div>
 				<div class="clear"></div>';
 		}
