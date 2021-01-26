@@ -46,10 +46,16 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 ## 2.1.2 - 2021/01/26
 
-* Bugfix: Não era possível atualizar a data de vencimento do boleto/PIX via back-end
+* Melhoria: Aviso de limite padrão comercial para transações acima de R$ 9.000
+* Melhoria: Compatibilidade com plug-ins de multi-step checkout (ou lojas sem AJAX no checkout)
+* Melhoria: Remoção de vários notices e warnings
+* Melhoria: Compatibilidade com plug-ins de quantidade fracionada
 * Bugfix: Boletos estavam sendo emitidos para pedidos não feitos com Paghiper em alguns casos
+* Bugfix: Instruções de pagamento eram mostrados várias vezes, dependendo das condições
+* Bugfix: Não era possível atualizar a data de vencimento do boleto/PIX via back-end
 * Bugfix: Plug-in retornava pedidos para o status de "aguardando" em alguns casos
 * Bugfix: Mais segurança na atualização dos pedidos
+* Bugfix: Link incorreto para pedidos era formado, caso bloco de boleto fosse acessado da área "meus pedidos"
 
 ## 2.1.1 - 2021/01/19
 
