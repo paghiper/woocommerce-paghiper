@@ -263,10 +263,24 @@ class WC_Paghiper_Base_Gateway {
 	 
 		// Add this action hook if you want your custom payment gateway to support it
 		do_action( 'woocommerce_paghiper_taxid_form_start', $this->gateway->id );
+
+		if(absint( get_query_var( 'order-pay' ) )) {
+			$order_id = absint( get_query_var( 'order-pay' ) );
+			$order = ($order_id > 0) ? wc_get_order($order_id) : null;
+		}
 	 
 		// Print fields only if there are no fields for the same purpose on the checkout
-		parse_str( $_POST['post_data'], $post_data );
-		if(!isset($post_data['billing_cpf'], $post_data['billing_cnpj'])) {
+		if(isset($order)) {
+			$order_id = absint( get_query_var( 'order-pay' ) );
+			$order = ($order_id > 0) ? wc_get_order($order_id) : null;
+
+			$has_taxid_fields = ($order && (!empty($order->billing_cpf) || !empty($order->billing_cnpj) || !empty($order->{'_'.$order->get_payment_method().'_cpf_cnpj'})));
+		} else {
+			parse_str( $_POST['post_data'], $post_data );
+			$has_taxid_fields = (!isset($post_data['billing_cpf'], $post_data['billing_cnpj']));
+		}
+
+		if(!$has_taxid_fields) {
 			echo '<div class="form-row form-row-wide paghiper-taxid-fieldset">
 				<label>Número de CPF/CNPJ <span class="required">*</span></label>
 				<input id="'.$this->gateway->id.'_cpf_cnpj" name="_'.$this->gateway->id.'_cpf_cnpj" class="paghiper_tax_id" type="text" autocomplete="off">
@@ -284,10 +298,7 @@ class WC_Paghiper_Base_Gateway {
 
 		$has_payer_fields = false;
 
-		if(absint( get_query_var( 'order-pay' ) )) {
-			$order_id = absint( get_query_var( 'order-pay' ) );
-			$order = ($order_id > 0) ? wc_get_order($order_id) : null;
-
+		if(isset($order)) {
 			$has_payer_fields = ($order && (!empty($order->billing_first_name) || !empty($order->billing_company) || !empty($order->{'_'.$order->get_payment_method().'_payer_name'})));
 			
 			if( (strlen($payer_cpf_cnpj) > 11 && ( empty($order->billing_company) && empty($order->{'_'.$order->get_payment_method().'_payer_name'})) ) ) {
@@ -509,7 +520,7 @@ class WC_Paghiper_Base_Gateway {
 		if($order->get_payment_method() !== 'paghiper_pix') {
 
 			$html = '<div class="woocommerce-message">';
-			$html .= sprintf( '<a class="button button-primary wc-forward" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $_GET['key'] ) ), __( 'Pagar o Boleto', 'woo-boleto-paghiper' ) );
+			$html .= sprintf( '<a class="button button-primary wc-forward" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Pagar o Boleto', 'woo-boleto-paghiper' ) );
 	
 			$message = sprintf( __( '%sAtenção!%s Você NÃO vai receber o boleto pelos Correios.', 'woo-boleto-paghiper' ), '<strong>', '</strong>' ) . '<br />';
 			$message .= __( 'Clique no link abaixo e pague o boleto pelo seu aplicativo de Internet Banking .', 'woo-boleto-paghiper' ) . '<br />';
