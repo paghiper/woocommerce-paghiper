@@ -56,8 +56,13 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
                 break;
             case "canceled" :
 
-                    // TODO: Checar se data do boleto cancelado é menor que a atual (do pedido)
                     // Se data do pedido for maior que a do boleto cancelado, não cancelar pedido
+			        $paghiper_data = get_post_meta( $order_no, 'wc_paghiper_data', true );
+
+                    if($return['transaction_id'] !== $paghiper_data['transaction_id']) {
+                        $order->add_order_note( __( 'PagHiper: Um boleto emitido para este pedido foi cancelado. Como não era o boleto mais atual, o pedido permanece aguardando pagamento.' , 'woo_paghiper' ) );
+                        return;
+                    }
 
                     $cancelled_status = (!empty($settings['set_status_when_cancelled'])) ? $settings['set_status_when_cancelled'] : 'cancelled';
                     
