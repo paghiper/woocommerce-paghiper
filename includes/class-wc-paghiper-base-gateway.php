@@ -262,7 +262,7 @@ class WC_Paghiper_Base_Gateway {
 		// Print fields only if there are no fields for the same purpose on the checkout
 		parse_str( $_POST['post_data'], $post_data );
 		if(!isset($post_data['billing_cpf'], $post_data['billing_cnpj'])) {
-			echo '<div class="form-row form-row-wide">
+			echo '<div class="form-row form-row-wide paghiper-taxid-fieldset">
 				<label>Número de CPF/CNPJ <span class="required">*</span></label>
 				<input id="'.$this->gateway->id.'_cpf_cnpj" name="_'.$this->gateway->id.'_cpf_cnpj" class="paghiper_tax_id" type="text" autocomplete="off">
 				</div>
@@ -294,7 +294,7 @@ class WC_Paghiper_Base_Gateway {
 
 		if(!$has_payer_fields) {
 				
-			echo '<div class="form-row form-row-wide">
+			echo '<div class="form-row form-row-wide paghiper-payername-fieldset">
 				<label>Nome do pagador <span class="required">*</span></label>
 				<input id="'.$this->gateway->id.'_payer_name" name="_'.$this->gateway->id.'_payer_name" type="text" autocomplete="off">
 				</div>
