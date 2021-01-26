@@ -23,7 +23,12 @@ class WC_Paghiper_Base_Gateway {
         // Checamos se a moeda configurada é suportada pelo gateway
         if ( ! $this->using_supported_currency() ) { 
             add_action( 'admin_notices', array( $this, 'currency_not_supported_message' ) ); 
-        } 
+		} 
+		
+		// Show our payment details inside the order page
+		if(empty( is_wc_endpoint_url('order-received') )) {
+			add_action( 'woocommerce_order_details_before_order_table', array( $this, 'show_payment_instructions' ), 10, 1 );
+		}
 	}
 
 	/**
@@ -59,23 +64,24 @@ class WC_Paghiper_Base_Gateway {
 
 		$total = 0;
 
-		$min_value = apply_filters( "woo_{$this->gateway->id}_max_value", 3, $cart );
-		$max_value = apply_filters( "woo_{$this->gateway->id}_max_value", PHP_INT_MAX, $cart );
-
 		if ( WC()->cart ) {
+			$cart = WC()->cart;
 			$total = $this->gateway->retrieve_order_total();
-		}
 
-		if ( $total >= $min_value ) {
-			$has_met_min_amount = true;
-		}
+			$min_value = apply_filters( "woo_{$this->gateway->id}_max_value", 3, $cart );
+			$max_value = apply_filters( "woo_{$this->gateway->id}_max_value", PHP_INT_MAX, $cart );
 
-		if ( $total >= $max_value ) {
-			$has_met_max_amount = true;
-		}
-
-		if($available && $has_met_min_amount && !$has_met_max_amount) {
-			return true;
+			if ( $total >= $min_value ) {
+				$has_met_min_amount = true;
+			}
+	
+			if ( $total >= $max_value ) {
+				$has_met_max_amount = true;
+			}
+	
+			if($available && $has_met_min_amount && !$has_met_max_amount) {
+				return true;
+			}
 		}
 
 		return false;
@@ -257,11 +263,25 @@ class WC_Paghiper_Base_Gateway {
 	 
 		// Add this action hook if you want your custom payment gateway to support it
 		do_action( 'woocommerce_paghiper_taxid_form_start', $this->gateway->id );
+
+		if(absint( get_query_var( 'order-pay' ) )) {
+			$order_id = absint( get_query_var( 'order-pay' ) );
+			$order = ($order_id > 0) ? wc_get_order($order_id) : null;
+		}
 	 
 		// Print fields only if there are no fields for the same purpose on the checkout
-		parse_str( $_POST['post_data'], $post_data );
-		if(!isset($post_data['billing_cpf'], $post_data['billing_cnpj'])) {
-			echo '<div class="form-row form-row-wide">
+		if(isset($order)) {
+			$order_id = absint( get_query_var( 'order-pay' ) );
+			$order = ($order_id > 0) ? wc_get_order($order_id) : null;
+
+			$has_taxid_fields = ($order && (!empty($order->billing_cpf) || !empty($order->billing_cnpj) || !empty($order->{'_'.$order->get_payment_method().'_cpf_cnpj'})));
+		} else {
+			parse_str( $_POST['post_data'], $post_data );
+			$has_taxid_fields = (!isset($post_data['billing_cpf'], $post_data['billing_cnpj']));
+		}
+
+		if(!$has_taxid_fields) {
+			echo '<div class="form-row form-row-wide paghiper-taxid-fieldset">
 				<label>Número de CPF/CNPJ <span class="required">*</span></label>
 				<input id="'.$this->gateway->id.'_cpf_cnpj" name="_'.$this->gateway->id.'_cpf_cnpj" class="paghiper_tax_id" type="text" autocomplete="off">
 				</div>
@@ -278,10 +298,7 @@ class WC_Paghiper_Base_Gateway {
 
 		$has_payer_fields = false;
 
-		if(absint( get_query_var( 'order-pay' ) )) {
-			$order_id = absint( get_query_var( 'order-pay' ) );
-			$order = ($order_id > 0) ? wc_get_order($order_id) : null;
-
+		if(isset($order)) {
 			$has_payer_fields = ($order && (!empty($order->billing_first_name) || !empty($order->billing_company) || !empty($order->{'_'.$order->get_payment_method().'_payer_name'})));
 			
 			if( (strlen($payer_cpf_cnpj) > 11 && ( empty($order->billing_company) && empty($order->{'_'.$order->get_payment_method().'_payer_name'})) ) ) {
@@ -293,7 +310,7 @@ class WC_Paghiper_Base_Gateway {
 
 		if(!$has_payer_fields) {
 				
-			echo '<div class="form-row form-row-wide">
+			echo '<div class="form-row form-row-wide paghiper-payername-fieldset">
 				<label>Nome do pagador <span class="required">*</span></label>
 				<input id="'.$this->gateway->id.'_payer_name" name="_'.$this->gateway->id.'_payer_name" type="text" autocomplete="off">
 				</div>
@@ -426,6 +443,12 @@ class WC_Paghiper_Base_Gateway {
 
 		} else {
 
+			// Prints a notice, case order total surpasses our normal commercial limits
+			$order_total = round(floatval($order->get_total()));
+			if($order_total > 9000) {
+				$order->add_order_note( sprintf( __( 'Atenção! Total da transação excede R$ 9.000. Caso ainda não o tenha feito, entre em contato com nossa equipe comercial para liberação através do e-mail <a href="comercial@paghiper.com" target="_blank">comercial@paghiper.com</a>', 'woo_paghiper' ) ) );
+			}
+
 			if ( 'yes' === $this->debug ) {
 				wc_paghiper_add_log( $this->log, sprintf( 'Pedido %s: Não foi possível gerar o '. ($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto' .'. Detalhes: %s', var_export($transaction, true) ) );
 			}
@@ -479,7 +502,13 @@ class WC_Paghiper_Base_Gateway {
 		$order 		= (is_numeric($order)) ? wc_get_order($order) : $order;
 		$order_id 	= $order->get_id();
 
-		if($this->gateway->id !== 'paghiper_pix' && $order->get_payment_method() !== $this->gateway->id) {
+		// Locks this action for misfiring when order is placed with other gateways
+		if(!in_array($order->get_payment_method(), ['paghiper', 'paghiper_billet', 'paghiper_pix'])) {
+			return;
+		}
+
+		// Fallback for old billet transactions
+		if($order->get_payment_method() !== $this->gateway->id && $order->get_payment_method() !== 'paghiper') {
 			return;
 		}
 
@@ -491,7 +520,7 @@ class WC_Paghiper_Base_Gateway {
 		if($order->get_payment_method() !== 'paghiper_pix') {
 
 			$html = '<div class="woocommerce-message">';
-			$html .= sprintf( '<a class="button button-primary wc-forward" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $_GET['key'] ) ), __( 'Pagar o Boleto', 'woo-boleto-paghiper' ) );
+			$html .= sprintf( '<a class="button button-primary wc-forward" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Pagar o Boleto', 'woo-boleto-paghiper' ) );
 	
 			$message = sprintf( __( '%sAtenção!%s Você NÃO vai receber o boleto pelos Correios.', 'woo-boleto-paghiper' ), '<strong>', '</strong>' ) . '<br />';
 			$message .= __( 'Clique no link abaixo e pague o boleto pelo seu aplicativo de Internet Banking .', 'woo-boleto-paghiper' ) . '<br />';
@@ -519,7 +548,7 @@ class WC_Paghiper_Base_Gateway {
 	function email_instructions( $order, $sent_to_admin ) {
 
 		$order_status = (strpos($order->get_status(), 'wc-') === false) ? 'wc-'.$order->get_status() : $order->get_status();
-		if ( $sent_to_admin || apply_filters('woo_paghiper_pending_status', $this->set_status_when_waiting, $order) !== $order_status || strpos($order->payment_method, 'paghiper') === false || ($order->payment_method == 'paghiper_pix' && $order->get_payment_method() !== $this->gateway->id)) {
+		if ( $sent_to_admin || apply_filters('woo_paghiper_pending_status', $this->set_status_when_waiting, $order) !== $order_status || strpos($order->get_payment_method(), 'paghiper') === false || ($order->get_payment_method() == 'paghiper_pix' && $order->get_payment_method() !== $this->gateway->id)) {
 			return;
 		}
 

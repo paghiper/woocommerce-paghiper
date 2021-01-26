@@ -5,7 +5,7 @@
  * Description: Ofereça a seus clientes pagamento por PIX e boleto bancário com a PagHiper. Fácil, prático e rapido!
  * Author: PagHiper Pagamentos
  * Author URI: https://www.paghiper.com
- * Version: 2.1
+ * Version: 2.1.2
  * Tested up to: 5.6
  * License: GPLv2 or later
  * Text Domain: woo-boleto-paghiper
@@ -32,7 +32,7 @@ class WC_Paghiper {
 	 *
 	 * @var string
 	 */
-	const VERSION = '2.1';
+	const VERSION = '2.1.2';
 
 	/**
 	 * Instance of this class.
@@ -74,17 +74,15 @@ class WC_Paghiper {
 			add_filter( 'woocommerce_new_order', array($this, 'generate_transaction') );
 			add_filter( 'woocommerce_email_attachments', array($this, 'attach_billet'), 10, 3 );
 			add_action( 'wp_enqueue_scripts', array( $this, 'load_plugin_assets' ) );
+			add_action( 'admin_enqueue_scripts', array( $this, 'load_plugin_assets' ) );
 
-			// Inicializa logs, caso ativados
-			$this->log = wc_paghiper_initialize_log( $this->gateway_settings[ 'debug' ] );
+			// Migra configurações das chaves antigas ao atualizar
+			add_action( 'init', array( $this, 'migrate_gateway_settings' ));
 			
 		}
 
 		/* Print some notices */
 		add_action( 'admin_notices', array( $this, 'print_requirement_notices' ) );
-
-		// Pega a configuração atual do plug-in.
-		$this->gateway_settings = get_option( 'woocommerce_paghiper_settings' );
 
 	}
 
@@ -209,55 +207,54 @@ class WC_Paghiper {
 	 */
 	public static function check_paghiper_credentials() {
 
-		// Include SDK for our call
-		require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/vendor/autoload.php';
+		add_action( 'admin_notices', function() {
 
-		$gateways = ['woocommerce_paghiper_pix_settings', 'woocommerce_paghiper_billet_settings'];
-		foreach($gateways as $gateway) {
-			$gateway_settings = get_option( $gateway );
-			$is_pix = ($gateway == 'woocommerce_paghiper_pix_settings') ? true : false;
-
-			$gateway_name = ($is_pix) ? 'PIX PagHiper' : 'Boleto PagHiper';
-			$gateway_class = ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
-
-			if(!array_key_exists('api_key', $gateway_settings) || empty($gateway_settings['api_key'])) {
-				add_action( 'admin_notices', function() {
-					echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __($gateway_name), __('Você ainda não configurou sua apiKey! Finalize a configuração do seu plug-in aqui:'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), __("Configurações de integração {$gateway_name}"));
-				});
+			// Include SDK for our call
+			require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/vendor/autoload.php';
 	
-				return;
-			}
-
-		};
-
-		if(!get_transient( 'woo_paghiper_apikey_valid' )) {
-
-			$valid_gateway_apis = [];
+			$gateways = ['woocommerce_paghiper_pix_settings', 'woocommerce_paghiper_billet_settings'];
 			foreach($gateways as $gateway) {
 				$gateway_settings = get_option( $gateway );
 				$is_pix = ($gateway == 'woocommerce_paghiper_pix_settings') ? true : false;
-
+	
 				$gateway_name = ($is_pix) ? 'PIX PagHiper' : 'Boleto PagHiper';
 				$gateway_class = ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
 	
-				try {
-					$PagHiperAPI = new PagHiper($gateway_settings['api_key'], $gateway_settings['token']);
-					$response = $PagHiperAPI->transaction()->status('0000000000000000');
-					$valid_gateway_apis[] = $gateway;
-				} catch(Exception $e) {
+				if(!array_key_exists('api_key', $gateway_settings) || empty($gateway_settings['api_key'])) {
+					echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __($gateway_name), __('Você ainda não configurou sua apiKey! Finalize a configuração do seu plug-in aqui:'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), __("Configurações de integração {$gateway_name}"));
+		
+				}
 	
-					if (strpos($e->getMessage(), 'apiKey') !== false) {
-						add_action( 'admin_notices', function() {
+			};
+
+			if(!get_transient( 'woo_paghiper_apikey_valid' )) {
+
+				$valid_gateway_apis = [];
+				foreach($gateways as $gateway) {
+					$gateway_settings = get_option( $gateway );
+					$is_pix = ($gateway == 'woocommerce_paghiper_pix_settings') ? true : false;
+	
+					$gateway_name = ($is_pix) ? 'PIX PagHiper' : 'Boleto PagHiper';
+					$gateway_class = ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
+		
+					try {
+						$PagHiperAPI = new PagHiper($gateway_settings['api_key'], $gateway_settings['token']);
+						$response = $PagHiperAPI->transaction()->status('0000000000000000');
+						$valid_gateway_apis[] = $gateway;
+					} catch(Exception $e) {
+		
+						if (strpos($e->getMessage(), 'apiKey') !== false) {
 							echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __($gateway_name), __('Sua apiKey é inválida! Confira novamente seus dados aqui:'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), __("Configurações de integração {$gateway_name}"));
-						});
+						}
 					}
+				}
+	
+				if(sizeof($valid_gateway_apis) == sizeof($gateways)) {
+					set_transient( 'woo_paghiper_apikey_valid', 1, 12 * 60 * 60 );
 				}
 			}
 
-			if(sizeof($valid_gateway_apis) == sizeof($gateways)) {
-				set_transient( 'woo_paghiper_apikey_valid', 1, 12 * 60 * 60 );
-			}
-		}
+		});
 
 	}
 
@@ -272,7 +269,6 @@ class WC_Paghiper {
 
 			// Enqueue scripts
 			add_action( 'admin_enqueue_scripts', function() {
-				wp_register_script( 'paghiper_admin_js', wc_paghiper_assets_url() . 'js/admin.min.js','','1.0', false );
 				
 				wp_localize_script( 'paghiper_admin_js', 'notice_params', array(
 					'ajaxurl' => get_admin_url() . 'admin-ajax.php', 
@@ -287,6 +283,27 @@ class WC_Paghiper {
 			});
 			
 		}
+
+		add_action( 'admin_notices', function() {
+
+			$gateways = ['woocommerce_paghiper_pix_settings', 'woocommerce_paghiper_billet_settings'];
+			foreach($gateways as $gateway) {
+
+				$gateway_settings = get_option( $gateway );
+				if(strpos($gateway_settings['set_status_when_waiting'], 'on-hold') === FALSE) {
+
+					$is_pix = ($gateway == 'woocommerce_paghiper_pix_settings') ? true : false;
+		
+					$gateway_name = ($is_pix) ? 'PIX PagHiper' : 'Boleto PagHiper';
+					$gateway_class = ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
+	
+					if(!apply_filters('hide_waiting_status_warning', false, $gateway_class)) {
+						echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __($gateway_name), __('O status após a emissão deve ser "Aguardando" ou equivalente. Caso contrário, o Woocommerce pode cancelar os pedidos antes do pagamento! <br>Finalize a configuração do seu plug-in aqui:'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), __("Configurações de integração {$gateway_name}"));
+					}
+				}
+			}
+
+		});
 
 	}
 
@@ -311,11 +328,6 @@ class WC_Paghiper {
 	 * Plugin activate method.
 	 */
 	public static function activate() {
-
-		// Deactivate other instances of the plugin
-
-		// Migrate gateway settings
-		self::migrate_gateway_settings();
 
 		// Add our API endpoint for notifications and transactions
 		self::add_paghiper_endpoint();
@@ -342,6 +354,11 @@ class WC_Paghiper {
 	 * Migrate settings from old versions
 	 */
 	public function migrate_gateway_settings() {
+
+		$plugin_db_version = (float) get_option( 'woocommerce_paghiper_db_version');
+		if(get_option( 'woocommerce_paghiper_db_version' ) == 1.1) {
+			return false;
+		}
 
 		$is_migrated = FALSE;
 
@@ -390,6 +407,13 @@ class WC_Paghiper {
 			set_transient( 'woo_paghiper_notice_2_1', true, (5 * 24 * 60 * 60) );
 		}
 
+		$billet_gateway_settings = get_option( 'woocommerce_paghiper_billet_settings' );
+		$pix_gateway_settings = get_option( 'woocommerce_paghiper_pix_settings' );
+
+		if(!empty($billet_gateway_settings['api_key']) || !empty($pix_gateway_settings['api_key'])) {
+			update_option( 'woocommerce_paghiper_db_version', 1.1, '', 'yes');
+		}
+
 		return $is_migrated;
 	}
 
@@ -413,11 +437,26 @@ class WC_Paghiper {
 	 */
 	public function attach_billet( $attachments, $email_id, $order ) {
 
-		if ( $this->log ) {
-			wc_paghiper_add_log( $this->log, sprintf( 'Enviando mail: %s', $email_id ) );
-		}
+		$payment_method = $order->get_payment_method();
+		if ( in_array($payment_method, ['paghiper', 'paghiper_billet']) ) {
 
-		if ( apply_filters('woo_paghiper_pending_status', 'on-hold', $order) === $order->status && in_array($order->payment_method, ['paghiper', 'paghiper_billet']) ) {
+			// Initializes plug-in options
+			if(!$this->gateway_settings) {
+				$this->gateway_settings = get_option("woocommerce_{$payment_method}_settings");
+			}
+
+			// Inicializa logs, caso ativados
+			if(!$this->log) {
+				$this->log = wc_paghiper_initialize_log( $this->gateway_settings[ 'debug' ] );
+			}
+
+			if(apply_filters('woo_paghiper_pending_status', $this->gateway_settings['set_status_when_waiting'], $order) !== $order->status) {
+				return;
+			}
+
+			if ( $this->log ) {
+				wc_paghiper_add_log( $this->log, sprintf( 'Enviando mail: %s', $email_id ) );
+			}
 
 			try {
 
@@ -529,9 +568,24 @@ class WC_Paghiper {
 	public function pending_payment_message( $order_id ) {
 		$order = new WC_Order( $order_id );
 
-		if ( 'on-hold' === $order->status && 'paghiper' == $order->payment_method ) {
+		$payment_method = $order->get_payment_method();
+		if ( in_array($payment_method, array('paghiper', 'paghiper_billet')) ) {
 
-			require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
+			// Initializes plug-in options
+			if(!$this->gateway_settings) {
+				$this->gateway_settings = get_option("woocommerce_{$payment_method}_settings");
+			}
+
+			// Inicializa logs, caso ativados
+			if(!$this->log) {
+				$this->log = wc_paghiper_initialize_log( $this->gateway_settings[ 'debug' ] );
+			}
+
+			if(apply_filters('woo_paghiper_pending_status', $this->gateway_settings['set_status_when_waiting'], $order) !== $order->status) {
+				return;
+			}
+
+			require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
 	
 			$paghiperTransaction = new WC_PagHiper_Transaction( $order_id );
 			$paghiperTransaction->printBarCode(true);
@@ -561,13 +615,27 @@ class WC_Paghiper {
 			wp_register_script( 'jquery-mask', wc_paghiper_assets_url() . 'js/libs/jquery.mask/jquery.mask.min.js', array( 'jquery' ), '1.14.16', false );
 		}
 
+		wp_register_script( 'paghiper_admin_js', wc_paghiper_assets_url() . 'js/admin.min.js', array('jquery', 'jquery-mask'),'1.0', false );
 		wp_register_script( 'paghiper_frontend_js', wc_paghiper_assets_url() . 'js/frontend.min.js',array( 'jquery', 'jquery-mask' ),'1.0', false );
 		wp_register_style( 'paghiper_frontend_css', wc_paghiper_assets_url() . 'css/frontend.min.css','','1.0', false );
 
 		if(!is_admin()) {
+
 			wp_enqueue_script(  'jquery-mask' );
 			wp_enqueue_script(  'paghiper_frontend_js' );
 			wp_enqueue_style( 'paghiper_frontend_css' );
+
+		} else {
+
+			
+			global $current_screen;
+			$req_action = empty( $_REQUEST[ 'action' ] ) ? false : $_REQUEST[ 'action' ];
+			if ($current_screen->post_type =='shop_order' && $req_action == 'edit') {
+	
+				wp_enqueue_script(  'jquery-mask' );
+				wp_enqueue_script(  'paghiper_admin_js' );
+	
+			}
 		}
 	}
 

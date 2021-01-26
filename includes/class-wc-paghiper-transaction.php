@@ -212,7 +212,7 @@ class WC_PagHiper_Transaction {
 
 	public function prepare_data_for_transaction() {
 
-		if ( empty( $this->order ) ) {
+		if ( empty( $this->order ) || !in_array($this->order->get_payment_method(), ['paghiper', 'paghiper_billet', 'paghiper_pix']) ) {
 			return false;
 		}
 
@@ -271,7 +271,7 @@ class WC_PagHiper_Transaction {
 
 			$product_id 		= ($item->is_type( 'variable' )) ? $item->get_variation_id() : $item->get_product_id() ;
 			$product_name		= $item->get_name();
-			$product_quantity	= $item->get_quantity();
+			$product_quantity	= (is_int($item->get_quantity())) ? $item->get_quantity() : 1;
 			$individual_price	= $item->get_subtotal() / $product_quantity;
 			$product_price		= $this->_convert_to_cents(($individual_price > 0) ? $individual_price : 0);
 
@@ -379,6 +379,9 @@ class WC_PagHiper_Transaction {
 		require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/vendor/autoload.php';
 		
 		$transaction_data = $this->prepare_data_for_transaction();
+		if(!$transaction_data) {
+			return false;
+		}
 
 		$token 			= $this->gateway_settings['token'];
 		$api_key 		= $this->gateway_settings['api_key'];
@@ -529,39 +532,64 @@ class WC_PagHiper_Transaction {
 		$due_date = (DateTime::createFromFormat('Y-m-d', $this->order_data['order_transaction_due_date']))->format('d/m/Y');
 
 		$html = '<div class="woo_paghiper_digitable_line" style="margin-bottom: 40px;">';
+		$assets_url = wc_paghiper_assets_url().'images';
 
 		if($this->gateway_id !== 'paghiper_pix') :
 			
 			$barcode_number = $this->_get_barcode();
-			$barcode_url = plugins_url( "assets/php/barcode.php?codigo={$barcode_number}", plugin_dir_path( __FILE__ ) );
-			$html .= "<p style='width: 100%; text-align: center;'>Pague seu boleto usando o código de barras ou a linha digitável, se preferir:</p>";
-			$html .= ($barcode_number) ? "<img src='{$barcode_url}' title='Código de barras do boleto deste pedido.' style='max-width: 100%;'>" : '';
-			$html .= ($print) ? "<strong style='font-size: 18px;'>" : "";
-			$html .= "<p style='width: 100%; text-align: center;'>{$digitable_line}</p>";
-			$html .= ($print) ? "</strong>" : "";
+			if(!$barcode_number) {
+
+				$html .= "<img style='max-width: 200px;' src='{$assets_url}/pix-cancelled.png'>";
+				$html .= sprintf('<p><strong>%s</strong></p>', 'Não foi possível emitir seu PIX');
+				$html .= sprintf('<p>%s</p>', 'Entre em contato com o suporte informando o erro 0x00007b');
+
+				wc_paghiper_add_log( $this->log, sprintf( 'PIX não disponível para exibição do código de barras. Pedido #%s', $order_id ) );
+				
+			} else {
+
+				$barcode_url = plugins_url( "assets/php/barcode.php?codigo={$barcode_number}", plugin_dir_path( __FILE__ ) );
+				$html .= "<p style='width: 100%; text-align: center;'>Pague seu boleto usando o código de barras ou a linha digitável, se preferir:</p>";
+				$html .= ($barcode_number) ? "<img src='{$barcode_url}' title='Código de barras do boleto deste pedido.' style='max-width: 100%;'>" : '';
+				$html .= ($print) ? "<strong style='font-size: 18px;'>" : "";
+				$html .= "<p style='width: 100%; text-align: center;'>{$digitable_line}</p>";
+				$html .= ($print) ? "</strong>" : "";
+
+			}
 
 		else :
 
 			$barcode_url = $this->_get_barcode();
-			$html .= "<p style='width: 100%; text-align: center;'>Efetue o pagamento PIX usando o <strong>código de barras</strong> ou usando <strong>PIX copia e cola</strong>, se preferir:</p>";
+			if(!$barcode_url) {
 
-			if($print) {
-				$html .= '<div class="pix-container">';
-				$html .= ($barcode_url) ? "<div class='qr-code'><img src='{$barcode_url}' title='Código de barras do PIX deste pedido.'><br>Data de vencimento: <strong>{$due_date}</strong></div>" : '';
-				$html .= '<div class="instructions"><ul>
-					<li><span>Abra o app do seu banco ou instituição financeira e <strong>entre no ambiente Pix</strong>.</span></li>
-					<li><span>Escolha a opção <strong>Pagar com QR Code</strong> e escanele o código ao lado.</span></li>
-					<li><span>Confirme as informações e finalize o pagamento.</span></li>
-				</ul></div>';
-				$html .= '</div>';
-				$html .= sprintf('<div class="paghiper-pix-code" onclick="copyPaghiperEmv()"><p>Pagar com PIX copia e cola - <button>Clique para copiar</button></p><div class="textarea-container"><textarea readonly rows="3">%s</textarea></div></div>', $digitable_line);
+				$html .= "<img style='max-width: 200px;' src='{$assets_url}/billet-cancelled.png'>";
+				$html .= sprintf('<p><strong>%s</strong></p>', 'Não foi possível exibir o seu boleto');
+				$html .= sprintf('<p>%s</p>', 'Entre em contato com o suporte informando o erro 0x0000e9');
+
+				wc_paghiper_add_log( $this->log, sprintf( 'Boleto não disponível para exibição do código de barras. Pedido #%s', $order_id ) );
+				
 			} else {
-				$html .= ($barcode_url) ? "<img src='{$barcode_url}' title='Código de barras do PIX deste pedido.' style='max-width: 100%; margin: 0 auto;'>" : '';
-				$html .= "<p style='width: 100%; text-align: center;'>Data de vencimento: <strong>{$due_date}</strong></p>";
-				$html .= "<p style='width: 100%; text-align: center;'>Seu código PIX: {$digitable_line}</p>";
-			}
 
-			$html .= "<p style='width: 100%; text-align: center; margin-top: 20px;'>Após o pagamento, podemos levar alguns segundos para confirmar o seu pagamento.<br>Você será avisado assim que isso ocorrer!</p>";
+				$html .= "<p style='width: 100%; text-align: center;'>Efetue o pagamento PIX usando o <strong>código de barras</strong> ou usando <strong>PIX copia e cola</strong>, se preferir:</p>";
+	
+				if($print) {
+					$html .= '<div class="pix-container">';
+					$html .= ($barcode_url) ? "<div class='qr-code'><img src='{$barcode_url}' title='Código de barras do PIX deste pedido.'><br>Data de vencimento: <strong>{$due_date}</strong></div>" : '';
+					$html .= '<div class="instructions"><ul>
+						<li><span>Abra o app do seu banco ou instituição financeira e <strong>entre no ambiente Pix</strong>.</span></li>
+						<li><span>Escolha a opção <strong>Pagar com QR Code</strong> e escanele o código ao lado.</span></li>
+						<li><span>Confirme as informações e finalize o pagamento.</span></li>
+					</ul></div>';
+					$html .= '</div>';
+					$html .= sprintf('<div class="paghiper-pix-code" onclick="copyPaghiperEmv()"><p>Pagar com PIX copia e cola - <button>Clique para copiar</button></p><div class="textarea-container"><textarea readonly rows="3">%s</textarea></div></div>', $digitable_line);
+				} else {
+					$html .= ($barcode_url) ? "<img src='{$barcode_url}' title='Código de barras do PIX deste pedido.' style='max-width: 100%; margin: 0 auto;'>" : '';
+					$html .= "<p style='width: 100%; text-align: center;'>Data de vencimento: <strong>{$due_date}</strong></p>";
+					$html .= "<p style='width: 100%; text-align: center;'>Seu código PIX: {$digitable_line}</p>";
+				}
+	
+				$html .= "<p style='width: 100%; text-align: center; margin-top: 20px;'>Após o pagamento, podemos levar alguns segundos para confirmar o seu pagamento.<br>Você será avisado assim que isso ocorrer!</p>";
+			
+			}
 		endif;
 
 		$html .= '</div>';

@@ -30,7 +30,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
                 $order->add_order_note( __( 'PagHiper: Pagamento completo. O valor ja se encontra disponível para saque.' , 'woo_paghiper' ) );
                 break;
             case "processing" :
-                $order->update_status( 'on-hold', __( 'PagHiper: Pagamento em disputa. Para responder, faça login na sua conta Paghiper e procure pelo número da transação.', 'woo_paghiper' ) );
+                $order->update_status( $settings['set_status_when_waiting'], __( 'PagHiper: Pagamento em disputa. Para responder, faça login na sua conta Paghiper e procure pelo número da transação.', 'woo_paghiper' ) );
                 increase_order_stock( $order, $settings );
                 break;
         }
@@ -41,21 +41,28 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
         switch ( $return['status'] ) {
             case "pending" :
 
-                if($order_status !== ((strpos($order_status, 'wc-') === FALSE) ? 'on-hold' : 'wc-on-hold')) {
+                /*if($order_status == $settings['set_status_when_cancelled']) {
                     $waiting_status = (!empty($settings['set_status_when_waiting'])) ? $settings['set_status_when_waiting'] : 'on-hold';
                     $order->update_status( $waiting_status, __( 'Boleto PagHiper: Novo boleto gerado. Aguardando compensação.', 'woo_paghiper' ) );
                 } else {
                     $order->add_order_note( __( 'PagHiper: Post de notificação recebido. Aguardando compensação do boleto.' , 'woo_paghiper' ) );
-                }
+                }*/
+                $order->add_order_note( __( 'PagHiper: Novo boleto emitido. Aguardando compensação.' , 'woo_paghiper' ) );
                 break;
+
             case "reserved" :
 
                 $order->add_order_note( __( 'PagHiper: Pagamento pré-compensado (reservado). Aguarde confirmação.' , 'woo_paghiper' ) );
                 break;
             case "canceled" :
 
-                    // TODO: Checar se data do boleto cancelado é menor que a atual (do pedido)
                     // Se data do pedido for maior que a do boleto cancelado, não cancelar pedido
+			        $paghiper_data = get_post_meta( $order_no, 'wc_paghiper_data', true );
+
+                    if($return['transaction_id'] !== $paghiper_data['transaction_id']) {
+                        $order->add_order_note( __( 'PagHiper: Um boleto emitido para este pedido foi cancelado. Como não era o boleto mais atual, o pedido permanece aguardando pagamento.' , 'woo_paghiper' ) );
+                        return;
+                    }
 
                     $cancelled_status = (!empty($settings['set_status_when_cancelled'])) ? $settings['set_status_when_cancelled'] : 'cancelled';
                     
