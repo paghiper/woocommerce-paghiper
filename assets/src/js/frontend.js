@@ -48,7 +48,7 @@ function checkForTaxIdFields() {
 		let hasTaxField = false,
 			hasPayerNameField = false;
 
-			if(otherTaxIdFields) {
+			if(ownPayerNameField) {
 				if(otherTaxIdFields.length > 0) {
 					ownTaxIdField.classList.add('paghiper-hidden');
 				} else {
