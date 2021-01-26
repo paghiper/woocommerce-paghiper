@@ -59,23 +59,24 @@ class WC_Paghiper_Base_Gateway {
 
 		$total = 0;
 
-		$min_value = apply_filters( "woo_{$this->gateway->id}_max_value", 3, $cart );
-		$max_value = apply_filters( "woo_{$this->gateway->id}_max_value", PHP_INT_MAX, $cart );
-
 		if ( WC()->cart ) {
+			$cart = WC()->cart;
 			$total = $this->gateway->retrieve_order_total();
-		}
 
-		if ( $total >= $min_value ) {
-			$has_met_min_amount = true;
-		}
+			$min_value = apply_filters( "woo_{$this->gateway->id}_max_value", 3, $cart );
+			$max_value = apply_filters( "woo_{$this->gateway->id}_max_value", PHP_INT_MAX, $cart );
 
-		if ( $total >= $max_value ) {
-			$has_met_max_amount = true;
-		}
-
-		if($available && $has_met_min_amount && !$has_met_max_amount) {
-			return true;
+			if ( $total >= $min_value ) {
+				$has_met_min_amount = true;
+			}
+	
+			if ( $total >= $max_value ) {
+				$has_met_max_amount = true;
+			}
+	
+			if($available && $has_met_min_amount && !$has_met_max_amount) {
+				return true;
+			}
 		}
 
 		return false;
