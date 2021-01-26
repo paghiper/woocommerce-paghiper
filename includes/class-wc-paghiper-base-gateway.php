@@ -23,7 +23,10 @@ class WC_Paghiper_Base_Gateway {
         // Checamos se a moeda configurada é suportada pelo gateway
         if ( ! $this->using_supported_currency() ) { 
             add_action( 'admin_notices', array( $this, 'currency_not_supported_message' ) ); 
-        } 
+		} 
+		
+		// Show our payment details inside the order page
+		add_action( 'woocommerce_order_details_before_order_table', array( $this, 'show_payment_instructions' ), 10, 1 );
 	}
 
 	/**
@@ -480,13 +483,13 @@ class WC_Paghiper_Base_Gateway {
 		$order 		= (is_numeric($order)) ? wc_get_order($order) : $order;
 		$order_id 	= $order->get_id();
 
-		// Fallback for old billet transactions
-		if($this->gateway->id !== 'paghiper_pix' && $order->get_payment_method() !== $this->gateway->id) {
+		// Locks this action for misfiring when order is placed with other gateways
+		if(!in_array($order->get_payment_method(), ['paghiper', 'paghiper_billet', 'paghiper_pix'])) {
 			return;
 		}
 
-		// Locks this action for misfiring when order is placed with other gateways
-		if(!in_array($order->get_payment_method(), ['paghiper', 'paghiper_billet', 'paghiper_pix'])) {
+		// Fallback for old billet transactions
+		if($order->get_payment_method() !== $this->gateway->id && $order->get_payment_method() !== 'paghiper') {
 			return;
 		}
 

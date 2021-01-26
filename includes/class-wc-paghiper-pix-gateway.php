@@ -38,9 +38,8 @@ class WC_Paghiper_Pix_Gateway extends WC_Payment_Gateway {
 		// Ações
 		if ( is_checkout() && !empty( is_wc_endpoint_url('order-received') ) ) {
 			add_action( 'woocommerce_thankyou_paghiper_pix', array( $this->paghiper_gateway, 'show_payment_instructions' ) );
-		} else {
-			add_action( 'woocommerce_order_details_before_order_table', array( $this->paghiper_gateway, 'show_payment_instructions' ), 10, 1 );
 		}
+		
 		add_action( 'woocommerce_email_after_order_table', array( $this->paghiper_gateway, 'email_instructions' ), 10, 2 );
 		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
 	}
