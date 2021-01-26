@@ -486,7 +486,7 @@ class WC_Paghiper_Base_Gateway {
 		}
 
 		// Locks this action for misfiring when order is placed with other gateways
-		if(in_array($order->get_payment_method(), ['paghiper', 'paghiper_billet', 'paghiper_pix'])) {
+		if(!in_array($order->get_payment_method(), ['paghiper', 'paghiper_billet', 'paghiper_pix'])) {
 			return;
 		}
 
