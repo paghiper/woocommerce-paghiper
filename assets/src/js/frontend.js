@@ -34,23 +34,45 @@ jQuery( document ).ready(function($) {
 });
 
 function checkForTaxIdFields() {
+
 	let otherTaxIdFields 		= document.querySelectorAll('[name="billing_cpf"], [name="billing_cnpj"]'),
 		otherPayerNameFields 	= document.querySelectorAll('[name="billing_first_name"], [name="billing_company"]');
 
-	let ownTaxIdField 		= document.querySelector('.paghiper-taxid-fieldset'),
-		ownPayerNameField 	= document.querySelector('.paghiper-payername-fieldset');
+	let paghiperFieldsetContainers = document.querySelectorAll('.wc-paghiper-form');
 
-	if(otherTaxIdFields.length > 0) {
-		ownTaxIdField.classList.add('paghiper-hidden');
-	} else {
-		ownTaxIdField.classList.remove('paghiper-hidden');
-	}
+	[].forEach.call(paghiperFieldsetContainers, (paghiperFieldsetContainer) => {
 
-	if(otherPayerNameFields.length > 0) {
-		ownPayerNameField.classList.add('paghiper-hidden');
-	} else {
-		ownPayerNameField.classList.remove('paghiper-hidden');
-	}
+		let ownTaxIdField 		= paghiperFieldsetContainer.querySelector('.paghiper-taxid-fieldset'),
+			ownPayerNameField 	= paghiperFieldsetContainer.querySelector('.paghiper-payername-fieldset');
+
+		let hasTaxField = false,
+			hasPayerNameField = false;
+
+			if(otherTaxIdFields) {
+				if(otherTaxIdFields.length > 0) {
+					ownTaxIdField.classList.add('paghiper-hidden');
+				} else {
+					ownTaxIdField.classList.remove('paghiper-hidden');
+					hasTaxField = true;
+				}
+			}
+
+			if(ownPayerNameField) {
+				if(otherPayerNameFields.length > 0) {
+					ownPayerNameField.classList.add('paghiper-hidden');
+				} else {
+					ownPayerNameField.classList.remove('paghiper-hidden');
+					hasPayerNameField = true;
+				}
+			}
+
+		if(!hasTaxField && !hasPayerNameField) {
+			paghiperFieldsetContainer.classList.add('paghiper-hidden');
+		} else {
+			paghiperFieldsetContainer.classList.remove('paghiper-hidden');
+		}
+	});
+
 }
 
 function copyPaghiperEmv() {
