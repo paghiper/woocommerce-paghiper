@@ -31,14 +31,26 @@ class WC_Paghiper_Admin {
 	 * Register paghiper metabox.
 	 */
 	public function register_metabox() {
-		add_meta_box(
-			'paghiper-boleto',
-			__( 'Boleto Bancário - PagHiper', 'woo_paghiper' ),
-			array( $this, 'metabox_content' ),
-			'shop_order',
-			'side',
-			'default'
-		);
+
+		global $post;
+		$order = new WC_Order( $post->ID );
+		$payment_method = $order->get_payment_method();
+		
+		if(in_array($payment_method, ['paghiper', 'paghiper_billet', 'paghiper_pix'])) {
+
+			$method_title = ($payment_method == 'paghiper_pix') ? "PIX" : "Boleto";
+
+			add_meta_box(
+				'paghiper-boleto',
+				__( "Configurações do {$method_title}", 'woo_paghiper' ),
+				array( $this, 'metabox_content' ),
+				'shop_order',
+				'side',
+				'default'
+			);
+
+		}
+		
 	}
 
 	/**
@@ -93,13 +105,6 @@ class WC_Paghiper_Admin {
 			$html .= '<input type="text" id="woo_paghiper_expiration_date" name="woo_paghiper_expiration_date" class="date" style="width: 100%;" />';
 			$html .= '<span class="description">' . __( 'Ao configurar uma nova data de vencimento, o boleto é re-enviado ao cliente por e-mail.', 'woo_paghiper' ) . '</span>';
 
-			$html .= '<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js" type="text/javascript"></script>
-			<script type="text/javascript">
-			jQuery(document).ready(function($){
-				$(".date").mask("00/00/0000", {placeholder: "__/__/____", clearIfNotMatch: true});
-			});
-			</script>';
-
 			// Show errors related to user input (invalid or past inputted dates)
 			if ( $error = get_transient( "woo_paghiper_save_order_errors_{$post->ID}" ) ) {
 
@@ -108,13 +113,13 @@ class WC_Paghiper_Admin {
 
 			}
 
+			
 			// Show due date errors (set on weekend, skipped to monday)
 			if ( $error = get_transient( "woo_paghiper_due_date_order_errors_{$post->ID}" ) ) {
 
 				$html .= sprintf('<div class="error"><p>%s</p></div>', $error); 
 
 			}
-
 
 
 		} else {
