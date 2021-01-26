@@ -212,7 +212,7 @@ class WC_PagHiper_Transaction {
 
 	public function prepare_data_for_transaction() {
 
-		if ( empty( $this->order ) ) {
+		if ( empty( $this->order ) || in_array($this->order->get_payment_method(), ['paghiper', 'paghiper_billet', 'paghiper_pix']) ) {
 			return false;
 		}
 
