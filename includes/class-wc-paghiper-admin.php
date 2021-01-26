@@ -221,7 +221,7 @@ class WC_Paghiper_Admin {
 		$headers[] = "Content-Type: text/html\r\n";
 
 		// Billet re-emission
-		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
+		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
 
 		$paghiperTransaction = new WC_PagHiper_Transaction( $order->id );
 
