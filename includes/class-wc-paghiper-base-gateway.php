@@ -432,6 +432,12 @@ class WC_Paghiper_Base_Gateway {
 
 		} else {
 
+			// Prints a notice, case order total surpasses our normal commercial limits
+			$order_total = round(floatval($order->get_total()));
+			if($order_total > 9000) {
+				$order->add_order_note( sprintf( __( 'Atenção! Total da transação excede R$ 9.000. Caso ainda não o tenha feito, entre em contato com nossa equipe comercial para liberação através do e-mail <a href="comercial@paghiper.com" target="_blank">comercial@paghiper.com</a>', 'woo_paghiper' ) ) );
+			}
+
 			if ( 'yes' === $this->debug ) {
 				wc_paghiper_add_log( $this->log, sprintf( 'Pedido %s: Não foi possível gerar o '. ($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto' .'. Detalhes: %s', var_export($transaction, true) ) );
 			}
