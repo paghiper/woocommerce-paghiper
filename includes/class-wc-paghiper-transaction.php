@@ -363,6 +363,12 @@ class WC_PagHiper_Transaction {
 		$data = apply_filters( 'paghiper_transaction_data', $data, $this->order_id );
 
 		if ( $this->log ) {
+
+			if($order_total >= 9000) {
+				wc_paghiper_add_log( $this->log, 'Aviso! Total do pedido excede R$ 9.000.' );
+				$this->order->add_order_note( sprintf( __( 'Atenção! Total da transação excede R$ 9.000. Caso ainda não o tenha feito, entre em contato com nossa equipe comercial para liberação através do e-mail <a href="comercial@paghiper.com" target="_blank">comercial@paghiper.com</a>', 'woo_paghiper' ) ) );
+			}
+
 			wc_paghiper_add_log( $this->log, sprintf( 'Dados preparados para envio: %s', var_export($data, true) ) );
 		}
 
