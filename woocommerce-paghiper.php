@@ -77,17 +77,11 @@ class WC_Paghiper {
 
 			// Migra configurações das chaves antigas ao atualizar
 			add_action( 'init', array( $this, 'migrate_gateway_settings' ));
-
-			// Inicializa logs, caso ativados
-			$this->log = wc_paghiper_initialize_log( $this->gateway_settings[ 'debug' ] );
 			
 		}
 
 		/* Print some notices */
 		add_action( 'admin_notices', array( $this, 'print_requirement_notices' ) );
-
-		// Pega a configuração atual do plug-in.
-		$this->gateway_settings = get_option( 'woocommerce_paghiper_settings' );
 
 	}
 
@@ -423,11 +417,25 @@ class WC_Paghiper {
 	 */
 	public function attach_billet( $attachments, $email_id, $order ) {
 
-		if ( $this->log ) {
-			wc_paghiper_add_log( $this->log, sprintf( 'Enviando mail: %s', $email_id ) );
-		}
+		if ( in_array($order->payment_method, ['paghiper', 'paghiper_billet']) ) {
 
-		if ( apply_filters('woo_paghiper_pending_status', 'on-hold', $order) === $order->status && in_array($order->payment_method, ['paghiper', 'paghiper_billet']) ) {
+			// Initializes plug-in options
+			if(!$this->gateway_settings) {
+				$this->gateway_settings = get_option("woocommerce_{$order->payment_method}_settings");
+			}
+
+			// Inicializa logs, caso ativados
+			if(!$this->log) {
+				$this->log = wc_paghiper_initialize_log( $this->gateway_settings[ 'debug' ] );
+			}
+
+			if(apply_filters('woo_paghiper_pending_status', $this->gateway_settings['set_status_when_waiting'], $order) !== $order->status) {
+				return;
+			}
+
+			if ( $this->log ) {
+				wc_paghiper_add_log( $this->log, sprintf( 'Enviando mail: %s', $email_id ) );
+			}
 
 			try {
 
@@ -539,7 +547,21 @@ class WC_Paghiper {
 	public function pending_payment_message( $order_id ) {
 		$order = new WC_Order( $order_id );
 
-		if ( 'on-hold' === $order->status && 'paghiper' == $order->payment_method ) {
+		if ( in_array($order->payment_method, array('paghiper', 'paghiper_billet')) ) {
+
+			// Initializes plug-in options
+			if(!$this->gateway_settings) {
+				$this->gateway_settings = get_option("woocommerce_{$order->payment_method}_settings");
+			}
+
+			// Inicializa logs, caso ativados
+			if(!$this->log) {
+				$this->log = wc_paghiper_initialize_log( $this->gateway_settings[ 'debug' ] );
+			}
+
+			if(apply_filters('woo_paghiper_pending_status', $this->gateway_settings['set_status_when_waiting'], $order) !== $order->status) {
+				return;
+			}
 
 			require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
 	

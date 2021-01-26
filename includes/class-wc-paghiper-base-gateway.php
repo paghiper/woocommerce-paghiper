@@ -479,7 +479,13 @@ class WC_Paghiper_Base_Gateway {
 		$order 		= (is_numeric($order)) ? wc_get_order($order) : $order;
 		$order_id 	= $order->get_id();
 
+		// Fallback for old billet transactions
 		if($this->gateway->id !== 'paghiper_pix' && $order->get_payment_method() !== $this->gateway->id) {
+			return;
+		}
+
+		// Locks this action for misfiring when order is placed with other gateways
+		if(in_array($order->get_payment_method(), ['paghiper', 'paghiper_billet', 'paghiper_pix'])) {
 			return;
 		}
 
