@@ -565,7 +565,7 @@ class WC_Paghiper {
 				return;
 			}
 
-			require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-billet.php';
+			require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
 	
 			$paghiperTransaction = new WC_PagHiper_Transaction( $order_id );
 			$paghiperTransaction->printBarCode(true);
@@ -600,7 +600,7 @@ class WC_Paghiper {
 		wp_register_style( 'paghiper_frontend_css', wc_paghiper_assets_url() . 'css/frontend.min.css','','1.0', false );
 
 		if(!is_admin()) {
-			
+
 			wp_enqueue_script(  'jquery-mask' );
 			wp_enqueue_script(  'paghiper_frontend_js' );
 			wp_enqueue_style( 'paghiper_frontend_css' );
