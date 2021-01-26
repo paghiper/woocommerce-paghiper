@@ -54,8 +54,9 @@ class WC_Paghiper_Admin {
 
 		// Use nonce for verification.
 		wp_nonce_field( basename( __FILE__ ), 'woo_paghiper_metabox_nonce' );
+		$gateway_name = $order->get_payment_method();
 
-		if ( in_array($order->payment_method, ['paghiper', 'paghiper_pix', 'paghiper_billet']) ) {
+		if ( in_array($gateway_name, ['paghiper', 'paghiper_pix', 'paghiper_billet']) ) {
 			$paghiper_data = get_post_meta( $post->ID, 'wc_paghiper_data', true );
 
 			// Compatibility with pre v2.1 keys
@@ -67,7 +68,6 @@ class WC_Paghiper_Admin {
 			if ( !isset($paghiper_data['order_transaction_due_date']) ) {
 
 				// Pega a configuração atual do plug-in.
-				$gateway_name = $order->get_payment_method();
 				$settings = ($gateway_name == 'paghiper_pix') ? get_option( 'woocommerce_paghiper_pix_settings' ) : get_option( 'woocommerce_paghiper_billet_settings' );
 
 				$order_transaction_due_date			= isset( $settings['days_due_date'] ) ? absint( $settings['days_due_date'] ) : 5;

@@ -74,6 +74,7 @@ class WC_Paghiper {
 			add_filter( 'woocommerce_new_order', array($this, 'generate_transaction') );
 			add_filter( 'woocommerce_email_attachments', array($this, 'attach_billet'), 10, 3 );
 			add_action( 'wp_enqueue_scripts', array( $this, 'load_plugin_assets' ) );
+			add_action( 'admin_enqueue_scripts', array( $this, 'load_plugin_assets' ) );
 
 			// Migra configurações das chaves antigas ao atualizar
 			add_action( 'init', array( $this, 'migrate_gateway_settings' ));
@@ -269,7 +270,6 @@ class WC_Paghiper {
 
 			// Enqueue scripts
 			add_action( 'admin_enqueue_scripts', function() {
-				wp_register_script( 'paghiper_admin_js', wc_paghiper_assets_url() . 'js/admin.min.js','','1.0', false );
 				
 				wp_localize_script( 'paghiper_admin_js', 'notice_params', array(
 					'ajaxurl' => get_admin_url() . 'admin-ajax.php', 
@@ -417,11 +417,12 @@ class WC_Paghiper {
 	 */
 	public function attach_billet( $attachments, $email_id, $order ) {
 
-		if ( in_array($order->payment_method, ['paghiper', 'paghiper_billet']) ) {
+		$payment_method = $order->get_payment_method();
+		if ( in_array($payment_method, ['paghiper', 'paghiper_billet']) ) {
 
 			// Initializes plug-in options
 			if(!$this->gateway_settings) {
-				$this->gateway_settings = get_option("woocommerce_{$order->payment_method}_settings");
+				$this->gateway_settings = get_option("woocommerce_{$payment_method}_settings");
 			}
 
 			// Inicializa logs, caso ativados
@@ -547,11 +548,12 @@ class WC_Paghiper {
 	public function pending_payment_message( $order_id ) {
 		$order = new WC_Order( $order_id );
 
-		if ( in_array($order->payment_method, array('paghiper', 'paghiper_billet')) ) {
+		$payment_method = $order->get_payment_method();
+		if ( in_array($payment_method, array('paghiper', 'paghiper_billet')) ) {
 
 			// Initializes plug-in options
 			if(!$this->gateway_settings) {
-				$this->gateway_settings = get_option("woocommerce_{$order->payment_method}_settings");
+				$this->gateway_settings = get_option("woocommerce_{$payment_method}_settings");
 			}
 
 			// Inicializa logs, caso ativados
@@ -593,6 +595,7 @@ class WC_Paghiper {
 			wp_register_script( 'jquery-mask', wc_paghiper_assets_url() . 'js/libs/jquery.mask/jquery.mask.min.js', array( 'jquery' ), '1.14.16', false );
 		}
 
+		wp_register_script( 'paghiper_admin_js', wc_paghiper_assets_url() . 'js/admin.min.js', array('jquery', 'jquery-mask'),'1.0', false );
 		wp_register_script( 'paghiper_frontend_js', wc_paghiper_assets_url() . 'js/frontend.min.js',array( 'jquery', 'jquery-mask' ),'1.0', false );
 		wp_register_style( 'paghiper_frontend_css', wc_paghiper_assets_url() . 'css/frontend.min.css','','1.0', false );
 
@@ -600,6 +603,15 @@ class WC_Paghiper {
 			wp_enqueue_script(  'jquery-mask' );
 			wp_enqueue_script(  'paghiper_frontend_js' );
 			wp_enqueue_style( 'paghiper_frontend_css' );
+		} else {
+			
+			global $current_screen;
+			if ($current_screen->post_type =='shop_order' && $current_screen->action == 'edit') {
+	
+				wp_enqueue_script(  'jquery-mask' );
+				wp_enqueue_script(  'paghiper_admin_js' );
+	
+			}
 		}
 	}
 

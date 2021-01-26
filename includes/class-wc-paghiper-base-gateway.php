@@ -526,7 +526,7 @@ class WC_Paghiper_Base_Gateway {
 	function email_instructions( $order, $sent_to_admin ) {
 
 		$order_status = (strpos($order->get_status(), 'wc-') === false) ? 'wc-'.$order->get_status() : $order->get_status();
-		if ( $sent_to_admin || apply_filters('woo_paghiper_pending_status', $this->set_status_when_waiting, $order) !== $order_status || strpos($order->payment_method, 'paghiper') === false || ($order->payment_method == 'paghiper_pix' && $order->get_payment_method() !== $this->gateway->id)) {
+		if ( $sent_to_admin || apply_filters('woo_paghiper_pending_status', $this->set_status_when_waiting, $order) !== $order_status || strpos($order->get_payment_method(), 'paghiper') === false || ($order->get_payment_method() == 'paghiper_pix' && $order->get_payment_method() !== $this->gateway->id)) {
 			return;
 		}
 
