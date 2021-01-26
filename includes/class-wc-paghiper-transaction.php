@@ -271,7 +271,7 @@ class WC_PagHiper_Transaction {
 
 			$product_id 		= ($item->is_type( 'variable' )) ? $item->get_variation_id() : $item->get_product_id() ;
 			$product_name		= $item->get_name();
-			$product_quantity	= $item->get_quantity();
+			$product_quantity	= (is_int($item->get_quantity())) ? $item->get_quantity() : 1;
 			$individual_price	= $item->get_subtotal() / $product_quantity;
 			$product_price		= $this->_convert_to_cents(($individual_price > 0) ? $individual_price : 0);
 
