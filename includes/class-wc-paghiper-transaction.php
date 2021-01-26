@@ -212,7 +212,7 @@ class WC_PagHiper_Transaction {
 
 	public function prepare_data_for_transaction() {
 
-		if ( empty( $this->order ) || in_array($this->order->get_payment_method(), ['paghiper', 'paghiper_billet', 'paghiper_pix']) ) {
+		if ( empty( $this->order ) || !in_array($this->order->get_payment_method(), ['paghiper', 'paghiper_billet', 'paghiper_pix']) ) {
 			return false;
 		}
 
@@ -363,12 +363,6 @@ class WC_PagHiper_Transaction {
 		$data = apply_filters( 'paghiper_transaction_data', $data, $this->order_id );
 
 		if ( $this->log ) {
-
-			if($order_total >= 9000) {
-				wc_paghiper_add_log( $this->log, 'Aviso! Total do pedido excede R$ 9.000.' );
-				$this->order->add_order_note( sprintf( __( 'Atenção! Total da transação excede R$ 9.000. Caso ainda não o tenha feito, entre em contato com nossa equipe comercial para liberação através do e-mail <a href="comercial@paghiper.com" target="_blank">comercial@paghiper.com</a>', 'woo_paghiper' ) ) );
-			}
-
 			wc_paghiper_add_log( $this->log, sprintf( 'Dados preparados para envio: %s', var_export($data, true) ) );
 		}
 
@@ -385,6 +379,9 @@ class WC_PagHiper_Transaction {
 		require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/vendor/autoload.php';
 		
 		$transaction_data = $this->prepare_data_for_transaction();
+		if(!$transaction_data) {
+			return false;
+		}
 
 		$token 			= $this->gateway_settings['token'];
 		$api_key 		= $this->gateway_settings['api_key'];
