@@ -26,7 +26,9 @@ class WC_Paghiper_Base_Gateway {
 		} 
 		
 		// Show our payment details inside the order page
-		add_action( 'woocommerce_order_details_before_order_table', array( $this, 'show_payment_instructions' ), 10, 1 );
+		if(empty( is_wc_endpoint_url('order-received') )) {
+			add_action( 'woocommerce_order_details_before_order_table', array( $this, 'show_payment_instructions' ), 10, 1 );
+		}
 	}
 
 	/**
