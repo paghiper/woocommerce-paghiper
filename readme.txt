@@ -1,6 +1,6 @@
-=== Boleto PagHiper para Woocommerce ===
+=== WooCommerce Boleto e PIX PagHiper ===
 Contributors: henriqueccruz
-Tags: woocommerce, boleto, paghiper, pagamento
+Tags: woocommerce, pix, boleto, paghiper, pagamento, gateway
 Requires at least: 3.5
 Tested up to: 5.5.3
 Stable tag: 2.1.1
@@ -17,7 +17,7 @@ O plug-in anexa o boleto, mostra código de barras e linha digitável nos e-mail
 
 Fácil, prático e rápido!
 
-* **Versão mais Recente:** 2.1.1
+* **Versão mais Recente:** 2.1.2
 * **Requer WooCommerce** versão mínima 3.5
 * **Requer Wordpress** preferencialmente atualizado
 * **Requisitos:** PHP >= 5.6, cURL ativado.
@@ -52,6 +52,13 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 - Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
 - Implementação de funcionalidade de boleto parcelado
+
+## 2.1.2 - 2021/01/26
+
+- Bugfix: Não era possível atualizar a data de vencimento do boleto/PIX via back-end
+- Bugfix: Boletos estavam sendo emitidos para pedidos não feitos com Paghiper em alguns casos
+- Bugfix: Plug-in retornava pedidos para o status de "aguardando" em alguns casos
+- Bugfix: Mais segurança na atualização dos pedidos
 
 ## 2.1.1 - 2021/01/19
 
