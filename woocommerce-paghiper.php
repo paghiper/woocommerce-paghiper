@@ -600,13 +600,17 @@ class WC_Paghiper {
 		wp_register_style( 'paghiper_frontend_css', wc_paghiper_assets_url() . 'css/frontend.min.css','','1.0', false );
 
 		if(!is_admin()) {
+			
 			wp_enqueue_script(  'jquery-mask' );
 			wp_enqueue_script(  'paghiper_frontend_js' );
 			wp_enqueue_style( 'paghiper_frontend_css' );
+
 		} else {
+
 			
 			global $current_screen;
-			if ($current_screen->post_type =='shop_order' && $current_screen->action == 'edit') {
+			$req_action = empty( $_REQUEST[ 'action' ] ) ? false : $_REQUEST[ 'action' ];
+			if ($current_screen->post_type =='shop_order' && $req_action == 'edit') {
 	
 				wp_enqueue_script(  'jquery-mask' );
 				wp_enqueue_script(  'paghiper_admin_js' );
