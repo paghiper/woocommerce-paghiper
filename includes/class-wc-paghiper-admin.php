@@ -33,6 +33,11 @@ class WC_Paghiper_Admin {
 	public function register_metabox() {
 
 		global $post;
+
+		if(!$post || $post->post_type !== 'shop_order') {
+			return;
+		}
+		
 		$order = new WC_Order( $post->ID );
 		$payment_method = $order->get_payment_method();
 		
