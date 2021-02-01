@@ -430,8 +430,8 @@ class WC_Paghiper_Base_Gateway {
 			// Support for WooCommerce 2.7.
 			if ( $this->set_status_when_waiting !== $order->status) {
 				if( !get_stock_reduced( $order_id ) ) {
-					if ( function_exists( 'wc_reduce_stock_levels' ) ) {
-						wc_reduce_stock_levels( $order_id );
+					if ( function_exists( 'wc_maybe_reduce_stock_levels' ) ) {
+						wc_maybe_reduce_stock_levels( $order_id );
 					} else {
 						$order->reduce_order_stock();
 					}
