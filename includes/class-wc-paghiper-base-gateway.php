@@ -454,6 +454,9 @@ class WC_Paghiper_Base_Gateway {
 			if ( 'yes' === $this->debug ) {
 				wc_paghiper_add_log( $this->log, sprintf( 'Pedido %s: Não foi possível gerar o '. ($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto' .'. Detalhes: %s', var_export($transaction, true) ) );
 			}
+			
+			wc_add_notice( 'Não foi possível gerar o seu '. ($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto', 'error' );
+			return;
 
 		}
 
