@@ -384,7 +384,7 @@ class WC_Paghiper_Base_Gateway {
 	 *
 	 * @return array           Redirect.
 	 */
-	public function process_payment( $order_id ) {
+	public function process_payment( $order_id, $is_frontend = true ) {
 
 		$order = new WC_Order( $order_id );
 		$taxid_keys = ["_{$this->gateway->id}_cpf_cnpj", "_{$this->gateway->id}_payer_name"];
@@ -419,7 +419,9 @@ class WC_Paghiper_Base_Gateway {
 		$this->populate_initial_billet_date( $order );
 
 		if ( defined( 'WC_VERSION' ) && version_compare( WC_VERSION, '2.1', '>=' ) ) {
-			WC()->cart->empty_cart();
+			if ( $is_frontend ) {
+				WC()->cart->empty_cart();
+			}
 
 			$url = $order->get_checkout_order_received_url();
 		} else {
