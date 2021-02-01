@@ -398,23 +398,6 @@ class WC_Paghiper_Base_Gateway {
 			}
 		}
 
-		// Reduce stock levels.
-		// Support for WooCommerce 2.7.
-		if ( $this->set_status_when_waiting !== $order->status) {
-			if( !$order->get_data_store()->get_stock_reduced( $order_id ) ) {
-				if ( function_exists( 'wc_reduce_stock_levels' ) ) {
-					wc_reduce_stock_levels( $order_id );
-				} else {
-					$order->reduce_order_stock();
-				}
-	
-				if ( 'yes' === $this->debug ) {
-					wc_paghiper_add_log( $this->log, sprintf( 'Pedido %s: Itens do pedido retirados do estoque com sucesso', $order_id ) );
-				}
-			}
-
-		}
-
 		// Generates ticket data.
 		$this->populate_initial_billet_date( $order );
 
@@ -442,6 +425,23 @@ class WC_Paghiper_Base_Gateway {
 			// Mark as on-hold (we're awaiting the ticket).
 			$waiting_status = (!empty($this->set_status_when_waiting)) ? $this->set_status_when_waiting : 'on-hold';
 			$order->update_status( $waiting_status, __( 'PagHiper: '. ($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'Boleto' .' gerado e enviado por e-mail.', 'woo-boleto-paghiper' ) );
+
+			// Reduce stock levels.
+			// Support for WooCommerce 2.7.
+			if ( $this->set_status_when_waiting !== $order->status) {
+				if( !get_stock_reduced( $order_id ) ) {
+					if ( function_exists( 'wc_reduce_stock_levels' ) ) {
+						wc_reduce_stock_levels( $order_id );
+					} else {
+						$order->reduce_order_stock();
+					}
+		
+					if ( 'yes' === $this->debug ) {
+						wc_paghiper_add_log( $this->log, sprintf( 'Pedido %s: Itens do pedido retirados do estoque com sucesso', $order_id ) );
+					}
+				}
+	
+			}
 
 		} else {
 
