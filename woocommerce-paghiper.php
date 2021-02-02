@@ -436,6 +436,11 @@ class WC_Paghiper {
 	 * @param	object $order
 	 */
 	public function attach_billet( $attachments, $email_id, $order ) {
+		
+		// Simply bailout case target object is not an instance of WC_Order
+		if ( ! is_a( $order, 'WC_Order' ) || ! isset( $email_id ) ) {
+			return $attachments;
+		}
 
 		$payment_method = $order->get_payment_method();
 		if ( in_array($payment_method, ['paghiper', 'paghiper_billet']) ) {
