@@ -48,7 +48,7 @@ if ( isset( $boleto_code ) ) {
 		// Check if a new billet should be generated
 		if($order->is_paid()) {
 
-			$ico = 'boleto-ok.png';
+			$ico = 'billet-ok.png';
 			$title = 'Este boleto ja foi pago!';
 			$message = 'Recebemos seu pagamento! Você pode acompanhar a evolução do seu pedido pelo seu painel de cliente.';
 			echo print_screen($ico, $title, $message);
@@ -63,7 +63,7 @@ if ( isset( $boleto_code ) ) {
 		
 			if($dias_vencimento >= -3 && $dias_vencimento < 0) {
 		
-				$ico = 'boleto-waiting.png';
+				$ico = 'billet-waiting.png';
 				$title = 'Por favor, aguarde!';
 				$message = 'Este boleto venceu. Caso ja tenha efetuado o pagamento, aguarde o prazo de baixa bancária.';
 				echo print_screen($ico, $title, $message);
@@ -76,7 +76,7 @@ if ( isset( $boleto_code ) ) {
 		
 			} elseif( $dias_vencimento < -3 ) {
 		
-				$ico = 'boleto-cancelled.png';
+				$ico = 'billet-cancelled.png';
 				$title = 'Boleto Vencido!';
 				$message = 'Este boleto venceu e foi cancelado. Por favor, efetue seu pedido novamente.';
 				echo print_screen($ico, $title, $message);
