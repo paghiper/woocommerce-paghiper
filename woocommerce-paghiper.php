@@ -210,7 +210,7 @@ class WC_Paghiper {
 		add_action( 'admin_notices', function() {
 
 			// Include SDK for our call
-			require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/vendor/autoload.php';
+			require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/build/vendor/scoper-autoload.php';
 	
 			$gateways = ['woocommerce_paghiper_pix_settings', 'woocommerce_paghiper_billet_settings'];
 			foreach($gateways as $gateway) {

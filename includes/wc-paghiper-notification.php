@@ -3,7 +3,7 @@
 use PagHiper\PagHiper;
 
 // Include SDK for our call
-require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/vendor/autoload.php';
+require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/build/vendor/scoper-autoload.php';
 
 $wp_api_url = add_query_arg( 'wc-api', 'WC_Gateway_Paghiper', home_url( '/' ) );
 add_action( 'woocommerce_api_wc_gateway_paghiper', 'woocommerce_paghiper_check_ipn_response' );
