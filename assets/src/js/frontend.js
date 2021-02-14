@@ -48,11 +48,11 @@ function checkForTaxIdFields() {
 		let hasTaxField = false,
 			hasPayerNameField = false;
 
-			if(ownPayerNameField) {
+			if(ownTaxIdField) {
 				if(otherTaxIdFields.length > 0) {
 					ownTaxIdField.classList.add('paghiper-hidden');
 				} else {
-					ownTaxIdField.classList.remove('paghiper-hidden');
+					ownTaxIdField.classList.remove('paghiper-hidden');	
 					hasTaxField = true;
 				}
 			}

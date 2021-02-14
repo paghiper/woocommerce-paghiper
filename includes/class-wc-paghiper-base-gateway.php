@@ -8,6 +8,7 @@ class WC_Paghiper_Base_Gateway {
 	public function __construct($gateway) {
 
 		$this->gateway = $gateway;
+		$this->order = null;
 
 		// Define as variáveis que vamos usar e popula com os dados de configuração
 		$this->days_due_date 			= $this->gateway->get_option( 'days_due_date' );
@@ -255,6 +256,46 @@ class WC_Paghiper_Base_Gateway {
 
 	}
 
+	public function is_order() {
+
+		if($this->order) {
+			return $this->order;
+		}
+
+		if(absint( get_query_var( 'order-pay' ) )) {
+			$order_id = absint( get_query_var( 'order-pay' ) );
+			$this->order = ($order_id > 0) ? wc_get_order($order_id) : null;
+			
+		}
+
+		return $this->order;
+
+	}
+
+	public function has_taxid_fields() {
+		$order = $this->is_order();
+		if(!is_null($order)) {
+			return (!empty($order->billing_cpf) || !empty($order->billing_cnpj) || !empty($order->{'_'.$order->get_payment_method().'_cpf_cnpj'}));
+		}
+
+		return false;
+	}
+
+	public function has_payer_fields() {
+		$order = $this->is_order();
+		if(!is_null($order)) {
+			$has_payer_fields = ($order && (!empty($order->billing_first_name) || !empty($order->billing_company) || !empty($order->{'_'.$order->get_payment_method().'_payer_name'})));
+			
+			if( (strlen($payer_cpf_cnpj) > 11 && ( empty($order->billing_company) && empty($order->{'_'.$order->get_payment_method().'_payer_name'})) ) ) {
+				$has_payer_fields = false;
+			}
+
+			return $has_payer_fields;
+		}
+
+		return false;
+	}
+
 	public function payment_fields() {
 
 		echo wpautop( wp_kses_post( $this->gateway->description ) );
@@ -263,21 +304,12 @@ class WC_Paghiper_Base_Gateway {
 	 
 		// Add this action hook if you want your custom payment gateway to support it
 		do_action( 'woocommerce_paghiper_taxid_form_start', $this->gateway->id );
-
-		if(absint( get_query_var( 'order-pay' ) )) {
-			$order_id = absint( get_query_var( 'order-pay' ) );
-			$order = ($order_id > 0) ? wc_get_order($order_id) : null;
-		}
 	 
 		// Print fields only if there are no fields for the same purpose on the checkout
-		if(isset($order)) {
-			$order_id = absint( get_query_var( 'order-pay' ) );
-			$order = ($order_id > 0) ? wc_get_order($order_id) : null;
-
-			$has_taxid_fields = ($order && (!empty($order->billing_cpf) || !empty($order->billing_cnpj) || !empty($order->{'_'.$order->get_payment_method().'_cpf_cnpj'})));
-		} else {
+		$has_taxid_fields = $this->has_taxid_fields();
+		if(!$has_taxid_fields) {
 			parse_str( $_POST['post_data'], $post_data );
-			$has_taxid_fields = (!isset($post_data['billing_cpf'], $post_data['billing_cnpj']));
+			$has_taxid_fields = (isset($post_data['billing_cpf'], $post_data['billing_cnpj']));
 		}
 
 		if(!$has_taxid_fields) {
@@ -296,15 +328,8 @@ class WC_Paghiper_Base_Gateway {
 			)
 		);
 
-		$has_payer_fields = false;
-
-		if(isset($order)) {
-			$has_payer_fields = ($order && (!empty($order->billing_first_name) || !empty($order->billing_company) || !empty($order->{'_'.$order->get_payment_method().'_payer_name'})));
-			
-			if( (strlen($payer_cpf_cnpj) > 11 && ( empty($order->billing_company) && empty($order->{'_'.$order->get_payment_method().'_payer_name'})) ) ) {
-				$has_payer_fields = false;
-			}
-		} else {
+		$has_payer_fields = $this->has_payer_fields();
+		if(!$has_payer_fields) {
 			$has_payer_fields = ((strlen($payer_cpf_cnpj) > 11 && !isset($post_data['billing_company'])) || !isset($post_data['_'.$this->gateway->id.'_payer_name']));
 		}
 
@@ -332,40 +357,52 @@ class WC_Paghiper_Base_Gateway {
 		$valid_keys = [];
 		$current_taxid = null;
 
-		foreach($taxid_post_keys as $taxid_post_key) {
-			if( (array_key_exists($taxid_post_key, $_POST) && !empty($_POST[$taxid_post_key])) ) {
-				$not_empty_keys[] = $taxid_post_key;
+		if(!$this->has_taxid_fields()) {
 
-				$maybe_valid_taxid = preg_replace('/\D/', '', sanitize_text_field($_POST[$taxid_post_key]));
-
-				if($validateAPI->validate_taxid($maybe_valid_taxid)) {
-					$valid_keys[] = $taxid_post_key;
-					$current_taxid = (strlen($taxid) < strlen($maybe_valid_taxid)) ? $maybe_valid_taxid : $current_taxid;
+			foreach($taxid_post_keys as $taxid_post_key) {
+				if( (array_key_exists($taxid_post_key, $_POST) && !empty($_POST[$taxid_post_key])) ) {
+					$not_empty_keys[] = $taxid_post_key;
+	
+					$maybe_valid_taxid = preg_replace('/\D/', '', sanitize_text_field($_POST[$taxid_post_key]));
+					
+	
+					// TODO: Check if item key exists in order meta too
+					if($validateAPI->validate_taxid($maybe_valid_taxid)) {
+						$valid_keys[] = $taxid_post_key;
+						$current_taxid = (strlen($taxid) < strlen($maybe_valid_taxid)) ? $maybe_valid_taxid : $current_taxid;
+					}
 				}
 			}
-		}
  
-		if( empty($not_empty_keys) ) {
-			wc_add_notice(  'CPF não informado!', 'error' );
+			if( empty($not_empty_keys) ) {
+				wc_clear_notices();
+				wc_add_notice(  '<strong>Número de CPF</strong> não informado!', 'error' );
+			}
 		}
 
 		if( empty($valid_keys) ) {
 			if(strlen($current_taxid) > 11) {
-				wc_add_notice(  'CNPJ inválido!', 'error' );
+				wc_clear_notices();
+				wc_add_notice(  '<strong>Número de CNPJ</strong> inválido!', 'error' );
 
 				$taxid_payer_keys 	= ['_'.$this->gateway->id.'_payer_name', 'company_name', 'billing_first_name', 'billing_last_name'];
 				$taxid_payer 		= null;
 				foreach($taxid_payer_keys as $taxid_payer_key) {
+					// TODO: Check if item key exists in order meta too
 					if( (array_key_exists($taxid_payer_key, $_POST) && !empty($_POST[$taxid_payer_key])) ) {
 						$taxid_payer = sanitize_text_field($_POST[$taxid_payer_key]);
 					}
 				}
 
 				if(!$taxid_payer || empty($taxid_payer)) {
-					wc_add_notice(  'Ops! Precisamos também do seu nome.', 'error' );
+					wc_clear_notices();
+					wc_add_notice(  'Ops! Precisamos também do seu <strong>nome</strong>.', 'error' );
 				}
 			} else {
-				wc_add_notice(  'CPF inválido!', 'error' );
+				if(!empty($not_empty_keys)) {
+					wc_clear_notices();
+					wc_add_notice(  '<strong>Número de CPF</strong> inválido!', 'error' );
+				}
 			}
 		}
 
@@ -384,7 +421,7 @@ class WC_Paghiper_Base_Gateway {
 	 *
 	 * @return array           Redirect.
 	 */
-	public function process_payment( $order_id ) {
+	public function process_payment( $order_id, $is_frontend = true ) {
 
 		$order = new WC_Order( $order_id );
 		$taxid_keys = ["_{$this->gateway->id}_cpf_cnpj", "_{$this->gateway->id}_payer_name"];
@@ -398,28 +435,13 @@ class WC_Paghiper_Base_Gateway {
 			}
 		}
 
-		// Reduce stock levels.
-		// Support for WooCommerce 2.7.
-		if ( $this->set_status_when_waiting !== $order->status) {
-			if( !$order->get_data_store()->get_stock_reduced( $order_id ) ) {
-				if ( function_exists( 'wc_reduce_stock_levels' ) ) {
-					wc_reduce_stock_levels( $order_id );
-				} else {
-					$order->reduce_order_stock();
-				}
-	
-				if ( 'yes' === $this->debug ) {
-					wc_paghiper_add_log( $this->log, sprintf( 'Pedido %s: Itens do pedido retirados do estoque com sucesso', $order_id ) );
-				}
-			}
-
-		}
-
 		// Generates ticket data.
 		$this->populate_initial_billet_date( $order );
 
 		if ( defined( 'WC_VERSION' ) && version_compare( WC_VERSION, '2.1', '>=' ) ) {
-			WC()->cart->empty_cart();
+			if ( $is_frontend ) {
+				WC()->cart->empty_cart();
+			}
 
 			$url = $order->get_checkout_order_received_url();
 		} else {
@@ -452,6 +474,9 @@ class WC_Paghiper_Base_Gateway {
 			if ( 'yes' === $this->debug ) {
 				wc_paghiper_add_log( $this->log, sprintf( 'Pedido %s: Não foi possível gerar o '. ($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto' .'. Detalhes: %s', var_export($transaction, true) ) );
 			}
+			
+			wc_add_notice( 'Não foi possível gerar o seu '. ($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto', 'error' );
+			return;
 
 		}
 

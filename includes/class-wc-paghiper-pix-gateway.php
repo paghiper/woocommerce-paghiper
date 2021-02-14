@@ -74,8 +74,8 @@ class WC_Paghiper_Pix_Gateway extends WC_Payment_Gateway {
 	 *
 	 * @return array           Redirect.
 	 */
-	public function process_payment( $order_id ) {
-		return $this->paghiper_gateway->process_payment( $order_id );
+	public function process_payment( $order_id, $is_frontend = true ) {
+		return $this->paghiper_gateway->process_payment( $order_id, $is_frontend = true );
 	}
 
 }

@@ -1,17 +1,17 @@
 <?php
 /**
- * Plugin Name: WooCommerce Boleto e PIX PagHiper
- * Plugin URI: https://github.com/paghiper/woocommerce-paghiper/
- * Description: Ofereça a seus clientes pagamento por PIX e boleto bancário com a PagHiper. Fácil, prático e rapido!
- * Author: PagHiper Pagamentos
- * Author URI: https://www.paghiper.com
- * Version: 2.1.3
- * Tested up to: 5.6
- * License: GPLv2 or later
- * Text Domain: woo-boleto-paghiper
- * Domain Path: /languages/
- * WC requires at least: 3.5
- * WC tested up to: 4.9.2
+ * Plugin Name: 			WooCommerce Boleto e PIX PagHiper
+ * Plugin URI: 				https://github.com/paghiper/woocommerce-paghiper/
+ * Description: 			Ofereça a seus clientes pagamento por PIX e boleto bancário com a PagHiper. Fácil, prático e rapido!
+ * Author: 					PagHiper Pagamentos
+ * Author URI: 				https://www.paghiper.com
+ * Version: 				2.1.4
+ * Tested up to: 			5.6.1
+ * License: 				GPLv2 or later
+ * Text Domain: 			woo-boleto-paghiper
+ * Domain Path: 			/languages/
+ * WC requires at least: 	3.5
+ * WC tested up to: 		5.0
  */	
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -32,7 +32,7 @@ class WC_Paghiper {
 	 *
 	 * @var string
 	 */
-	const VERSION = '2.1.3';
+	const VERSION = '2.1.4';
 
 	/**
 	 * Instance of this class.
@@ -210,7 +210,7 @@ class WC_Paghiper {
 		add_action( 'admin_notices', function() {
 
 			// Include SDK for our call
-			require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/vendor/autoload.php';
+			require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/build/vendor/scoper-autoload.php';
 	
 			$gateways = ['woocommerce_paghiper_pix_settings', 'woocommerce_paghiper_billet_settings'];
 			foreach($gateways as $gateway) {
@@ -436,6 +436,11 @@ class WC_Paghiper {
 	 * @param	object $order
 	 */
 	public function attach_billet( $attachments, $email_id, $order ) {
+		
+		// Simply bailout case target object is not an instance of WC_Order
+		if ( ! is_a( $order, 'WC_Order' ) || ! isset( $email_id ) ) {
+			return $attachments;
+		}
 
 		$payment_method = $order->get_payment_method();
 		if ( in_array($payment_method, ['paghiper', 'paghiper_billet']) ) {

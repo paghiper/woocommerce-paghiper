@@ -3,7 +3,7 @@
 use PagHiper\PagHiper;
 
 // Include SDK for our call
-require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/vendor/autoload.php';
+require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/build/vendor/scoper-autoload.php';
 
 $wp_api_url = add_query_arg( 'wc-api', 'WC_Gateway_Paghiper', home_url( '/' ) );
 add_action( 'woocommerce_api_wc_gateway_paghiper', 'woocommerce_paghiper_check_ipn_response' );
@@ -146,7 +146,7 @@ function increase_order_stock( $order, $settings ) {
     $order_id = $order->get_id();
     
     if ( 'yes' === get_option( 'woocommerce_manage_stock' ) && $replenish_stock == true && $order && 0 < count( $order->get_items() ) ) {
-        if ( apply_filters( 'woocommerce_payment_complete_reduce_order_stock', $order && ! $order->get_data_store()->get_stock_reduced( $order_id ), $order_id ) ) {
+        if ( apply_filters( 'woocommerce_payment_complete_reduce_order_stock', $order, $order_id ) ) {
             if ( function_exists( 'wc_maybe_increase_stock_levels' ) ) {
                 wc_maybe_increase_stock_levels( $order_id );
             }

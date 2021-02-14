@@ -1,0 +1,26 @@
+{
+    "name": "paghiper\/paghiper-php-sdk",
+    "description": "Kit de integra\u00e7\u00e3o de software para o gateway PagHiper.",
+    "keywords": [
+        "paghiper",
+        "php",
+        "boleto",
+        "sdk"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Henrique Cruz",
+            "email": "eu@henriquecruz.com.br"
+        }
+    ],
+    "require": {
+        "php": ">=5.6.0",
+        "guzzlehttp\/guzzle": "6.2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "PagHiper\\": "src\/"
+        }
+    }
+}

@@ -6,11 +6,11 @@ O plug-in anexa o boleto, mostra código de barras e linha digitável nos e-mail
 
 Fácil, prático e rápido!
 
-* **Versão mais Recente:** 2.1.3
+* **Versão mais Recente:** 2.1.4
 * **Requer WooCommerce** versão mínima 3.5
 * **Requer Wordpress** preferencialmente atualizado
 * **Requisitos:** PHP >= 5.6.0, Suporte a JSON e permissões de escrita na pasta uploads.
-* **Compatibilidade:** Wordpress 5.6, Woocommerce 4.9.2, PHP 7.4. Integrado diretamente ao Wordpress usando WC_API.
+* **Compatibilidade:** Wordpress 5.6.1, Woocommerce 5.0, PHP 7.4.
 
 
 # Como Instalar
@@ -43,6 +43,14 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 * Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
 * Implementação de funcionalidade de boleto parcelado
+
+## 2.1.4 - 2021/02/14
+
+* Bugfix: Pedido falhava na validação caso o status fosse "Aguardando pagamento"
+* Bugfix: Erro ao enviar e-mails de estoque baixo
+* Bugfix: Evita baixa duplicada de estoque (e seus transtornos relacionados)
+* Melhoria: Evita conflitos com outros plugins usando versões diferentes do GuzzleHttp
+* Melhoria: Mais segurança no processamento da transação no checkout
 
 ## 2.1.3 - 2021/01/27
 

@@ -376,7 +376,7 @@ class WC_PagHiper_Transaction {
 		}
 
 		// Include SDK for our call
-		require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/vendor/autoload.php';
+		require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/build/vendor/scoper-autoload.php';
 		
 		$transaction_data = $this->prepare_data_for_transaction();
 		if(!$transaction_data) {
@@ -500,6 +500,16 @@ class WC_PagHiper_Transaction {
 	}
 
 	public function print_transaction_html() {
+
+		// Checamos se o pedido não é um PIX
+		if($this->order_data['transaction_type'] == 'pix') {
+
+			$ico = 'billet-cancelled.png';
+			$title = 'Este pedido não foi feito com boleto!';
+			$message = 'A forma de pagamento deste pedido é PIX. Cheque seu e-mail ou sua área de pedidos para informações sobre como pagar.';
+			echo print_screen($ico, $title, $message);
+
+		}
 		
 		// Temos um boleto ja emitido com data de vencimento válida, só pegamos uma cópia
 		$response = wp_remote_get($this->order_data['url_slip']);
