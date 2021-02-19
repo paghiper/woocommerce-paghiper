@@ -365,7 +365,6 @@ class WC_Paghiper_Base_Gateway {
 	
 					$maybe_valid_taxid = preg_replace('/\D/', '', sanitize_text_field($_POST[$taxid_post_key]));
 					
-	
 					// TODO: Check if item key exists in order meta too
 					if($validateAPI->validate_taxid($maybe_valid_taxid)) {
 						$valid_keys[] = $taxid_post_key;
@@ -401,7 +400,12 @@ class WC_Paghiper_Base_Gateway {
 			} else {
 				if(!empty($not_empty_keys)) {
 					wc_clear_notices();
-					wc_add_notice(  '<strong>Número de CPF</strong> inválido!', 'error' );
+
+					if(strlen($maybe_valid_taxid) > 11) {
+						wc_add_notice(  '<strong>Número de CNPJ</strong> inválido!', 'error' );
+					} else {
+						wc_add_notice(  '<strong>Número de CPF</strong> inválido!', 'error' );
+					}
 				}
 			}
 		}
