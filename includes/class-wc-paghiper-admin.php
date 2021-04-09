@@ -251,7 +251,7 @@ class WC_Paghiper_Admin {
 		$message = $mailer->wrap_message( sprintf(__( 'Nova data de vencimento para o seu %s', 'woo_paghiper' ), ((($gateway_name !== 'paghiper_pix') ? 'boleto' : 'PIX'))), $main_message );
 
 		// Send email.
-		$mailer->send( $order->get_billing_email, $subject, $message, $headers, '' );
+		$mailer->send( $billing_email, $subject, $message, $headers, '' );
 	}
 }
 
