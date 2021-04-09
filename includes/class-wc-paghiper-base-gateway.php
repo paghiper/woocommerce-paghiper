@@ -577,7 +577,9 @@ class WC_Paghiper_Base_Gateway {
 	function email_instructions( $order, $sent_to_admin ) {
 
 		$order_status = (strpos($order->get_status(), 'wc-') === false) ? 'wc-'.$order->get_status() : $order->get_status();
-		if ( $sent_to_admin || apply_filters('woo_paghiper_pending_status', $this->set_status_when_waiting, $order) !== $order_status || strpos($order->get_payment_method(), 'paghiper') === false || ($order->get_payment_method() == 'paghiper_pix' && $order->get_payment_method() !== $this->gateway->id)) {
+		$order_payment_method = $order->get_payment_method();
+
+		if ( $sent_to_admin || apply_filters('woo_paghiper_pending_status', $this->set_status_when_waiting, $order) !== $order_status || strpos($order_payment_method, 'paghiper') === false || $order_payment_method !== $this->gateway->id) {
 			return;
 		}
 
@@ -591,7 +593,7 @@ class WC_Paghiper_Base_Gateway {
 
 		$message = $paghiperTransaction->printBarCode();
 
-		if($order->get_payment_method() !== 'paghiper_pix') {
+		if($order_payment_method !== 'paghiper_pix') {
 
 			$message .= sprintf( __( '%sAtenção!%s Você NÃO vai receber o boleto pelos Correios.', 'woo-boleto-paghiper' ), '<strong>', '</strong>' ) . '<br />';
 			$message .= __( 'Se preferir, você pode imprimir e pagar o boleto em qualquer agência bancária ou lotérica.', 'woo-boleto-paghiper' ) . '<br />';
