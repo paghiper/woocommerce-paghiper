@@ -372,7 +372,11 @@ class WC_PagHiper_Transaction {
 
 	public function create_transaction() {
 
-		if($this->has_issued_valid_transaction() || apply_filters('woo_paghiper_pending_status', $this->set_status_when_waiting, $this->order) !== $this->order_status) {
+		if($this->has_issued_valid_transaction()) {
+			return false;
+		}
+
+		if(apply_filters('woo_paghiper_pending_status', $this->gateway_settings['set_status_when_waiting'], $this->order) !== $this->order_status && !in_array($this->order_status, ['wc-pending', 'pending'])) {
 			return false;
 		}
 

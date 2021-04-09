@@ -552,7 +552,7 @@ class WC_Paghiper_Base_Gateway {
 		}
 
 		// Breaks execution if order is not in the right state
-		if(apply_filters('woo_paghiper_pending_status', $this->gateway_settings['set_status_when_waiting'], $order) !== $order_status) {
+		if(apply_filters('woo_paghiper_pending_status', $this->set_status_when_waiting, $order) !== $order_status) {
 			return;
 		}
 
