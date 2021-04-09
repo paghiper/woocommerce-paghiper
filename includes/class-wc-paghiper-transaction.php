@@ -592,12 +592,12 @@ class WC_PagHiper_Transaction {
 					$html .= '</div>';
 					$html .= sprintf('<div class="paghiper-pix-code" onclick="copyPaghiperEmv()"><p>Pagar com PIX copia e cola - <button>Clique para copiar</button></p><div class="textarea-container"><textarea readonly rows="3">%s</textarea></div></div>', $digitable_line);
 				} else {
-					$html .= ($barcode_url) ? "<img src='{$barcode_url}' title='Código de barras do PIX deste pedido.' style='max-width: 100%; margin: 0 auto;'>" : '';
+					$html .= ($barcode_url) ? "<p style='text-align: center;'><img src='{$barcode_url}' title='Código de barras do PIX deste pedido.' style='max-width: 100%; margin: 0 auto;'></p>" : '';
 					$html .= "<p style='width: 100%; text-align: center;'>Data de vencimento: <strong>{$due_date}</strong></p>";
 					$html .= "<p style='width: 100%; text-align: center;'>Seu código PIX: {$digitable_line}</p>";
 				}
 	
-				$html .= "<p style='width: 100%; text-align: center; margin-top: 20px;'>Após o pagamento, podemos levar alguns segundos para confirmar o seu pagamento.<br>Você será avisado assim que isso ocorrer!</p>";
+				$html .= "<p style='width: 100%; text-align: center; margin-top: 20px;'>Após o pagamento, podemos levar alguns segundos para confirmar o seu pagamento.<br>Você será avisado(a) assim que isso ocorrer!</p>";
 			
 			}
 		endif;
