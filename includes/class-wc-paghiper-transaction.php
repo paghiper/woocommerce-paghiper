@@ -26,6 +26,7 @@ class WC_PagHiper_Transaction {
 
 		// Pegamos o pedido completo
 		$this->order = new WC_Order( $order_id );
+		$this->order_status = (strpos($this->order->get_status(), 'wc-') === false) ? 'wc-'.$this->order->get_status() : $this->order->get_status();
 
 		// Pega a configuração atual do plug-in.
 		$this->gateway_id = $this->order->get_payment_method();
@@ -371,7 +372,7 @@ class WC_PagHiper_Transaction {
 
 	public function create_transaction() {
 
-		if($this->has_issued_valid_transaction()) {
+		if($this->has_issued_valid_transaction() || apply_filters('woo_paghiper_pending_status', $this->set_status_when_waiting, $this->order) !== $this->order_status) {
 			return false;
 		}
 
@@ -539,6 +540,10 @@ class WC_PagHiper_Transaction {
 	public function print_transaction_barcode($print = FALSE) {
 
 		$digitable_line = $this->_get_digitable_line();
+
+		if(!$digitable_line)
+			return false;
+
 		$due_date = (DateTime::createFromFormat('Y-m-d', $this->order_data['order_transaction_due_date']))->format('d/m/Y');
 
 		$html = '<div class="woo_paghiper_digitable_line" style="margin-bottom: 40px;">';

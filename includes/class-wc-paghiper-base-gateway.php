@@ -530,14 +530,21 @@ class WC_Paghiper_Base_Gateway {
 
 		$order 		= (is_numeric($order)) ? wc_get_order($order) : $order;
 		$order_id 	= $order->get_id();
+		$order_payment_method = $order->get_payment_method();
+		$order_status = (strpos($order->get_status(), 'wc-') === false) ? 'wc-'.$order->get_status() : $order->get_status();
 
 		// Locks this action for misfiring when order is placed with other gateways
-		if(!in_array($order->get_payment_method(), ['paghiper', 'paghiper_billet', 'paghiper_pix'])) {
+		if(!in_array($order_payment_method, ['paghiper', 'paghiper_billet', 'paghiper_pix'])) {
 			return;
 		}
 
 		// Fallback for old billet transactions
 		if($order->get_payment_method() !== $this->gateway->id && $order->get_payment_method() !== 'paghiper') {
+			return;
+		}
+
+		// Breaks execution if order is not in the right state
+		if(apply_filters('woo_paghiper_pending_status', $this->gateway_settings['set_status_when_waiting'], $order) !== $order_status) {
 			return;
 		}
 

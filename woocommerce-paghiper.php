@@ -443,6 +443,8 @@ class WC_Paghiper {
 		}
 
 		$payment_method = $order->get_payment_method();
+		$order_status = (strpos($order->get_status(), 'wc-') === false) ? 'wc-'.$order->get_status() : $order->get_status();
+
 		if ( in_array($payment_method, ['paghiper', 'paghiper_billet']) ) {
 
 			// Initializes plug-in options
@@ -455,7 +457,7 @@ class WC_Paghiper {
 				$this->log = wc_paghiper_initialize_log( $this->gateway_settings[ 'debug' ] );
 			}
 
-			if(apply_filters('woo_paghiper_pending_status', $this->gateway_settings['set_status_when_waiting'], $order) !== $order->status) {
+			if(apply_filters('woo_paghiper_pending_status', $this->gateway_settings['set_status_when_waiting'], $order) !== $order_status) {
 				return;
 			}
 
@@ -572,9 +574,10 @@ class WC_Paghiper {
 	 */
 	public function pending_payment_message( $order_id ) {
 		$order = new WC_Order( $order_id );
+		$order_status = (strpos($order->get_status(), 'wc-') === false) ? 'wc-'.$order->get_status() : $order->get_status();
 
 		$payment_method = $order->get_payment_method();
-		if ( in_array($payment_method, array('paghiper', 'paghiper_billet')) ) {
+		if ( in_array($payment_method, array('paghiper', 'paghiper_billet'))) {
 
 			// Initializes plug-in options
 			if(!$this->gateway_settings) {
@@ -586,7 +589,7 @@ class WC_Paghiper {
 				$this->log = wc_paghiper_initialize_log( $this->gateway_settings[ 'debug' ] );
 			}
 
-			if(apply_filters('woo_paghiper_pending_status', $this->gateway_settings['set_status_when_waiting'], $order) !== $order->status) {
+			if(apply_filters('woo_paghiper_pending_status', $this->gateway_settings['set_status_when_waiting'], $order) !== $order_status) {
 				return;
 			}
 
