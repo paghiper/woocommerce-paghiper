@@ -228,7 +228,7 @@ class WC_Paghiper_Base_Gateway {
 		);
 
 		if($this->gateway->id == 'paghiper_pix') {
-			unset($first['open_after_day_due']);
+			unset($first['skip_non_workdays'], $first['open_after_day_due']);
 		}
 
 		return array_merge( $first, $last );
