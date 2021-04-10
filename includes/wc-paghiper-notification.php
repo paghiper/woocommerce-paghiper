@@ -145,7 +145,7 @@ function paghiper_increase_order_stock( $order, $settings ) {
 
     $order_id = $order->get_id();
     
-    if ( 'yes' === get_option( 'woocommerce_manage_stock' ) && $replenish_stock == true && $order && 0 < count( $order->get_items() ) ) {
+    if ( 'yes' === get_option( 'woocommerce_manage_stock' ) && ($replenish_stock === true || $replenish_stock == 'true') && $order && 0 < count( $order->get_items() ) ) {
         if ( apply_filters( 'woocommerce_payment_complete_reduce_order_stock', $order, $order_id ) ) {
             if ( function_exists( 'wc_maybe_increase_stock_levels' ) ) {
                 wc_maybe_increase_stock_levels( $order_id );
