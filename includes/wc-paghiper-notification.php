@@ -31,7 +31,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
                 break;
             case "processing" :
                 $order->update_status( $settings['set_status_when_waiting'], __( 'PagHiper: Pagamento em disputa. Para responder, faça login na sua conta Paghiper e procure pelo número da transação.', 'woo_paghiper' ) );
-                increase_order_stock( $order, $settings );
+                paghiper_increase_order_stock( $order, $settings );
                 break;
         }
 
@@ -67,7 +67,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
                     $cancelled_status = (!empty($settings['set_status_when_cancelled'])) ? $settings['set_status_when_cancelled'] : 'cancelled';
                     
                     $order->update_status( $cancelled_status, __( 'PagHiper: Boleto Cancelado.', 'woo_paghiper' ) );
-                    increase_order_stock( $order, $settings );
+                    paghiper_increase_order_stock( $order, $settings );
                 break;
             case "paid" :
 
@@ -138,7 +138,7 @@ function woocommerce_paghiper_check_ipn_response() {
  *
  * @param int $order_id Order ID.
  */
-function increase_order_stock( $order, $settings ) {
+function paghiper_increase_order_stock( $order, $settings ) {
 
     /* Changing setting keys from Woo-Boleto-Paghiper 1.2.6.1 */
     $replenish_stock = ($settings['replenish_stock'] !== '') ? $settings['replenish_stock'] : $settings['incrementar-estoque'];
