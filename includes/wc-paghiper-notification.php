@@ -142,8 +142,12 @@ function paghiper_increase_order_stock( $order, $settings ) {
 
     /* Changing setting keys from Woo-Boleto-Paghiper 1.2.6.1 */
     $replenish_stock = ($settings['replenish_stock'] !== '') ? $settings['replenish_stock'] : $settings['incrementar-estoque'];
-
     $order_id = $order->get_id();
+
+    // Locks this action for misfiring when order is placed with other gateways
+    if(!in_array($order->get_payment_method(), ['paghiper', 'paghiper_billet', 'paghiper_pix'])) {
+        return;
+    }
     
     if ( 'yes' === get_option( 'woocommerce_manage_stock' ) && $replenish_stock == 'yes' && $order && 0 < count( $order->get_items() ) ) {
         if ( apply_filters( 'woocommerce_payment_complete_reduce_order_stock', $order, $order_id ) ) {
