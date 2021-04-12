@@ -12,7 +12,11 @@ add_action( 'woocommerce_api_wc_gateway_paghiper', 'woocommerce_paghiper_check_i
 add_action('wp_ajax_woo_paghiper_pix_webhook', 'woocommerce_paghiper_check_ipn_response');
 add_action('wp_ajax_nopriv_woo_paghiper_pix_webhook','woocommerce_paghiper_check_ipn_response');
 
+$paghiper_log = false;
+
 function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
+
+    global $paghiper_log;
 
     $order          = new WC_Order($order_no);
     $order_status   = $order->get_status();
@@ -93,13 +97,18 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 
 function woocommerce_paghiper_check_ipn_response() {
 
+    global $paghiper_log;
+
     $transaction_type = (isset($_GET) && array_key_exists('gateway', $_GET)) ? sanitize_text_field($_GET['gateway']) : 'billet';
     if (defined('DOING_AJAX') && DOING_AJAX) { 
         $transaction_type = 'pix'; 
     }
 
     $settings = ($transaction_type == 'pix') ? get_option( 'woocommerce_paghiper_pix_settings' ) : get_option( 'woocommerce_paghiper_billet_settings' );
-    $log = wc_paghiper_initialize_log( $settings[ 'debug' ] );
+
+    if(!$paghiper_log) {
+        $paghiper_log = wc_paghiper_initialize_log( $settings[ 'debug' ] );
+    }
 
     $token 			= $settings['token'];
     $api_key 		= $settings['api_key'];
@@ -110,7 +119,7 @@ function woocommerce_paghiper_check_ipn_response() {
     if($response['result'] == 'success') {
 
         if ( $log ) {
-            wc_paghiper_add_log( $log, sprintf('Pedido #%s: Post de retorno da PagHiper confirmado.', $response['order_id']) );
+            wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: Post de retorno da PagHiper confirmado.', $response['order_id']) );
         }
 
         // Print a 200 HTTP code for the notification engine
@@ -122,9 +131,9 @@ function woocommerce_paghiper_check_ipn_response() {
 
     } else {
 
-        if ( $log ) {
+        if ( $paghiper_log ) {
             $error = $response->get_error_message();
-            wc_paghiper_add_log( $log, sprintf( 'Erro: não foi possível checar o post de retorno da PagHiper. Mensagem: %s', $response ) );
+            wc_paghiper_add_log( $paghiper_log, sprintf( 'Erro: não foi possível checar o post de retorno da PagHiper. Mensagem: %s', $response ) );
         }
 
         wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), array( 'response' => 401 ) );
@@ -140,6 +149,12 @@ function woocommerce_paghiper_check_ipn_response() {
  */
 function paghiper_increase_order_stock( $order, $settings ) {
 
+    global $paghiper_log;
+
+    if(!$paghiper_log) {
+        $paghiper_log = wc_paghiper_initialize_log( $settings[ 'debug' ] );
+    }
+
     /* Changing setting keys from Woo-Boleto-Paghiper 1.2.6.1 */
     $replenish_stock = ($settings['replenish_stock'] !== '') ? $settings['replenish_stock'] : $settings['incrementar-estoque'];
     $order_id = $order->get_id();
@@ -153,7 +168,13 @@ function paghiper_increase_order_stock( $order, $settings ) {
         if ( apply_filters( 'woocommerce_payment_complete_reduce_order_stock', $order, $order_id ) ) {
             if ( function_exists( 'wc_maybe_increase_stock_levels' ) ) {
                 wc_maybe_increase_stock_levels( $order_id );
+            } else {
+                wc_paghiper_add_log( $paghiper_log, sprintf( 'Pedido #%s: Incremento de estoque automático cancelado. Função de devolução ao estoque está indisponível no momento', $order_id ) );
             }
+        } else {
+            wc_paghiper_add_log( $paghiper_log, sprintf( 'Pedido #%s: Incremento de estoque automático cancelado. Um filtro impediu a execução do procesos.', $order_id ) );
         }
+    } else {
+        wc_paghiper_add_log( $paghiper_log, sprintf( 'Pedido #%s: Gestão de estoque não habilitada. Itens não serão readicionados ao inventário.', $order_id ) );
     }
 }
