@@ -69,7 +69,6 @@ class WC_Paghiper {
 			add_action( 'wp_ajax_paghiper_dismiss_notice', array( __CLASS__, 'dismiss_notices') );
 
 			add_filter( 'template_include', array( $this, 'paghiper_template' ), 9999 );
-			add_action( 'woocommerce_view_order', array( $this, 'pending_payment_message' ) );
 			add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( $this, 'plugin_action_links' ) );
 			//add_filter( 'woocommerce_new_order', array($this, 'generate_transaction') );
 			add_filter( 'woocommerce_email_attachments', array($this, 'attach_billet'), 10, 3 );
@@ -563,55 +562,6 @@ class WC_Paghiper {
 		}
 
 		return apply_filters( 'woo_paghiper_url', $url, $code, $home );
-	}
-
-	/**
-	 * Display pending payment message in order details.
-	 *
-	 * @param  int $order_id Order id.
-	 *
-	 * @return string        Message HTML.
-	 */
-	public function pending_payment_message( $order_id ) {
-		$order = new WC_Order( $order_id );
-		$order_status = (strpos($order->get_status(), 'wc-') === false) ? 'wc-'.$order->get_status() : $order->get_status();
-
-		$payment_method = $order->get_payment_method();
-		if ( in_array($payment_method, array('paghiper', 'paghiper_billet'))) {
-
-			// Initializes plug-in options
-			if(!$this->gateway_settings) {
-				$this->gateway_settings = get_option("woocommerce_{$payment_method}_settings");
-			}
-
-			// Inicializa logs, caso ativados
-			if(!$this->log) {
-				$this->log = wc_paghiper_initialize_log( $this->gateway_settings[ 'debug' ] );
-			}
-
-			if(apply_filters('woo_paghiper_pending_status', $this->gateway_settings['set_status_when_waiting'], $order) !== $order_status) {
-				return;
-			}
-
-			require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
-	
-			$paghiperTransaction = new WC_PagHiper_Transaction( $order_id );
-			$paghiperTransaction->printBarCode(true);
-
-			$html = '<div class="woocommerce-info">';
-			$html .= sprintf( '<a class="button button-primary wc-forward" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Visualizar boleto &rarr;', 'woo-boleto-paghiper' ) );
-
-			$message = sprintf( __( '%sAtenção!%s Ainda não registramos o pagamento deste pedido.', 'woo-boleto-paghiper' ), '<strong>', '</strong>' ) . '<br />';
-			$message .= __( 'Por favor clique no botão ao lado e pague o boleto pelo seu Internet Banking.', 'woo-boleto-paghiper' ) . '<br />';
-			$message .= __( 'Caso preferir, você pode imprimir e pagá-lo em qualquer agência bancária ou casa lotérica.', 'woo-boleto-paghiper' ) . '<br />';
-			$message .= __( 'Ignore esta mensagem caso ja tenha efetuado o pagamento. O pedido será atualizado assim que houver a compensação.', 'woo-boleto-paghiper' ) . '<br />';
-
-			$html .= apply_filters( 'woo_paghiper_pending_payment_message', $message, $order );
-
-			$html .= '</div>';
-
-			echo $html;
-		}
 	}
 
 	/**
