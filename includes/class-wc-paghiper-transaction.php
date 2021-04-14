@@ -132,7 +132,7 @@ class WC_PagHiper_Transaction {
 					$this->invalid_reason = 'different_due_date';
 	
 					if ( $this->log ) {
-						$log_message = 'Pedido #%s: Data de vencimento do boleto não bate com a informada no pedido. Um novo boleto será gerado.';
+						$log_message = 'Pedido #%s: Data de vencimento da transação não bate com a informada no pedido. Uma nova transação será gerado.';
 						wc_paghiper_add_log( $this->log, sprintf( $log_message, $this->order_id ) );
 					}
 				}
