@@ -26,6 +26,7 @@ class WC_PagHiper_Transaction {
 
 		// Pegamos o pedido completo
 		$this->order = new WC_Order( $order_id );
+		$this->order_status = (strpos($this->order->get_status(), 'wc-') === false) ? 'wc-'.$this->order->get_status() : $this->order->get_status();
 
 		// Pega a configuração atual do plug-in.
 		$this->gateway_id = $this->order->get_payment_method();
@@ -131,7 +132,7 @@ class WC_PagHiper_Transaction {
 					$this->invalid_reason = 'different_due_date';
 	
 					if ( $this->log ) {
-						$log_message = 'Pedido #%s: Data de vencimento do boleto não bate com a informada no pedido. Um novo boleto será gerado.';
+						$log_message = 'Pedido #%s: Data de vencimento da transação não bate com a informada no pedido. Uma nova transação será gerado.';
 						wc_paghiper_add_log( $this->log, sprintf( $log_message, $this->order_id ) );
 					}
 				}
@@ -375,6 +376,10 @@ class WC_PagHiper_Transaction {
 			return false;
 		}
 
+		if(apply_filters('woo_paghiper_pending_status', $this->gateway_settings['set_status_when_waiting'], $this->order) !== $this->order_status && !in_array($this->order_status, ['wc-pending', 'pending'])) {
+			return false;
+		}
+
 		// Include SDK for our call
 		require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/build/vendor/scoper-autoload.php';
 		
@@ -539,6 +544,10 @@ class WC_PagHiper_Transaction {
 	public function print_transaction_barcode($print = FALSE) {
 
 		$digitable_line = $this->_get_digitable_line();
+
+		if(!$digitable_line)
+			return false;
+
 		$due_date = (DateTime::createFromFormat('Y-m-d', $this->order_data['order_transaction_due_date']))->format('d/m/Y');
 
 		$html = '<div class="woo_paghiper_digitable_line" style="margin-bottom: 40px;">';
@@ -592,12 +601,12 @@ class WC_PagHiper_Transaction {
 					$html .= '</div>';
 					$html .= sprintf('<div class="paghiper-pix-code" onclick="copyPaghiperEmv()"><p>Pagar com PIX copia e cola - <button>Clique para copiar</button></p><div class="textarea-container"><textarea readonly rows="3">%s</textarea></div></div>', $digitable_line);
 				} else {
-					$html .= ($barcode_url) ? "<img src='{$barcode_url}' title='Código de barras do PIX deste pedido.' style='max-width: 100%; margin: 0 auto;'>" : '';
+					$html .= ($barcode_url) ? "<p style='text-align: center;'><img src='{$barcode_url}' title='Código de barras do PIX deste pedido.' style='max-width: 100%; margin: 0 auto;'></p>" : '';
 					$html .= "<p style='width: 100%; text-align: center;'>Data de vencimento: <strong>{$due_date}</strong></p>";
 					$html .= "<p style='width: 100%; text-align: center;'>Seu código PIX: {$digitable_line}</p>";
 				}
 	
-				$html .= "<p style='width: 100%; text-align: center; margin-top: 20px;'>Após o pagamento, podemos levar alguns segundos para confirmar o seu pagamento.<br>Você será avisado assim que isso ocorrer!</p>";
+				$html .= "<p style='width: 100%; text-align: center; margin-top: 20px;'>Após o pagamento, podemos levar alguns segundos para confirmar o seu pagamento.<br>Você será avisado(a) assim que isso ocorrer!</p>";
 			
 			}
 		endif;

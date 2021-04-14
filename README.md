@@ -6,7 +6,7 @@ O plug-in anexa o boleto, mostra código de barras e linha digitável nos e-mail
 
 Fácil, prático e rápido!
 
-* **Versão mais Recente:** 2.1.4
+* **Versão mais Recente:** 2.1.5
 * **Requer WooCommerce** versão mínima 3.5
 * **Requer Wordpress** preferencialmente atualizado
 * **Requisitos:** PHP >= 5.6.0, Suporte a JSON e permissões de escrita na pasta uploads.
@@ -43,6 +43,16 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 * Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
 * Implementação de funcionalidade de boleto parcelado
+
+## 2.1.5 - 2021/04/14
+
+* Melhoria: Mais informações nos logs
+* Melhoria: Lógica de re-emissão aprimorada
+* Bugfix: Transações (PIX e Boleto) sendo geradas duas vezes na criação do pedido
+* Bugfix: Cancelamento de PIX e boleto não mudam mais o status do pedido, mesmo que o método de pagamento tenha sido mudado
+* Bugfix: E-mails de nova data de vencimento não eram enviados (dependendo da versão do Woocommerce)
+* Bugfix: Controle mais estrito do estoque
+* Bugfix: Instruções de pagamento eram mostrados várias vezes, dependendo das condições
 
 ## 2.1.4 - 2021/02/14
 

@@ -228,7 +228,7 @@ class WC_Paghiper_Base_Gateway {
 		);
 
 		if($this->gateway->id == 'paghiper_pix') {
-			unset($first['open_after_day_due']);
+			unset($first['skip_non_workdays'], $first['open_after_day_due']);
 		}
 
 		return array_merge( $first, $last );
@@ -365,7 +365,6 @@ class WC_Paghiper_Base_Gateway {
 	
 					$maybe_valid_taxid = preg_replace('/\D/', '', sanitize_text_field($_POST[$taxid_post_key]));
 					
-	
 					// TODO: Check if item key exists in order meta too
 					if($validateAPI->validate_taxid($maybe_valid_taxid)) {
 						$valid_keys[] = $taxid_post_key;
@@ -401,7 +400,12 @@ class WC_Paghiper_Base_Gateway {
 			} else {
 				if(!empty($not_empty_keys)) {
 					wc_clear_notices();
-					wc_add_notice(  '<strong>Número de CPF</strong> inválido!', 'error' );
+
+					if(strlen($maybe_valid_taxid) > 11) {
+						wc_add_notice(  '<strong>Número de CNPJ</strong> inválido!', 'error' );
+					} else {
+						wc_add_notice(  '<strong>Número de CPF</strong> inválido!', 'error' );
+					}
 				}
 			}
 		}
@@ -459,6 +463,7 @@ class WC_Paghiper_Base_Gateway {
 		$transaction = $paghiperTransaction->create_transaction();
 
 		if($transaction) {
+
 			// Mark as on-hold (we're awaiting the ticket).
 			$waiting_status = (!empty($this->set_status_when_waiting)) ? $this->set_status_when_waiting : 'on-hold';
 			$order->update_status( $waiting_status, __( 'PagHiper: '. ($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'Boleto' .' gerado e enviado por e-mail.', 'woo-boleto-paghiper' ) );
@@ -471,11 +476,18 @@ class WC_Paghiper_Base_Gateway {
 				$order->add_order_note( sprintf( __( 'Atenção! Total da transação excede R$ 9.000. Caso ainda não o tenha feito, entre em contato com nossa equipe comercial para liberação através do e-mail <a href="comercial@paghiper.com" target="_blank">comercial@paghiper.com</a>', 'woo_paghiper' ) ) );
 			}
 
-			if ( 'yes' === $this->debug ) {
-				wc_paghiper_add_log( $this->log, sprintf( 'Pedido %s: Não foi possível gerar o '. ($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto' .'. Detalhes: %s', var_export($transaction, true) ) );
+			if ( $this->log ) {
+				wc_paghiper_add_log( 
+					$this->log, 
+					sprintf( 'Pedido #%s: Não foi possível gerar o %s. Detalhes: %s', 
+						$order_id, 
+						(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto'), 
+						var_export($transaction, true) 
+					) 
+				);
 			}
 			
-			wc_add_notice( 'Não foi possível gerar o seu '. ($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto', 'error' );
+			wc_add_notice( 'Não foi possível gerar o seu '. (($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto'), 'error' );
 			return;
 
 		}
@@ -526,14 +538,21 @@ class WC_Paghiper_Base_Gateway {
 
 		$order 		= (is_numeric($order)) ? wc_get_order($order) : $order;
 		$order_id 	= $order->get_id();
+		$order_payment_method = $order->get_payment_method();
+		$order_status = (strpos($order->get_status(), 'wc-') === false) ? 'wc-'.$order->get_status() : $order->get_status();
 
 		// Locks this action for misfiring when order is placed with other gateways
-		if(!in_array($order->get_payment_method(), ['paghiper', 'paghiper_billet', 'paghiper_pix'])) {
+		if(!in_array($order_payment_method, ['paghiper', 'paghiper_billet', 'paghiper_pix'])) {
 			return;
 		}
 
 		// Fallback for old billet transactions
 		if($order->get_payment_method() !== $this->gateway->id && $order->get_payment_method() !== 'paghiper') {
+			return;
+		}
+
+		// Breaks execution if order is not in the right state
+		if(apply_filters('woo_paghiper_pending_status', $this->set_status_when_waiting, $order) !== $order_status) {
 			return;
 		}
 
@@ -573,7 +592,9 @@ class WC_Paghiper_Base_Gateway {
 	function email_instructions( $order, $sent_to_admin ) {
 
 		$order_status = (strpos($order->get_status(), 'wc-') === false) ? 'wc-'.$order->get_status() : $order->get_status();
-		if ( $sent_to_admin || apply_filters('woo_paghiper_pending_status', $this->set_status_when_waiting, $order) !== $order_status || strpos($order->get_payment_method(), 'paghiper') === false || ($order->get_payment_method() == 'paghiper_pix' && $order->get_payment_method() !== $this->gateway->id)) {
+		$order_payment_method = $order->get_payment_method();
+
+		if ( $sent_to_admin || apply_filters('woo_paghiper_pending_status', $this->set_status_when_waiting, $order) !== $order_status || strpos($order_payment_method, 'paghiper') === false || $order_payment_method !== $this->gateway->id) {
 			return;
 		}
 
@@ -587,7 +608,7 @@ class WC_Paghiper_Base_Gateway {
 
 		$message = $paghiperTransaction->printBarCode();
 
-		if($order->get_payment_method() !== 'paghiper_pix') {
+		if($order_payment_method !== 'paghiper_pix') {
 
 			$message .= sprintf( __( '%sAtenção!%s Você NÃO vai receber o boleto pelos Correios.', 'woo-boleto-paghiper' ), '<strong>', '</strong>' ) . '<br />';
 			$message .= __( 'Se preferir, você pode imprimir e pagar o boleto em qualquer agência bancária ou lotérica.', 'woo-boleto-paghiper' ) . '<br />';
