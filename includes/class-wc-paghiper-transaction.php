@@ -246,8 +246,11 @@ class WC_PagHiper_Transaction {
 		}
 
 		// Override data with our gateway fields
+		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-validation.php';
+		$validateAPI = new WC_PagHiper_Validation;
+
 		$checkout_payer_cpf_cnpj = get_post_meta($this->order_id, '_'.$this->gateway_id.'_cpf_cnpj', true);
-		if(!empty($checkout_payer_cpf_cnpj)) {
+		if(!empty($checkout_payer_cpf_cnpj) && $validateAPI->validate_taxid( $checkout_payer_cpf_cnpj )) {
 			$data['payer_cpf_cnpj'] = $checkout_payer_cpf_cnpj;
 		}
 
