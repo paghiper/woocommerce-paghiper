@@ -62,8 +62,9 @@ class WC_Paghiper {
 			}
 
 			add_filter( 'woocommerce_payment_gateways', array( $this, 'add_gateway' ) );
-			add_action( 'init', array( __CLASS__, 'add_paghiper_endpoint' ) );
-			add_action( 'init', array( __CLASS__, 'maybe_deactivate_other_plugins' ) );
+			add_action( 'init', array( $this, 'add_paghiper_endpoint' ) );
+			add_action( 'init', array( $this, 'init_shortcode' ) );
+			add_action( 'init', array( $this, 'maybe_deactivate_other_plugins' ) );
 			add_action( 'admin_notices', array( __CLASS__, 'check_paghiper_credentials' ) );
 			add_action( 'admin_init', array( __CLASS__, 'print_notices' ) );
 			add_action( 'wp_ajax_paghiper_dismiss_notice', array( __CLASS__, 'dismiss_notices') );
@@ -152,10 +153,52 @@ class WC_Paghiper {
 	}
 
 	/**
-	 * Created the paghiper endpoint.
+	 * Create the paghiper endpoint.
 	 */
 	public static function add_paghiper_endpoint() {
 		add_rewrite_endpoint( 'paghiper', EP_PERMALINK | EP_ROOT );
+	}
+
+	/**
+	 * Initialise our shortcode
+	 */
+	public function init_shortcode() {
+		add_shortcode( 'paghiper_shortcode', function() {
+			global $wp;
+
+			if ( !is_wc_endpoint_url( 'order-received' ) && !is_view_order_page() )
+				return false;
+
+			try {
+
+				//Get Order ID
+				if(is_wc_endpoint_url( 'order-received' )) {
+					$order_id  = wc_clean( $wp->query_vars['order-received'] );
+				} elseif(is_view_order_page()) {
+					$order_id = wc_clean( $wp->query_vars['view-order'] );
+				}
+
+				if ( empty($order_id) || $order_id == 0 )
+					return; // Exit;
+								
+				// Get an instance of the WC_Order object
+				$order = new WC_Order( $order_id );
+				$payment_method = $order->get_payment_method();
+
+				do_action( "woocommerce_thankyou_{$payment_method}", $order_id );
+
+				return;
+
+
+			} catch (Exception $e) {
+
+				if ( $this->log ) {
+					wc_paghiper_add_log( $this->log, sprintf( 'Erro: %s', $e->getMessage() ) );
+				}
+
+			}
+
+		});
 	}
 
 	/**
