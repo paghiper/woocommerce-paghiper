@@ -78,6 +78,9 @@ class WC_Paghiper {
 
 			// Migra configurações das chaves antigas ao atualizar
 			add_action( 'init', array( $this, 'migrate_gateway_settings' ));
+
+			// Mostra opções de boleto para pedidos
+			add_filter( 'woocommerce_my_account_my_orders_actions', array( $this, 'order_banking_billet_link' ), 10, 2 );
 			
 		}
 
@@ -605,6 +608,26 @@ class WC_Paghiper {
 		}
 
 		return apply_filters( 'woo_paghiper_url', $url, $code, $home );
+	}
+
+	public function order_banking_billet_link ($actions, $order) {
+		if ( 'paghiper_billet' !== $order->get_payment_method() ) {
+			return $actions;
+		}
+
+		if ( ! in_array( $order->get_status(), array( 'pending', 'on-hold' ), true ) ) {
+			return $actions;
+		}
+
+		$boleto_url = $this->get_paghiper_url( $order->get_order_key() );
+		if ( ! empty( $boleto_url ) ) {
+			$actions[] = array(
+				'url'  => $boleto_url,
+				'name' => __( 'Pagar boleto', 'paghiper' ),
+			);
+		}
+
+		return $actions;
 	}
 
 	/**
