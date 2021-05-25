@@ -163,7 +163,7 @@ class WC_Paghiper {
 	 * Initialise our shortcode
 	 */
 	public function init_shortcode() {
-		add_shortcode( 'paghiper_shortcode', function() {
+		add_shortcode( 'paghiper_show_instructions', function() {
 			global $wp;
 
 			if ( !is_wc_endpoint_url( 'order-received' ) && !is_view_order_page() )
