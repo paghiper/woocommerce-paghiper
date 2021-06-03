@@ -132,6 +132,10 @@ class WC_Paghiper {
 		include_once 'includes/class-wc-paghiper-billet-gateway.php';
 		include_once 'includes/class-wc-paghiper-pix-gateway.php';
 
+		if(class_exists('AutomateWoo\Variable')) {
+			include_once 'includes/integrations/automate-woo.php';
+		}
+
 	}
 
 	/**

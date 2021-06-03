@@ -44,6 +44,12 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
 * Implementação de funcionalidade de boleto parcelado
 
+## 2.2 - 2021/05/28
+
+* Melhoria: Shortcodes novos para facilitar integração com personalizadores de checkout
+* Melhoria: Compatibilidade nativa com os plug-ins Ninja checkout e NextMove
+* Bugfix: Botão de copiar código PIX não indicava ação após clique
+
 ## 2.1.5 - 2021/04/14
 
 * Melhoria: Mais informações nos logs

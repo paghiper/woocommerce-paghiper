@@ -647,6 +647,10 @@ class WC_PagHiper_Transaction {
 		);
 	}
 
+	public function _get_due_date() {
+		return (DateTime::createFromFormat('Y-m-d', $this->order_data['order_transaction_due_date']))->format('d/m/Y');
+	}
+
 	public function _get_past_due_days() {
 		return $this->past_due_days;
 	}
