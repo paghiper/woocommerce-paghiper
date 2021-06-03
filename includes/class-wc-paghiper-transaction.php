@@ -598,7 +598,7 @@ class WC_PagHiper_Transaction {
 					$html .= ($barcode_url) ? "<div class='qr-code'><img src='{$barcode_url}' title='Código de barras do PIX deste pedido.'><br>Data de vencimento: <strong>{$due_date}</strong></div>" : '';
 					$html .= '<div class="instructions"><ul>
 						<li><span>Abra o app do seu banco ou instituição financeira e <strong>entre no ambiente Pix</strong>.</span></li>
-						<li><span>Escolha a opção <strong>Pagar com QR Code</strong> e escanele o código ao lado.</span></li>
+						<li><span>Escolha a opção <strong>Pagar com QR Code</strong> e escaneie o código ao lado.</span></li>
 						<li><span>Confirme as informações e finalize o pagamento.</span></li>
 					</ul></div>';
 					$html .= '</div>';
