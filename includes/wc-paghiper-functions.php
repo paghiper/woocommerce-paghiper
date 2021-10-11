@@ -105,3 +105,31 @@ function wc_paghiper_add_workdays( $due_date, $order, $workday_settings = NULL, 
 
 	return apply_filters('woo_paghiper_due_date', $return, $order);
 }
+
+/**
+ * Checks if an autoload include is performed successfully. If not, include necessary files
+ * 
+ * @return boolean
+ */
+
+function wc_paghiper_check_sdk_includes( $log = false ) {
+
+	if (!\function_exists('PagHiperSDK\\GuzzleHttp\\uri_template') || !\function_exists('PagHiperSDK\\GuzzleHttp\\choose_handler')) {
+
+		if($log) {
+			wc_paghiper_add_log( $this->log, sprintf( 'Erro: O PHP SDK não incluiu todos os arquivos necessários por alguma questão relacionada a PSR-4 ou por configuração de ambiente.' ) );
+		}
+
+		require_once WC_Paghiper::get_plugin_path() . '/ralouphie/getallheaders/src/getallheaders.php';
+		require_once WC_Paghiper::get_plugin_path() . '/guzzlehttp/promises/src/functions_include.php';
+		require_once WC_Paghiper::get_plugin_path() . '/guzzlehttp/psr7/src/functions_include.php';
+		require_once WC_Paghiper::get_plugin_path() . '/guzzlehttp/guzzle/src/functions_include.php';
+
+		if($log) {
+			wc_paghiper_add_log( $this->log, sprintf( 'Erro contornado: O plug-in se recuperou do erro mas talvez você queira verificar questões relacionadas a compilação ou configuração da sua engine PHP.' ) );
+		}
+
+	}
+
+	return true;
+}

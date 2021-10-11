@@ -2,9 +2,6 @@
 
 use PagHiper\PagHiper;
 
-// Include SDK for our call
-require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/build/vendor/scoper-autoload.php';
-
 $wp_api_url = add_query_arg( 'wc-api', 'WC_Gateway_Paghiper', home_url( '/' ) );
 add_action( 'woocommerce_api_wc_gateway_paghiper', 'woocommerce_paghiper_check_ipn_response' );
 
@@ -112,6 +109,10 @@ function woocommerce_paghiper_check_ipn_response() {
 
     $token 			= $settings['token'];
     $api_key 		= $settings['api_key'];
+
+    // Include SDK for our call
+    require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/build/vendor/scoper-autoload.php';
+    wc_paghiper_check_sdk_includes( ($paghiper_log) ? $paghiper_log : false );
 
     $PagHiperAPI 	= new PagHiper($api_key, $token);
     $response 		= $PagHiperAPI->transaction()->process_ipn_notification($_POST['notification_id'], $_POST['transaction_id'], $transaction_type);
