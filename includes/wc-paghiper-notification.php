@@ -110,6 +110,10 @@ function woocommerce_paghiper_check_ipn_response() {
     $token 			= $settings['token'];
     $api_key 		= $settings['api_key'];
 
+    if(empty($_POST)) {
+        wc_paghiper_add_log( $paghiper_log, 'Post de retorno da PagHiper veio sem conteúdo. Cheque nos logs se serviços de filtragem de tráfego, como mod_security, cPGuard, Imunify360 e similares para mais informações. Caso precise de mais ajuda, entre em contato com o nosso suporte.' );
+    }
+
     // Include SDK for our call
     require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/build/vendor/scoper-autoload.php';
     wc_paghiper_check_sdk_includes( ($paghiper_log) ? $paghiper_log : false );
