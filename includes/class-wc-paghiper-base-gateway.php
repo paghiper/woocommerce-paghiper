@@ -519,7 +519,7 @@ class WC_Paghiper_Base_Gateway {
 
 		// Maybe skip non-workdays as per configuration
 		$maybe_skip_non_workdays = ($gateway_name == 'paghiper_pix') ? null : $this->skip_non_workdays;
-		$transaction_due_date = wc_paghiper_add_workdays($transaction_due_date, $order, $transaction_due_date, 'date');
+		$transaction_due_date = wc_paghiper_add_workdays($transaction_due_date, $order, $maybe_skip_non_workdays, 'date');
 		$data['order_transaction_due_date'] = $transaction_due_date->format('Y-m-d');
 		$data['transaction_type'] = ($gateway_name == 'paghiper_pix') ? 'pix' : 'billet';
 
