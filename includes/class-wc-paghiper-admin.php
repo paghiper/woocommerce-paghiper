@@ -226,7 +226,7 @@ class WC_Paghiper_Admin {
 		}
 
 		$gateway_name = $order->get_payment_method();
-		$billing_email = (property_exists(get_billing_email, $order)) ? $order->get_billing_email : $order->get_billing_email();
+		$billing_email = (property_exists($order, "get_billing_email")) ? $order->get_billing_email : $order->get_billing_email();
 
 		if(!$billing_email)
 			return;
