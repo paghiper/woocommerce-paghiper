@@ -71,7 +71,7 @@ function wc_paghiper_add_workdays( $due_date, $order, $workday_settings = NULL, 
 
 	if($due_date && $workday_settings == 'yes') {
 
-		$due_date_weekday = $due_date->format('N');
+		$due_date_weekday = ($due_date)->format('N');
 
 		if ($due_date_weekday >= 6) {
 			$date_diff = (8 - $due_date_weekday);
