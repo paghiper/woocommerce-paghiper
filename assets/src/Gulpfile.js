@@ -38,6 +38,7 @@ const plumber		= require('gulp-plumber');
 const rename 		= require('gulp-rename');
 const autoprefixer 	= require('gulp-autoprefixer');
 const uglify 		= require('gulp-uglify');
+const livereload 	= require('gulp-livereload');
 const args			= require('yargs').argv;
 const isRelease 	= args.release || false;
 
@@ -97,6 +98,7 @@ const buildTemplates = function (done) {
 			}) )
 			//.pipe(rename({ extname: '.php' }))
 			.pipe(dest(paths.jade.output))
+			.pipe(livereload());
 }
 
 /**
@@ -110,7 +112,8 @@ const css = function (done) {
 			.pipe(autoprefixer({ cascade : false }))
 			.pipe(cleancss())
 			.pipe(rename({ suffix: '.min' }))
-			.pipe( dest(paths.styles.output) );
+			.pipe( dest(paths.styles.output) )
+			.pipe(livereload());
 }
 
 /**
@@ -120,7 +123,8 @@ const images = function (done) {
 	return src( [ paths.images.input ] )
     	.pipe(plumber())
 		.pipe( imagemin( { optimizationLevel: 3, progressive: true, interlaced: true } ) )
-		.pipe( dest( paths.images.output ) );
+		.pipe( dest( paths.images.output ) )
+		.pipe(livereload());
 }
 
 /**
@@ -130,7 +134,8 @@ const svg = function (done) {
 	return src( [ paths.svgs.input ])	
 		.pipe(plumber())
         .pipe(svgmin())
-        .pipe( dest(paths.svgs.output) );
+        .pipe( dest(paths.svgs.output) )
+		.pipe(livereload());
 }
 
 /**
@@ -146,7 +151,8 @@ const js = function (done) {
         }))
         .pipe(rename({ suffix: '.min' }))
         .pipe(uglify())
-		.pipe( dest(paths.scripts.output) );
+		.pipe( dest(paths.scripts.output) )
+		.pipe(livereload());
 }
 
 /**
@@ -156,12 +162,16 @@ const copy = function (done) {
 	// Copy static files
 	return src(paths.copy.input)
 		.pipe(plumber())
-		.pipe( dest(paths.copy.output) );
+		.pipe( dest(paths.copy.output) )
+		.pipe(livereload());
 }
 
 // Watch for changes
 const watchSource = function (done) {
-
+	
+	livereload.listen({
+		host: "localhost"
+	});
 	watch(paths.images.input, images);
 	watch(paths.svgs.input, svg);
 	watch(paths.styles.input, css);
