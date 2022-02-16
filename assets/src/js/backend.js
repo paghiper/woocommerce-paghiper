@@ -1,3 +1,5 @@
+//=require functions/_copyPaghiperEmv.js
+
 jQuery(document).ready( function($){
 	
 	// Deal with dismissable notices

@@ -5,13 +5,13 @@
  * Description: 			Ofereça a seus clientes pagamento por PIX e boleto bancário com a PagHiper. Fácil, prático e rapido!
  * Author: 					PagHiper Pagamentos
  * Author URI: 				https://www.paghiper.com
- * Version: 				2.1.5
- * Tested up to: 			5.7
+ * Version: 				2.2
+ * Tested up to: 			5.7.2
  * License: 				GPLv2 or later
  * Text Domain: 			woo-boleto-paghiper
  * Domain Path: 			/languages/
  * WC requires at least: 	3.5
- * WC tested up to: 		5.2.0
+ * WC tested up to: 		5.3.0
  */	
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -644,27 +644,16 @@ class WC_Paghiper {
 			wp_register_script( 'jquery-mask', wc_paghiper_assets_url() . 'js/libs/jquery.mask/jquery.mask.min.js', array( 'jquery' ), '1.14.16', false );
 		}
 
-		wp_register_script( 'paghiper_admin_js', wc_paghiper_assets_url() . 'js/admin.min.js', array('jquery', 'jquery-mask'),'1.0', false );
-		wp_register_script( 'paghiper_frontend_js', wc_paghiper_assets_url() . 'js/frontend.min.js',array( 'jquery', 'jquery-mask' ),'1.0', false );
-		wp_register_style( 'paghiper_frontend_css', wc_paghiper_assets_url() . 'css/frontend.min.css','','1.0', false );
+		wp_register_script( 'paghiper-admin-js', wc_paghiper_assets_url() . 'js/admin.min.js', array('jquery', 'jquery-mask'),'1.0', false );
+		wp_register_script( 'paghiper-frontend_js', wc_paghiper_assets_url() . 'js/frontend.min.js',array( 'jquery', 'jquery-mask' ),'1.0', false );
+		wp_register_style( 'paghiper-frontend-css', wc_paghiper_assets_url() . 'css/frontend.min.css','','1.0', false );
 
 		if(!is_admin()) {
 
 			wp_enqueue_script(  'jquery-mask' );
-			wp_enqueue_script(  'paghiper_frontend_js' );
-			wp_enqueue_style( 'paghiper_frontend_css' );
+			wp_enqueue_script(  'paghiper-frontend-js' );
+			wp_enqueue_style( 'paghiper-frontend-css' );
 
-		} else {
-
-			
-			global $current_screen;
-			$req_action = empty( $_REQUEST[ 'action' ] ) ? false : $_REQUEST[ 'action' ];
-			if ($current_screen->post_type =='shop_order' && $req_action == 'edit') {
-	
-				wp_enqueue_script(  'jquery-mask' );
-				wp_enqueue_script(  'paghiper_admin_js' );
-	
-			}
 		}
 	}
 
