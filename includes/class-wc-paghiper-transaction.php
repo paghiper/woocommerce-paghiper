@@ -270,6 +270,13 @@ class WC_PagHiper_Transaction {
 		$data['payer_state']      	= $this->order->billing_state;
 		$data['payer_zip_code']   	= $this->order->billing_postcode;
 
+		// Phone
+		if(property_exists($this->order, "billing_cellphone") && !empty($this->order->billing_cellphone)) {
+		    $data['payer_phone']  = $this->order->billing_cellphone;
+		} elseif(property_exists($this->order, "billing_phone") && !empty($this->order->billing_phone)) {
+			$data['payer_phone']  = $this->order->billing_phone;
+		}
+
 		// Cart items
 		$data['items'] = array();
 		foreach ( $this->order->get_items() as $item_id => $item ) {
