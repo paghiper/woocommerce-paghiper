@@ -320,13 +320,15 @@ class WC_Paghiper_Base_Gateway {
 				<div class="clear"></div>';
 		}
 
-		$payer_cpf_cnpj = preg_replace('/\D/', '', sanitize_text_field(
-			(isset($_POST['_'.$this->gateway->id.'_cpf_cnpj'])) ? $_POST['_'.$this->gateway->id.'_cpf_cnpj'] : (
-				(
-					(isset($post_data['billing_cpf'])) ? $post_data['billing_cpf'] : $post_data['billing_cnpj'])
-				)
-			)
-		);
+		if(array_key_exists('_'.$this->gateway->id.'_cpf_cnpj', $_POST)) {
+			$payer_cpf_cnpj_value = $_POST['_'.$this->gateway->id.'_cpf_cnpj'];
+		} elseif(is_array($post_data) && array_key_exists('billing_cpf', $post_data)) {
+			$payer_cpf_cnpj_value = $post_data['billing_cnpj'];
+		} else {
+			$payer_cpf_cnpj_value = NULL;
+		}
+
+		$payer_cpf_cnpj = preg_replace('/\D/', '', sanitize_text_field($payer_cpf_cnpj_value));
 
 		$has_payer_fields = $this->has_payer_fields();
 		if(!$has_payer_fields) {
