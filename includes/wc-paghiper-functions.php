@@ -77,7 +77,9 @@ function wc_paghiper_add_workdays( $due_date, $order, $workday_settings = NULL, 
 			$date_diff = (8 - $due_date_weekday);
 			$due_date->modify( "+{$date_diff} days" );
 			
-			$paghiper_data = get_post_meta( $order->id, 'wc_paghiper_data', true );
+			$paghiper_data_query = get_post_meta( $order->id, 'wc_paghiper_data', true );
+
+			$paghiper_data = (is_array($paghiper_data_query)) ? $paghiper_data_query : [];
 			$paghiper_data['order_transaction_due_date'] = $due_date->format( 'Y-m-d' );
 
 			$update = update_post_meta( $order->id, 'wc_paghiper_data', $paghiper_data );
