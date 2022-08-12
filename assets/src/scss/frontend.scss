@@ -108,6 +108,19 @@
 	}
 }
 
+.woo_paghiper_digitable_line + .woocommerce-message {
+	@media only screen and (max-width: 600px) {
+		display: flex;
+		flex-direction: column;
+		text-align: center;
+
+		a.button-primary {
+			order: 2;
+			margin-top: 20px;
+		}
+	}
+}
+
 .payment_method_paghiper_billet,
 .payment_method_paghiper_pix {
 	img {
