@@ -39,11 +39,6 @@ const rename 		= require('gulp-rename');
 const autoprefixer 	= require('gulp-autoprefixer');
 const uglify 		= require('gulp-uglify');
 const livereload 	= require('gulp-livereload');
-const args			= require('yargs').argv;
-const isRelease 	= args.release || false;
-
-// Pug
-const jade = require('gulp-jade-php');
 
 // Scripts
 const babel = require('gulp-babel');
@@ -60,46 +55,6 @@ const imagemin = require('gulp-imagemin');
 
 // SVGs
 const svgmin = require('gulp-svgmin');
-
-/**
- * Task for building the HTML/PHPs
- */
-const buildTemplates = function (done) {
-	return src([paths.jade.input, paths.jade.ignore])
-			.pipe(plumber())
-			.pipe( jade({
-				'pretty': (!isRelease) ? true : false,
-				'locals': {
-					'echo': function(str) {
-						return "<?php echo " + str + " ?>"
-					},
-					'image': function(src) {
-						return ("<?php echo wc_paghiper_assets_url() ?>images/" + src);
-					},
-					'background': function(src, fromWP) {
-						var url = "/assets/images/";
-						url += src;
-						if (fromWP) {
-							return ("background-image: url('<?php echo " + src + "?>')");
-						} else {
-							return ("background-image: url('<?php echo wc_paghiper_assets_url() . \"" + url + "\" ?>')");
-						}
-					},
-					'css': function(value) {
-						return ("<?php echo wc_paghiper_assets_url() ?>css/" + value);
-					},
-					'js': function(value) {
-						return ("<?php echo wc_paghiper_assets_url() ?>js/" + value);
-					},
-					'assets': function(src) {
-						return ("<?php echo wc_paghiper_assets_url() ?>" + src);
-					}
-				}
-			}) )
-			//.pipe(rename({ extname: '.php' }))
-			.pipe(dest(paths.jade.output))
-			.pipe(livereload());
-}
 
 /**
  * Task for styles.
@@ -183,7 +138,6 @@ const watchSource = function (done) {
 
 exports.default = series(
 	parallel(
-		buildTemplates,
 		images,
 		svg,
 		css,
