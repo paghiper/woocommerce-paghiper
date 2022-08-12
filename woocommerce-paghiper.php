@@ -6,12 +6,13 @@
  * Author: 					PagHiper Pagamentos
  * Author URI: 				https://www.paghiper.com
  * Version: 				2.2
- * Tested up to: 			5.7.2
- * License: 				GPLv2 or later
+ * Tested up to: 			6.0.1
+ * License:              	GPLv3
+ * License URI:          	http://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain: 			woo-boleto-paghiper
  * Domain Path: 			/languages/
- * WC requires at least: 	3.5
- * WC tested up to: 		5.3.0
+ * WC requires at least: 	4.0.0
+ * WC tested up to: 		6.7.0
  */	
 
 if ( ! defined( 'ABSPATH' ) ) {
