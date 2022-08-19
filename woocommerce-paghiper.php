@@ -5,13 +5,14 @@
  * Description: 			Ofereça a seus clientes pagamento por PIX e boleto bancário com a PagHiper. Fácil, prático e rapido!
  * Author: 					PagHiper Pagamentos
  * Author URI: 				https://www.paghiper.com
- * Version: 				2.1.5
- * Tested up to: 			5.7
- * License: 				GPLv2 or later
+ * Version: 				2.2.1
+ * Tested up to: 			6.0.1
+ * License:              	GPLv3
+ * License URI:          	http://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain: 			woo-boleto-paghiper
  * Domain Path: 			/languages/
- * WC requires at least: 	3.5
- * WC tested up to: 		5.2.0
+ * WC requires at least: 	4.0.0
+ * WC tested up to: 		6.7.0
  */	
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -62,8 +63,9 @@ class WC_Paghiper {
 			}
 
 			add_filter( 'woocommerce_payment_gateways', array( $this, 'add_gateway' ) );
-			add_action( 'init', array( __CLASS__, 'add_paghiper_endpoint' ) );
-			add_action( 'init', array( __CLASS__, 'maybe_deactivate_other_plugins' ) );
+			add_action( 'init', array( $this, 'add_paghiper_endpoint' ) );
+			add_action( 'init', array( $this, 'init_shortcode' ) );
+			add_action( 'init', array( $this, 'maybe_deactivate_other_plugins' ) );
 			add_action( 'admin_notices', array( __CLASS__, 'check_paghiper_credentials' ) );
 			add_action( 'admin_init', array( __CLASS__, 'print_notices' ) );
 			add_action( 'wp_ajax_paghiper_dismiss_notice', array( __CLASS__, 'dismiss_notices') );
@@ -77,6 +79,9 @@ class WC_Paghiper {
 
 			// Migra configurações das chaves antigas ao atualizar
 			add_action( 'init', array( $this, 'migrate_gateway_settings' ));
+
+			// Mostra opções de boleto para pedidos
+			add_filter( 'woocommerce_my_account_my_orders_actions', array( $this, 'order_banking_billet_link' ), 10, 2 );
 			
 		}
 
@@ -128,6 +133,10 @@ class WC_Paghiper {
 		include_once 'includes/class-wc-paghiper-billet-gateway.php';
 		include_once 'includes/class-wc-paghiper-pix-gateway.php';
 
+		if(class_exists('AutomateWoo\Variable')) {
+			include_once 'includes/integrations/automate-woo.php';
+		}
+
 	}
 
 	/**
@@ -152,10 +161,52 @@ class WC_Paghiper {
 	}
 
 	/**
-	 * Created the paghiper endpoint.
+	 * Create the paghiper endpoint.
 	 */
 	public static function add_paghiper_endpoint() {
 		add_rewrite_endpoint( 'paghiper', EP_PERMALINK | EP_ROOT );
+	}
+
+	/**
+	 * Initialise our shortcode
+	 */
+	public function init_shortcode() {
+		add_shortcode( 'paghiper_show_instructions', function() {
+			global $wp;
+
+			if ( !is_wc_endpoint_url( 'order-received' ) && !is_view_order_page() )
+				return false;
+
+			try {
+
+				//Get Order ID
+				if(is_wc_endpoint_url( 'order-received' )) {
+					$order_id  = wc_clean( $wp->query_vars['order-received'] );
+				} elseif(is_view_order_page()) {
+					$order_id = wc_clean( $wp->query_vars['view-order'] );
+				}
+
+				if ( empty($order_id) || $order_id == 0 )
+					return; // Exit;
+								
+				// Get an instance of the WC_Order object
+				$order = new WC_Order( $order_id );
+				$payment_method = $order->get_payment_method();
+
+				do_action( "woocommerce_thankyou_{$payment_method}", $order_id );
+
+				return;
+
+
+			} catch (Exception $e) {
+
+				if ( $this->log ) {
+					wc_paghiper_add_log( $this->log, sprintf( 'Erro: %s', $e->getMessage() ) );
+				}
+
+			}
+
+		});
 	}
 
 	/**
@@ -210,6 +261,7 @@ class WC_Paghiper {
 
 			// Include SDK for our call
 			require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/build/vendor/scoper-autoload.php';
+			wc_paghiper_check_sdk_includes( ($this->log) ? $this->log : false );
 	
 			$gateways = ['woocommerce_paghiper_pix_settings', 'woocommerce_paghiper_billet_settings'];
 			foreach($gateways as $gateway) {
@@ -564,6 +616,26 @@ class WC_Paghiper {
 		return apply_filters( 'woo_paghiper_url', $url, $code, $home );
 	}
 
+	public function order_banking_billet_link ($actions, $order) {
+		if ( 'paghiper_billet' !== $order->get_payment_method() ) {
+			return $actions;
+		}
+
+		if ( ! in_array( $order->get_status(), array( 'pending', 'on-hold' ), true ) ) {
+			return $actions;
+		}
+
+		$boleto_url = $this->get_paghiper_url( $order->get_order_key() );
+		if ( ! empty( $boleto_url ) ) {
+			$actions[] = array(
+				'url'  => $boleto_url,
+				'name' => __( 'Pagar boleto', 'paghiper' ),
+			);
+		}
+
+		return $actions;
+	}
+
 	/**
 	 * Enqueue stylesheets and scripts for the front-end
 	 */
@@ -573,27 +645,19 @@ class WC_Paghiper {
 			wp_register_script( 'jquery-mask', wc_paghiper_assets_url() . 'js/libs/jquery.mask/jquery.mask.min.js', array( 'jquery' ), '1.14.16', false );
 		}
 
-		wp_register_script( 'paghiper_admin_js', wc_paghiper_assets_url() . 'js/admin.min.js', array('jquery', 'jquery-mask'),'1.0', false );
-		wp_register_script( 'paghiper_frontend_js', wc_paghiper_assets_url() . 'js/frontend.min.js',array( 'jquery', 'jquery-mask' ),'1.0', false );
-		wp_register_style( 'paghiper_frontend_css', wc_paghiper_assets_url() . 'css/frontend.min.css','','1.0', false );
+		wp_register_script( 'paghiper-admin-js', wc_paghiper_assets_url() . 'js/admin.min.js', array( 'jquery' ),'1.0', false );
+		wp_register_script( 'paghiper-frontend-js', wc_paghiper_assets_url() . 'js/frontend.min.js',array( 'jquery' ),'1.0', false );
+		wp_register_style( 'paghiper-frontend-css', wc_paghiper_assets_url() . 'css/frontend.min.css','','1.0', false );
 
 		if(!is_admin()) {
 
-			wp_enqueue_script(  'jquery-mask' );
-			wp_enqueue_script(  'paghiper_frontend_js' );
-			wp_enqueue_style( 'paghiper_frontend_css' );
-
-		} else {
-
-			
-			global $current_screen;
-			$req_action = empty( $_REQUEST[ 'action' ] ) ? false : $_REQUEST[ 'action' ];
-			if ($current_screen->post_type =='shop_order' && $req_action == 'edit') {
-	
+			if( ! wp_script_is( 'jquery-mask', 'enqueued' ) ) {
 				wp_enqueue_script(  'jquery-mask' );
-				wp_enqueue_script(  'paghiper_admin_js' );
-	
 			}
+
+			wp_enqueue_style( 'paghiper-frontend-css' );
+			wp_enqueue_script(  'paghiper-frontend-js' );
+
 		}
 	}
 

@@ -4,11 +4,14 @@
 
 	p {
 
+		display: block;
 		margin-bottom: 0.5em;
+		cursor: pointer;
 
 		button {
 			border: unset;
 			display: inline-block;
+			cursor: pointer;
 			padding: .25em .4em;
 			font-size: 75%;
 			font-weight: 700;
@@ -32,6 +35,7 @@
 		padding: .75rem 1.25rem;
 		margin-bottom: 1rem;
 		border-radius: .25rem;
+		cursor: pointer;
 
 		textarea {
 			color: #333333;
@@ -40,6 +44,7 @@
 			border: none;
 			overflow: hidden;
 			pointer-events: none;
+			line-break: anywhere;
 		}
 	}
 }
@@ -99,6 +104,19 @@
 			&:first-child:before { background-image: url('../images/ico_1-app.png'); }
 			&:nth-child(2):before { background-image: url('../images/ico_2-qr.png'); }
 			&:last-child:before { background-image: url('../images/ico_3-ok.png'); }
+		}
+	}
+}
+
+.woo_paghiper_digitable_line + .woocommerce-message {
+	@media only screen and (max-width: 600px) {
+		display: flex;
+		flex-direction: column;
+		text-align: center;
+
+		a.button-primary {
+			order: 2;
+			margin-top: 20px;
 		}
 	}
 }

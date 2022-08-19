@@ -25,6 +25,9 @@ class WC_Paghiper_Admin {
 
 		// Define our default offset
 		$this->timezone = new DateTimeZone('America/Sao_Paulo');
+
+		// Enqueue styles and assets
+		add_action( 'admin_enqueue_scripts', array( $this, 'load_plugin_assets' ) );
 	}
 
 	/**
@@ -98,10 +101,15 @@ class WC_Paghiper_Admin {
 				$paghiper_data['order_transaction_due_date'] = $data['order_transaction_due_date'];
 			}
 
-			$order_transaction_due_date = DateTime::createFromFormat('Y-m-d', $paghiper_data['order_transaction_due_date'], $this->timezone);
-			$formatted_due_date = ($order_transaction_due_date) ? $order_transaction_due_date->format('d/m/Y') : __("Boleto indisponível");
+			require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
 
-			$html = '<p><strong>' . __( 'Data de Vencimento:', 'woo_paghiper' ) . '</strong> ' . $formatted_due_date . '</p>';
+			$paghiperTransaction = new WC_PagHiper_Transaction( $post->ID );
+			$html = $paghiperTransaction->printBarCode(false, true, ['code', 'digitable']);
+
+			$order_transaction_due_date = DateTime::createFromFormat('Y-m-d', $paghiper_data['order_transaction_due_date'], $this->timezone);
+			$formatted_due_date = ($order_transaction_due_date) ? $order_transaction_due_date->format('d/m/Y') : sprintf(__("%s indisponível"), (($gateway_name == 'paghiper_pix') ? __("PIX") : __("Boleto")));
+
+			$html .= '<p><strong>' . __( 'Data de Vencimento:', 'woo_paghiper' ) . '</strong> ' . $formatted_due_date . '</p>';
 
 			if($gateway_name !== 'paghiper_pix')
 			$html .= '<p><strong>' . __( 'URL:', 'woo_paghiper' ) . '</strong> <a target="_blank" href="' . esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ) . '">' . __( 'Visualizar boleto', 'woo_paghiper' ) . '</a></p>';
@@ -226,7 +234,7 @@ class WC_Paghiper_Admin {
 		}
 
 		$gateway_name = $order->get_payment_method();
-		$billing_email = (property_exists(get_billing_email, $order)) ? $order->get_billing_email : $order->get_billing_email();
+		$billing_email = (property_exists($order, "get_billing_email")) ? $order->get_billing_email : $order->get_billing_email();
 
 		if(!$billing_email)
 			return;
@@ -252,6 +260,34 @@ class WC_Paghiper_Admin {
 
 		// Send email.
 		$mailer->send( $billing_email, $subject, $message, $headers, '' );
+	}
+
+	/**
+	 * Register and enqueue assets
+	 */
+
+	public function load_plugin_assets() {
+
+		if( !wp_script_is( 'jquery-mask', 'registered' ) ) {
+			wp_register_script( 'jquery-mask', wc_paghiper_assets_url() . 'js/libs/jquery.mask/jquery.mask.min.js', array( 'jquery' ), '1.14.16', false );
+		}
+
+		wp_register_script( 'paghiper-backend-js', wc_paghiper_assets_url() . 'js/backend.min.js', array('jquery', 'jquery-mask'),'1.0', false );
+        wp_register_style( 'paghiper-backend-css', wc_paghiper_assets_url() . 'css/backend.min.css', false, '1.0.0' );
+
+		if(is_admin()) {
+			
+			global $current_screen;
+			$req_action = empty( $_REQUEST[ 'action' ] ) ? false : $_REQUEST[ 'action' ];
+			if ($current_screen->post_type =='shop_order' && $req_action == 'edit') {
+	
+				wp_enqueue_script(  'jquery-mask' );
+				wp_enqueue_script( 'paghiper-backend-js' );
+				wp_enqueue_style( 'paghiper-backend-css' );
+	
+			}
+			
+		}
 	}
 }
 

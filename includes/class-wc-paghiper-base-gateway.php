@@ -320,13 +320,15 @@ class WC_Paghiper_Base_Gateway {
 				<div class="clear"></div>';
 		}
 
-		$payer_cpf_cnpj = preg_replace('/\D/', '', sanitize_text_field(
-			(isset($_POST['_'.$this->gateway->id.'_cpf_cnpj'])) ? $_POST['_'.$this->gateway->id.'_cpf_cnpj'] : (
-				(
-					(isset($post_data['billing_cpf'])) ? $post_data['billing_cpf'] : $post_data['billing_cnpj'])
-				)
-			)
-		);
+		if(array_key_exists('_'.$this->gateway->id.'_cpf_cnpj', $_POST)) {
+			$payer_cpf_cnpj_value = $_POST['_'.$this->gateway->id.'_cpf_cnpj'];
+		} elseif(is_array($post_data) && array_key_exists('billing_cpf', $post_data)) {
+			$payer_cpf_cnpj_value = $post_data['billing_cnpj'];
+		} else {
+			$payer_cpf_cnpj_value = NULL;
+		}
+
+		$payer_cpf_cnpj = preg_replace('/\D/', '', sanitize_text_field($payer_cpf_cnpj_value));
 
 		$has_payer_fields = $this->has_payer_fields();
 		if(!$has_payer_fields) {
@@ -518,7 +520,8 @@ class WC_Paghiper_Base_Gateway {
 			$transaction_due_date->modify( "+{$due_date_config} days" );
 
 		// Maybe skip non-workdays as per configuration
-		$transaction_due_date = wc_paghiper_add_workdays($transaction_due_date, $order, $this->skip_non_workdays, 'date');
+		$maybe_skip_non_workdays = ($gateway_name == 'paghiper_pix') ? null : $this->skip_non_workdays;
+		$transaction_due_date = wc_paghiper_add_workdays($transaction_due_date, $order, $maybe_skip_non_workdays, 'date');
 		$data['order_transaction_due_date'] = $transaction_due_date->format('Y-m-d');
 		$data['transaction_type'] = ($gateway_name == 'paghiper_pix') ? 'pix' : 'billet';
 

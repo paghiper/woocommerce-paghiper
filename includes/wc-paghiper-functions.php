@@ -71,13 +71,15 @@ function wc_paghiper_add_workdays( $due_date, $order, $workday_settings = NULL, 
 
 	if($due_date && $workday_settings == 'yes') {
 
-		$due_date_weekday = $due_date->format('N');
+		$due_date_weekday = ($due_date)->format('N');
 
 		if ($due_date_weekday >= 6) {
 			$date_diff = (8 - $due_date_weekday);
 			$due_date->modify( "+{$date_diff} days" );
 			
-			$paghiper_data = get_post_meta( $order->id, 'wc_paghiper_data', true );
+			$paghiper_data_query = get_post_meta( $order->id, 'wc_paghiper_data', true );
+
+			$paghiper_data = (is_array($paghiper_data_query)) ? $paghiper_data_query : [];
 			$paghiper_data['order_transaction_due_date'] = $due_date->format( 'Y-m-d' );
 
 			$update = update_post_meta( $order->id, 'wc_paghiper_data', $paghiper_data );
@@ -87,7 +89,9 @@ function wc_paghiper_add_workdays( $due_date, $order, $workday_settings = NULL, 
 			if($update) {
 				$order->add_order_note( sprintf( __( 'Data de vencimento ajustada para %s', 'woo_paghiper' ), $due_date->format('d/m/Y') ) );
 			} else {
-				var_dump($update);
+				$log = wc_paghiper_initialize_log( 'yes' );
+				wc_paghiper_add_log( $log, sprintf( 'Pedido #%s: Erro ao salvar data de vencimento: .', $order->id, var_export($update, TRUE) ) );
+
 				$order->add_order_note( sprintf( __( 'Data de vencimento deveria ser ajustada para %s mas houve um erro ao salvar a nova data.', 'woo_paghiper' ), $due_date->format('d/m/Y') ) );
 			}
 		}
@@ -104,4 +108,32 @@ function wc_paghiper_add_workdays( $due_date, $order, $workday_settings = NULL, 
 	}
 
 	return apply_filters('woo_paghiper_due_date', $return, $order);
+}
+
+/**
+ * Checks if an autoload include is performed successfully. If not, include necessary files
+ * 
+ * @return boolean
+ */
+
+function wc_paghiper_check_sdk_includes( $log = false ) {
+
+	if (!\function_exists('PagHiperSDK\\GuzzleHttp\\uri_template') || !\function_exists('PagHiperSDK\\GuzzleHttp\\choose_handler')) {
+
+		if($log) {
+			wc_paghiper_add_log( $this->log, sprintf( 'Erro: O PHP SDK não incluiu todos os arquivos necessários por alguma questão relacionada a PSR-4 ou por configuração de ambiente.' ) );
+		}
+
+		require_once WC_Paghiper::get_plugin_path() . '/ralouphie/getallheaders/src/getallheaders.php';
+		require_once WC_Paghiper::get_plugin_path() . '/guzzlehttp/promises/src/functions_include.php';
+		require_once WC_Paghiper::get_plugin_path() . '/guzzlehttp/psr7/src/functions_include.php';
+		require_once WC_Paghiper::get_plugin_path() . '/guzzlehttp/guzzle/src/functions_include.php';
+
+		if($log) {
+			wc_paghiper_add_log( $this->log, sprintf( 'Erro contornado: O plug-in se recuperou do erro mas talvez você queira verificar questões relacionadas a compilação ou configuração da sua engine PHP.' ) );
+		}
+
+	}
+
+	return true;
 }

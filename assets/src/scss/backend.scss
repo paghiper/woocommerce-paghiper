@@ -1,0 +1,47 @@
+
+.woo_paghiper_digitable_line {
+	margin-bottom: 10px !important;
+}
+
+.paghiper-pix-code {
+
+	position: relative;
+
+	* {
+		cursor: pointer !important;
+	}
+
+	p {
+		margin: 0px;
+	}
+
+	textarea {
+		appearance: none;
+		width: 100%;
+		overflow: hidden;
+		
+		margin: 10px 0;
+		background: white;
+
+		border-color: #888;
+		color: #888;
+		
+	}
+
+	button {
+		position: absolute;
+		bottom: 10px;
+		right: 0px;
+		border: 0px solid transparent;
+		padding: 4px 0;
+		cursor: pointer;
+
+		border-radius: 0 0 6px 6px;
+
+		appearance: none;
+		color: white;
+		background: #05b38b;
+		width: 100%;
+
+	}
+}

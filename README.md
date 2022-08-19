@@ -6,11 +6,11 @@ O plug-in anexa o boleto, mostra código de barras e linha digitável nos e-mail
 
 Fácil, prático e rápido!
 
-* **Versão mais Recente:** 2.1.5
-* **Requer WooCommerce** versão mínima 3.5
+* **Versão mais Recente:** 2.2.1
+* **Requer WooCommerce** versão mínima 4.0.0
 * **Requer Wordpress** preferencialmente atualizado
-* **Requisitos:** PHP >= 5.6.0, Suporte a JSON e permissões de escrita na pasta uploads.
-* **Compatibilidade:** Wordpress 5.6.1, Woocommerce 5.0, PHP 7.4.
+* **Requisitos:** PHP >= 5.6, cURL ativado.
+* **Compatibilidade:** Wordpress 6.0.1, Woocommerce 5.0, PHP 8.0.
 
 
 # Como Instalar
@@ -44,7 +44,30 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
 * Implementação de funcionalidade de boleto parcelado
 
-## 2.1.5 - 2021/04/14
+## 2.2.1
+
+* Bugfix: Botão de copiar código PIX não copia em alguns casos
+
+## 2.2
+
+* Melhoria: Compatibilidade total com PHP8
+* Melhoria: Segunda via de PIX e boleto no painel de pedido
+* Melhoria: Gramática e texto otimizados no checkout
+* Melhoria: Compatibilidade com AutomateWoo para envio de lembretes personalizados
+* Melhoria: Melhorias de acessibilidade no checkout
+* Melhoria: Novo shortcode para uso em checkouts personalizados
+* Melhoria: Agora o plug-in é compatível com Ninja checkout, NextMove e customizadores em geral
+* Bugfix: Warnings e deprecated errors removidos
+* Bugfix: Botão de copiar código PIX não indicava ação após clique
+* Bugfix: Conflito de bibliotecas jQuery (jQuery Mask)
+* Bugfix: Dados do cliente geravam transação sem número de telefone
+* Bugfix: Problemas relacionados ao composer e bibliotecas carregadas
+* Bugfix: Checkout desalinhado no mobile
+* Bugfix: Mais entradas de log para debug
+* Bugfix: Operadores de finais de semana não atuam mais em transações PIX
+* Bugfix: Erro 500 no painel ao atualizar data de vencimento
+
+## 2.1.5
 
 * Melhoria: Mais informações nos logs
 * Melhoria: Lógica de re-emissão aprimorada
@@ -54,7 +77,7 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Bugfix: Controle mais estrito do estoque
 * Bugfix: Instruções de pagamento eram mostrados várias vezes, dependendo das condições
 
-## 2.1.4 - 2021/02/14
+## 2.1.4
 
 * Bugfix: Pedido falhava na validação caso o status fosse "Aguardando pagamento"
 * Bugfix: Erro ao enviar e-mails de estoque baixo
@@ -79,11 +102,11 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Bugfix: Mais segurança na atualização dos pedidos
 * Bugfix: Link incorreto para pedidos era formado, caso bloco de boleto fosse acessado da área "meus pedidos"
 
-## 2.1.1 - 2021/01/19
+## 2.1.1
 
 * Bugfix: Credenciais não estavam sendo trazidas da versão anterior
 
-## 2.1.0 - 2021/01/18
+## 2.1.0
 
 * Nova funcionalidade: Receba seus pedidos usando pagamento por PIX
 * Melhoria: Campo próprio de CPF/CNPJ (Não é mais necessário uso do Brazilian Market on WooCommerce) e validação
@@ -111,15 +134,15 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Bugfix: Conciliação de estoque (no cancelamento de pedidos)
 * Bugfix: Corrige alguns potenciais problemas relacionados a criação de log (dependendo da versão do Woocommerce)
 
-## 2.0.3 - 2020/09/16
+## 2.0.3
 
 * Bigfix: Erro "payer_name invalido" ao finalizar pedido
 
-## 2.0.2 - 2020/09/16
+## 2.0.2
 
 * Validação de ApiKey e avisos no back-end do Wordpress
 
-## 2.0.1 - 2020/09/15
+## 2.0.1
 
 * Lógica de emissão de boleto re-escrita totalmente do zero
 * Automação de pedido (boleto emitido automaticamente ao criar o pedido)

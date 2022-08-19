@@ -206,7 +206,8 @@ class WC_PagHiper_Transaction {
 			
 		}
 
-		$transaction_due_days = wc_paghiper_add_workdays($transaction_due_date, $this->order, $this->gateway_settings['skip_non_workdays'], 'days');
+		$maybe_add_workdays = ($this->gateway_id == 'paghiper_pix') ? null : $this->gateway_settings['skip_non_workdays'];
+		$transaction_due_days = wc_paghiper_add_workdays($transaction_due_date, $this->order, $maybe_add_workdays, 'days');
 
 		return $transaction_due_days;
 	}
@@ -246,8 +247,11 @@ class WC_PagHiper_Transaction {
 		}
 
 		// Override data with our gateway fields
+		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-validation.php';
+		$validateAPI = new WC_PagHiper_Validation;
+
 		$checkout_payer_cpf_cnpj = get_post_meta($this->order_id, '_'.$this->gateway_id.'_cpf_cnpj', true);
-		if(!empty($checkout_payer_cpf_cnpj)) {
+		if(!empty($checkout_payer_cpf_cnpj) && $validateAPI->validate_taxid( $checkout_payer_cpf_cnpj )) {
 			$data['payer_cpf_cnpj'] = $checkout_payer_cpf_cnpj;
 		}
 
@@ -265,6 +269,13 @@ class WC_PagHiper_Transaction {
 		$data['payer_city']       	= $this->order->billing_city;
 		$data['payer_state']      	= $this->order->billing_state;
 		$data['payer_zip_code']   	= $this->order->billing_postcode;
+
+		// Phone
+		if(property_exists($this->order, "billing_cellphone") && !empty($this->order->billing_cellphone)) {
+		    $data['payer_phone']  = $this->order->billing_cellphone;
+		} elseif(property_exists($this->order, "billing_phone") && !empty($this->order->billing_phone)) {
+			$data['payer_phone']  = $this->order->billing_phone;
+		}
 
 		// Cart items
 		$data['items'] = array();
@@ -382,6 +393,7 @@ class WC_PagHiper_Transaction {
 
 		// Include SDK for our call
 		require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/build/vendor/scoper-autoload.php';
+		wc_paghiper_check_sdk_includes( ($this->log) ? $this->log : false );
 		
 		$transaction_data = $this->prepare_data_for_transaction();
 		if(!$transaction_data) {
@@ -541,7 +553,7 @@ class WC_PagHiper_Transaction {
 
 	}
 
-	public function print_transaction_barcode($print = FALSE) {
+	public function print_transaction_barcode($print = FALSE, $is_html = FALSE, $conf = FALSE) {
 
 		$digitable_line = $this->_get_digitable_line();
 
@@ -566,12 +578,20 @@ class WC_PagHiper_Transaction {
 				
 			} else {
 
-				$barcode_url = plugins_url( "assets/php/barcode.php?codigo={$barcode_number}", plugin_dir_path( __FILE__ ) );
-				$html .= "<p style='width: 100%; text-align: center;'>Pague seu boleto usando o código de barras ou a linha digitável, se preferir:</p>";
-				$html .= ($barcode_number) ? "<img src='{$barcode_url}' title='Código de barras do boleto deste pedido.' style='max-width: 100%;'>" : '';
-				$html .= ($print) ? "<strong style='font-size: 18px;'>" : "";
-				$html .= "<p style='width: 100%; text-align: center;'>{$digitable_line}</p>";
-				$html .= ($print) ? "</strong>" : "";
+				if( !$conf || (is_array($conf) && in_array('instructions', $conf)) ) {
+					$html .= "<p style='width: 100%; text-align: center;'>Pague seu boleto usando o código de barras ou a linha digitável, se preferir:</p>";
+				}
+
+				if( !$conf || (is_array($conf) && in_array('code', $conf)) ) {
+					$barcode_url = plugins_url( "assets/php/barcode.php?codigo={$barcode_number}", plugin_dir_path( __FILE__ ) );
+					$html .= ($barcode_number) ? "<img src='{$barcode_url}' title='Código de barras do boleto deste pedido.' style='max-width: 100%;'>" : '';
+				}
+
+				if( !$conf || (is_array($conf) && in_array('digitable', $conf)) ) {
+					$html .= ($print) ? "<strong style='font-size: 18px;'>" : "";
+					$html .= "<p style='width: 100%; text-align: center;'>{$digitable_line}</p>";
+					$html .= ($print) ? "</strong>" : "";
+				}
 
 			}
 
@@ -587,27 +607,72 @@ class WC_PagHiper_Transaction {
 				wc_paghiper_add_log( $this->log, sprintf( 'Boleto não disponível para exibição do código de barras. Pedido #%s', $order_id ) );
 				
 			} else {
+				
+				if( !$conf || (is_array($conf) && in_array('instructions', $conf)) ) {
+					$html .= "<p style='width: 100%; text-align: center;'>Efetue o pagamento PIX usando o <strong>código de barras</strong> ou usando <strong>PIX copia e cola</strong>, se preferir:</p>";
+				}
 
-				$html .= "<p style='width: 100%; text-align: center;'>Efetue o pagamento PIX usando o <strong>código de barras</strong> ou usando <strong>PIX copia e cola</strong>, se preferir:</p>";
-	
 				if($print) {
 					$html .= '<div class="pix-container">';
-					$html .= ($barcode_url) ? "<div class='qr-code'><img src='{$barcode_url}' title='Código de barras do PIX deste pedido.'><br>Data de vencimento: <strong>{$due_date}</strong></div>" : '';
-					$html .= '<div class="instructions"><ul>
-						<li><span>Abra o app do seu banco ou instituição financeira e <strong>entre no ambiente Pix</strong>.</span></li>
-						<li><span>Escolha a opção <strong>Pagar com QR Code</strong> e escanele o código ao lado.</span></li>
-						<li><span>Confirme as informações e finalize o pagamento.</span></li>
-					</ul></div>';
+					
+					if( !$conf || (is_array($conf) && in_array('code', $conf)) ) {
+
+						if($barcode_url) {
+							$html .= "<div class='qr-code'>";
+							$html .= "<img src='{$barcode_url}' title='Código de barras do PIX deste pedido.'>";
+							
+							if( !$conf || (is_array($conf) && in_array('due_date', $conf)) ) {
+								$html .= "<br>Data de vencimento: <strong>{$due_date}</strong>";
+							}
+
+							$html .= "</div>";
+						}
+
+					}
+					
+					if( !$conf || (is_array($conf) && in_array('instructions', $conf)) ) {
+						$html .= '<div class="instructions"><ul>
+							<li><span>Abra o app do seu banco ou instituição financeira e <strong>entre no ambiente Pix</strong>.</span></li>
+							<li><span>Escolha a opção <strong>Pagar com QR Code</strong> e escaneie o código ao lado.</span></li>
+							<li><span>Confirme as informações e finalize o pagamento.</span></li>
+						</ul></div>';
+					}
+					
 					$html .= '</div>';
-					$html .= sprintf('<div class="paghiper-pix-code" onclick="copyPaghiperEmv()"><p>Pagar com PIX copia e cola - <button>Clique para copiar</button></p><div class="textarea-container"><textarea readonly rows="3">%s</textarea></div></div>', $digitable_line);
+
+					if( !$conf || (is_array($conf) && in_array('digitable', $conf)) ) {
+						$html .= '<div class="paghiper-pix-code" onclick="copyPaghiperEmv()"><p>';
+
+						if( !$conf || (is_array($conf) && in_array('instructions', $conf)) ) {
+							
+							$html .= __('Pagar com PIX copia e cola - ');
+						}
+						
+						$html .= '<button type="button">Clique para copiar</button>';
+						
+						$html .= sprintf('</p><div class="textarea-container"><textarea readonly rows="3">%s</textarea></div>', $digitable_line);
+					}
+
+					$html .= "</div>";
+					
 				} else {
-					$html .= ($barcode_url) ? "<p style='text-align: center;'><img src='{$barcode_url}' title='Código de barras do PIX deste pedido.' style='max-width: 100%; margin: 0 auto;'></p>" : '';
-					$html .= "<p style='width: 100%; text-align: center;'>Data de vencimento: <strong>{$due_date}</strong></p>";
-					$html .= "<p style='width: 100%; text-align: center;'>Seu código PIX: {$digitable_line}</p>";
+					
+					if( !$conf || (is_array($conf) && in_array('code', $conf)) ) {
+						$html .= ($barcode_url) ? "<p style='text-align: center;'><img src='{$barcode_url}' title='Código de barras do PIX deste pedido.' style='max-width: 100%; margin: 0 auto;'></p>" : '';
+					}
+
+					if( !$conf || (is_array($conf) && in_array('due_date', $conf)) ) {
+						$html .= "<p style='width: 100%; text-align: center;'>Data de vencimento: <strong>{$due_date}</strong></p>";
+					}
+					
+					if( !$conf || (is_array($conf) && in_array('digitable', $conf)) ) {
+						$html .= "<p style='width: 100%; text-align: center;'>Seu código PIX: {$digitable_line}</p>";
+					}
 				}
 	
-				$html .= "<p style='width: 100%; text-align: center; margin-top: 20px;'>Após o pagamento, podemos levar alguns segundos para confirmar o seu pagamento.<br>Você será avisado(a) assim que isso ocorrer!</p>";
-			
+				if( !$conf || (is_array($conf) && in_array('instructions', $conf)) ) {
+					$html .= "<p style='width: 100%; text-align: center; margin-top: 20px;'>Após o pagamento, podemos levar alguns segundos para confirmar o seu pagamento.<br>Você será avisado(a) assim que isso ocorrer!</p>";
+				}
 			}
 		endif;
 
@@ -622,9 +687,9 @@ class WC_PagHiper_Transaction {
 		$this->print_transaction_html();
 	}
 
-	public function printBarCode($print = FALSE) {
+	public function printBarCode($print = FALSE, $is_html = FALSE, $conf = FALSE) {
 		$this->create_transaction();
-		$barcode = $this->print_transaction_barcode($print);
+		$barcode = $this->print_transaction_barcode(($print || (!$print && $is_html) ? true : false), $is_html, $conf);
 
 		if($print) 
 			echo $barcode;
@@ -642,6 +707,10 @@ class WC_PagHiper_Transaction {
 			($this->gateway_id == 'paghiper_pix') ? $this->order_data['qrcode_image_url'] :
 				((array_key_exists('barcode', $this->order_data)) ? $this->order_data['barcode'] : NULL)
 		);
+	}
+
+	public function _get_due_date() {
+		return (DateTime::createFromFormat('Y-m-d', $this->order_data['order_transaction_due_date']))->format('d/m/Y');
 	}
 
 	public function _get_past_due_days() {
