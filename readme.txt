@@ -19,7 +19,7 @@ O plug-in anexa o boleto, mostra código de barras e linha digitável nos e-mail
 
 Fácil, prático e rápido!
 
-* **Versão mais Recente:** 2.2
+* **Versão mais Recente:** 2.2.1
 * **Requer WooCommerce** versão mínima 4.0.0
 * **Requer Wordpress** preferencialmente atualizado
 * **Requisitos:** PHP >= 5.6, cURL ativado.
@@ -55,6 +55,10 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 - Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
 - Implementação de funcionalidade de boleto parcelado
 
+## 2.2.1
+
+- Bugfix: Botão de copiar código PIX não copia em alguns casos
+
 ## 2.2.0
 
 - Melhoria: Compatibilidade total com PHP8
@@ -63,8 +67,9 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 - Melhoria: Compatibilidade com AutomateWoo para envio de lembretes personalizados
 - Melhoria: Melhorias de acessibilidade no checkout
 - Melhoria: Novo shortcode para uso em checkouts personalizados
-- Melhoria: Agora o plug-in é compatível com Ninja checkout e customizadores em geral
+- Melhoria: Agora o plug-in é compatível com Ninja checkout, NextMove e customizadores em geral
 - Bugfix: Warnings e deprecated errors removidos
+- Bugfix: Botão de copiar código PIX não indicava ação após clique
 - Bugfix: Conflito de bibliotecas jQuery (jQuery Mask)
 - Bugfix: Dados do cliente geravam transação sem número de telefone
 - Bugfix: Problemas relacionados ao composer e bibliotecas carregadas
