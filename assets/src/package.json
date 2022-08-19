@@ -23,7 +23,7 @@
         "gulp-sass": "^4.1.1",
         "gulp-sourcemaps": "^3.0.0",
         "gulp-uglify": "^3.0.1",
-        "node-sass": "^4.13.1"
+        "node-sass": "^7.0.0"
     },
     "dependencies": {
         "babel-polyfill": "^6.26.0",
