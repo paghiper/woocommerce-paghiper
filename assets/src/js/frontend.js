@@ -1,4 +1,4 @@
-//=require functions/_copyPaghiperEmv.js
+//=include functions/_copyPaghiperEmv.js
 
 jQuery( document ).ready(function($) {
 
