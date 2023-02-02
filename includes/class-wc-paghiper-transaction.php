@@ -271,11 +271,10 @@ class WC_PagHiper_Transaction {
 		$data['payer_zip_code']   	= $this->order->billing_postcode;
 
 		// Phone
-		if(property_exists($this->order, "billing_cellphone") && !empty($this->order->billing_cellphone)) {
-		    $data['payer_phone']  = $this->order->billing_cellphone;
-		} elseif(property_exists($this->order, "billing_phone") && !empty($this->order->billing_phone)) {
-			$data['payer_phone']  = $this->order->billing_phone;
-		}
+		$billing_phone 			= $this->order->get_meta( '_billing_cellphone' );
+		$billing_cellphone 		= $this->order->get_billing_phone();
+		
+		$data['payer_phone'] 	= (!empty(preg_replace('/\D/', '', $billing_cellphone))) ? $billing_cellphone : $billing_phone;
 
 		// Cart items
 		$data['items'] = array();
