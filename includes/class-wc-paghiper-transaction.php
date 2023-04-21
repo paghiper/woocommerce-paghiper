@@ -366,8 +366,11 @@ class WC_PagHiper_Transaction {
 		$data['early_payment_discounts_cents'] 	= $this->gateway_settings['early_payment_discounts_cents'];
 		$data['early_payment_discounts_days'] 	= $this->gateway_settings['early_payment_discounts_days'];
 
-		$data['notification_url']				= get_site_url(null, $this->base_url.'wc-api/WC_Gateway_Paghiper/?gateway=').(($this->gateway_id == 'paghiper_pix') ? 'pix' : 'billet');
 		$data['transaction_type']				= ($this->gateway_id == 'paghiper_pix') ? 'pix' : 'billet';
+		$data['notification_url']				= add_query_arg([
+														'gateway' 	=> (($this->gateway_id == 'paghiper_pix') ? 'pix' : 'billet'),
+														'orderId' 	=> 'order_id',
+													], get_site_url(null, $this->base_url.'wc-api/WC_Gateway_Paghiper/'));
 
 		$data = apply_filters( 'paghiper_transaction_data', $data, $this->order_id );
 
@@ -407,32 +410,32 @@ class WC_PagHiper_Transaction {
 
 			$billet_data = get_post_meta( $this->order_id, 'wc_paghiper_data', true );
 
-			$transaction_base_data = array(
+			$transaction_base_data = [
 				'transaction_id'				=> $response['transaction_id'],
 				'value_cents'					=> $this->_convert_to_currency($response['value_cents']),
 				'status'						=> $response['status'],
 				'order_id'						=> $response['order_id'],
 				'current_transaction_due_date'	=> $response['due_date'],
-			);
+			];
 
 
 			if($this->gateway_id == 'paghiper_pix') {
-				$transaction = array(
+				$transaction = [
 					'qrcode_base64'		        => $response['pix_code']['qrcode_base64'],
 					'qrcode_image_url'	        => $response['pix_code']['qrcode_image_url'],
 					'emv'				        => $response['pix_code']['emv'],
 					'bacen_url'			        => $response['pix_code']['bacen_url'],
 					'pix_url'			        => $response['pix_code']['pix_url'],
 					'transaction_type'			=> 'pix'
-				);
+				];
 			} else {
-				$transaction = array(
+				$transaction = [
 					'digitable_line'			=> $response['bank_slip']['digitable_line'],
 					'url_slip'					=> $response['bank_slip']['url_slip'],
 					'url_slip_pdf'				=> $response['bank_slip']['url_slip_pdf'],
 					'barcode'					=> $response['bank_slip']['bar_code_number_to_image'],
 					'transaction_type'			=> 'billet'
-				);
+				];
 			}
 
 			$current_billet = array_merge($transaction_base_data, $transaction);
