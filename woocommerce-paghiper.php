@@ -357,7 +357,7 @@ class WC_Paghiper {
 
 		if(get_transient( 'woo_paghiper_notice_install_date' )) {
 
-			$is_installed_for_14_days 	= time() < get_transient( 'woo_paghiper_notice_install_date' ) + ( 20 * 86400 );
+			$is_installed_for_14_days 	= time() > get_transient( 'woo_paghiper_notice_install_date' ) + ( 20 * 86400 );
 			$is_reviewed_already 		= get_transient( 'woo_paghiper_notice_review_done' );
 			$doesnt_want_to_review 		= get_transient( 'woo_paghiper_notice_review_ignore' );
 
