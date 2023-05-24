@@ -369,7 +369,7 @@ class WC_PagHiper_Transaction {
 		$data['transaction_type']				= ($this->gateway_id == 'paghiper_pix') ? 'pix' : 'billet';
 		$data['notification_url']				= add_query_arg([
 														'gateway' 	=> (($this->gateway_id == 'paghiper_pix') ? 'pix' : 'billet'),
-														'orderId' 	=> 'order_id',
+														'orderId' 	=> $this->order_id,
 													], get_site_url(null, $this->base_url.'wc-api/WC_Gateway_Paghiper/'));
 
 		$data = apply_filters( 'paghiper_transaction_data', $data, $this->order_id );
