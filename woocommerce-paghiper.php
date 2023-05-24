@@ -69,6 +69,7 @@ class WC_Paghiper {
 			add_action( 'admin_notices', array( __CLASS__, 'check_paghiper_credentials' ) );
 			add_action( 'admin_init', array( __CLASS__, 'print_notices' ) );
 			add_action( 'wp_ajax_paghiper_dismiss_notice', array( __CLASS__, 'dismiss_notices') );
+			add_action( 'wp_ajax_paghiper_answer_notice', array( __CLASS__, 'answer_notices') );
 
 			add_filter( 'template_include', array( $this, 'paghiper_template' ), 9999 );
 			add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( $this, 'plugin_action_links' ) );
@@ -318,16 +319,6 @@ class WC_Paghiper {
 
 		if($is_updated) {
 
-			// Enqueue scripts
-			add_action( 'admin_enqueue_scripts', function() {
-				
-				wp_localize_script( 'paghiper_admin_js', 'notice_params', array(
-					'ajaxurl' => get_admin_url() . 'admin-ajax.php', 
-				));
-				
-				wp_enqueue_script(  'paghiper_admin_js' );
-			} );
-
 			// Print notices
 			add_action( 'admin_notices', function() {
 				echo sprintf('<div class="error notice paghiper-dismiss-notice is-dismissible" data-notice-id="notice_2_1"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __('PIX PagHiper'), __('Você ja pode receber pagamentos por PIX! Configure aqui:'), admin_url('admin.php?page=wc-settings&tab=checkout&section=wc_paghiper_pix_gateway'), __('Configurações do PIX PagHiper'));
@@ -356,6 +347,30 @@ class WC_Paghiper {
 
 		});
 
+		
+
+		/**
+		 * Plug-in review nag.
+		 *
+		 * @return string
+		 */
+
+		if(get_transient( 'woo_paghiper_notice_install_date' )) {
+
+			$is_installed_for_14_days 	= time() < get_transient( 'woo_paghiper_notice_install_date' ) + ( 20 * 86400 );
+			$is_reviewed_already 		= get_transient( 'woo_paghiper_notice_review_done' );
+			$doesnt_want_to_review 		= get_transient( 'woo_paghiper_notice_review_ignore' );
+
+			if( $is_installed_for_14_days && !$is_reviewed_already && !$doesnt_want_to_review ) {				
+				add_action( 'admin_notices', function() {
+					include_once 'includes/views/notices/html-nag-review.php';
+				});
+			}
+		} else {
+			set_transient( 'woo_paghiper_notice_install_date', time(), 0 );
+		}
+
+
 	}
 
 	/**
@@ -368,6 +383,37 @@ class WC_Paghiper {
 			$dismissal = delete_transient("woo_paghiper_notice_{$notice_name}");
 
 			if(!$dismissal) {
+				return false;
+			}
+
+		}
+		return true;
+	}
+
+	/**
+	 * Allow for notice interaction via AJAX
+	 */
+	public static function answer_notices() {
+
+		if(isset($_POST) && array_key_exists('noticeId', $_POST) && array_key_exists('userAction', $_POST)) {
+
+			$allowed_actions = ['set', 'delete'];
+
+			$notice_name = str_replace('notice_', '', sanitize_text_field($_POST['noticeId']));
+			$notice_action = sanitize_text_field($_POST['userAction']);
+			$dismissal = delete_transient("woo_paghiper_notice_{$notice_name}");
+
+			if(!in_array($notice_action, $allowed_actions)) {
+				return false;
+			}
+
+			if($notice_action == 'set') {
+				$action = set_transient("woo_paghiper_notice_{$notice_name}", 1, 0);	
+			} else {
+				$action = delete_transient("woo_paghiper_notice_{$notice_name}");	
+			}
+
+			if(!$action) {
 				return false;
 			}
 
@@ -658,6 +704,13 @@ class WC_Paghiper {
 			wp_enqueue_style( 'paghiper-frontend-css' );
 			wp_enqueue_script(  'paghiper-frontend-js' );
 
+		} else {
+			
+			wp_localize_script( 'paghiper-admin-js', 'notice_params', array(
+				'ajaxurl' => get_admin_url() . 'admin-ajax.php', 
+			));
+			
+			wp_enqueue_script(  'paghiper-admin-js' );
 		}
 	}
 
