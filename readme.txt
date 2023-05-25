@@ -2,10 +2,10 @@
 Contributors: henriqueccruz
 Donate link: https://www.paghiper.com/
 Tags: woocommerce, pix, boleto, paghiper, pagamento, gateway
-Requires at least: 3.5
-Tested up to: 7.0.1
+Requires at least: 6.0
+Tested up to: 6.2.0
 Stable tag: trunk
-Requires PHP: 7.0
+Requires PHP: 7.2
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -19,11 +19,11 @@ O plug-in anexa o boleto, mostra código de barras e linha digitável nos e-mail
 
 Fácil, prático e rápido!
 
-* **Versão mais Recente:** 2.2.2
+* **Versão mais Recente:** 2.3
 * **Requer WooCommerce** versão mínima 4.0.0
 * **Requer Wordpress** preferencialmente atualizado
-* **Requisitos:** PHP >= 5.6, cURL ativado.
-* **Compatibilidade:** Wordpress 6.1, Woocommerce 7.0.1, PHP 8.1.11.
+* **Requisitos:** PHP >= 7.2, cURL ativado.
+* **Compatibilidade:** Wordpress 6.2.0, Woocommerce 7.7.0, PHP 8.2.5.
 
 
 # Como Instalar
@@ -54,6 +54,13 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 - Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
 - Implementação de funcionalidade de boleto parcelado
+
+## 2.3
+
+- Melhoria: Suporte a emissão de PIX/boleto para pedidos com status malsucedido (failed)
+- Bugfix: Múltiplas transações geradas para o mesmo pedido
+- Bugfix: Conversão implícita de float para int
+- BUgfix: URL de notificação IPN dinâmica
 
 ## 2.2.2
 
