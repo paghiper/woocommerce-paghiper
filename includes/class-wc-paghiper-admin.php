@@ -283,9 +283,10 @@ class WC_Paghiper_Admin {
 	
 				wp_enqueue_script(  'jquery-mask' );
 				wp_enqueue_script( 'paghiper-backend-js' );
-				wp_enqueue_style( 'paghiper-backend-css' );
 	
 			}
+			
+			wp_enqueue_style( 'paghiper-backend-css' );
 			
 		}
 	}

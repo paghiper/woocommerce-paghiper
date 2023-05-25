@@ -27,8 +27,7 @@ function codificar($codigo)
 	else return '';
 }
 
-function pintarbarras($mapaI25, $altura, $espmin)
-{
+function pintarbarras($mapaI25, $altura, $espmin) {
 	$espmin--;
 	if($espmin < 0) {
 		$espmin = 0;
@@ -38,7 +37,7 @@ function pintarbarras($mapaI25, $altura, $espmin)
 		$altura = 5;
 	}
 
-	$largura = (strlen($mapaI25)/5*((($espmin+1)*3)+(($espmin+3)*2)))+20;
+	$largura = (int) (strlen($mapaI25)/5*((($espmin+1)*3)+(($espmin+3)*2)))+20;
 
 	$im = imagecreate($largura * 4, $altura);
 	imagecolorallocate($im, 255, 255, 255);
@@ -46,18 +45,18 @@ function pintarbarras($mapaI25, $altura, $espmin)
 	$spH = 10;
 	for($k = 0; $k < strlen($mapaI25); $k++) {
 		if (!($k&1)) {
-			$corbarra = ImageColorAllocate($im,0,0,0);
+			$corbarra = imagecolorallocate($im,0,0,0);
 		}
 		else {
-			$corbarra = ImageColorAllocate($im,255,255,255);
+			$corbarra = imagecolorallocate($im,255,255,255);
 		}
 		
 		if ($mapaI25[$k] == 'N') {
-			ImageFilledRectangle($im, $spH * 4, $altura-3, ($spH+$espmin+1) * 4, 2, $corbarra);
+			imagefilledrectangle($im, $spH * 4, $altura-3, ($spH+$espmin+1) * 4, 2, $corbarra);
 			$spH = $spH+$espmin+1;
 		}
 		else {
-			ImageFilledRectangle($im, $spH * 4, $altura-3, ($spH+$espmin+2) * 4, 2, $corbarra);
+			imagefilledrectangle($im, $spH * 4, $altura-3, ($spH+$espmin+2) * 4, 2, $corbarra);
 			$spH = $spH+$espmin+3;
 		}
 	}
@@ -67,6 +66,6 @@ function pintarbarras($mapaI25, $altura, $espmin)
 }
 
 // Recupera o código e cria a imagem jpeg
-$codigo = $_GET['codigo'];
+$codigo = $_GET['codigo'];	
 header("Content-Type: image/png");
 pintarbarras(codificar($codigo), 250, 1);

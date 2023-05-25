@@ -89,8 +89,7 @@ class WC_PagHiper_Transaction {
 			$different_total = ( $this->order->get_total() == $this->order_data['value_cents'] ? NULL : TRUE );
 			$different_due_date = ( $this->order_data['order_transaction_due_date'] == $this->order_data['current_transaction_due_date'] ? NULL : TRUE );
 
-			$today_date = new \DateTime();
-			$today_date->setTimezone($this->timezone);
+			$today_date = DateTime::createFromFormat('Y-m-d', date("Y-m-d"), $this->timezone);
 			$this->past_due_days = ($original_due_date && $current_billet_due_date) ? (int) $today_date->diff($original_due_date)->format("%r%a") : NULL ;
 
 			if($different_due_date) {
@@ -166,15 +165,14 @@ class WC_PagHiper_Transaction {
 		$order_due_date 	= $this->order_data['order_transaction_due_date'];
 		$transaction_days_due	= (!empty($this->gateway_settings['days_due_date'])) ? $this->gateway_settings['days_due_date'] : 5;
 
-		$today_date = new \DateTime();
-		$today_date->setTimezone($this->timezone);
+		$today_date = DateTime::createFromFormat('Y-m-d', date("Y-m-d"), $this->timezone);
 
 		// TODO: Implement better logic here
 		if(!empty($order_due_date)) {
 
 			// Calcular dias de diferença entre a data de vencimento e a data atual
 			$original_due_date = DateTime::createFromFormat('Y-m-d', $order_due_date, $this->timezone);
-			$transaction_due_days = ($today_date && $original_due_date) ? $today_date->diff($original_due_date) : NULL;
+			$transaction_due_days = ($today_date && $original_due_date) ? (int) $today_date->diff($original_due_date)->format('%a') : NULL;
 
 			$transaction_due_date = $original_due_date;
 
@@ -187,7 +185,7 @@ class WC_PagHiper_Transaction {
 			$transaction_due_date = $today_date;
 			$transaction_due_date->modify( "+{$billet_days_due} days" );
 
-			$transaction_due_days = $billet_due_date->days;
+			$transaction_due_days = (int) $billet_due_date->format('%a');
 
 			$order_data['order_transaction_due_date'] = $transaction_due_date->format( 'Y-m-d' );		
 			$this->order_data = $order_data;
@@ -368,8 +366,11 @@ class WC_PagHiper_Transaction {
 		$data['early_payment_discounts_cents'] 	= $this->gateway_settings['early_payment_discounts_cents'];
 		$data['early_payment_discounts_days'] 	= $this->gateway_settings['early_payment_discounts_days'];
 
-		$data['notification_url']				= get_site_url(null, $this->base_url.'wc-api/WC_Gateway_Paghiper/?gateway=').(($this->gateway_id == 'paghiper_pix') ? 'pix' : 'billet');
 		$data['transaction_type']				= ($this->gateway_id == 'paghiper_pix') ? 'pix' : 'billet';
+		$data['notification_url']				= add_query_arg([
+														'gateway' 	=> (($this->gateway_id == 'paghiper_pix') ? 'pix' : 'billet'),
+														'orderId' 	=> $this->order_id,
+													], get_site_url(null, $this->base_url.'wc-api/WC_Gateway_Paghiper/'));
 
 		$data = apply_filters( 'paghiper_transaction_data', $data, $this->order_id );
 
@@ -386,7 +387,7 @@ class WC_PagHiper_Transaction {
 			return false;
 		}
 
-		if(apply_filters('woo_paghiper_pending_status', $this->gateway_settings['set_status_when_waiting'], $this->order) !== $this->order_status && !in_array($this->order_status, ['wc-pending', 'pending'])) {
+		if(apply_filters('woo_paghiper_pending_status', $this->gateway_settings['set_status_when_waiting'], $this->order) !== $this->order_status && !in_array($this->order_status, ['wc-pending', 'pending', 'failed', 'wc-failed'])) {
 			return false;
 		}
 
@@ -409,32 +410,32 @@ class WC_PagHiper_Transaction {
 
 			$billet_data = get_post_meta( $this->order_id, 'wc_paghiper_data', true );
 
-			$transaction_base_data = array(
+			$transaction_base_data = [
 				'transaction_id'				=> $response['transaction_id'],
 				'value_cents'					=> $this->_convert_to_currency($response['value_cents']),
 				'status'						=> $response['status'],
 				'order_id'						=> $response['order_id'],
 				'current_transaction_due_date'	=> $response['due_date'],
-			);
+			];
 
 
 			if($this->gateway_id == 'paghiper_pix') {
-				$transaction = array(
+				$transaction = [
 					'qrcode_base64'		        => $response['pix_code']['qrcode_base64'],
 					'qrcode_image_url'	        => $response['pix_code']['qrcode_image_url'],
 					'emv'				        => $response['pix_code']['emv'],
 					'bacen_url'			        => $response['pix_code']['bacen_url'],
 					'pix_url'			        => $response['pix_code']['pix_url'],
 					'transaction_type'			=> 'pix'
-				);
+				];
 			} else {
-				$transaction = array(
+				$transaction = [
 					'digitable_line'			=> $response['bank_slip']['digitable_line'],
 					'url_slip'					=> $response['bank_slip']['url_slip'],
 					'url_slip_pdf'				=> $response['bank_slip']['url_slip_pdf'],
 					'barcode'					=> $response['bank_slip']['bar_code_number_to_image'],
 					'transaction_type'			=> 'billet'
-				);
+				];
 			}
 
 			$current_billet = array_merge($transaction_base_data, $transaction);

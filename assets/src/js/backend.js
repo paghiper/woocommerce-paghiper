@@ -14,6 +14,23 @@ jQuery(document).ready( function($){
 		});
 	});
 
+	$( '.paghiper-notice' ).on( 'click', '.ajax-action', function() {
+		let noticeId 		= $(this).data('notice-key')
+			noticeAction 	= $(this).data('action');
+
+		var data = {
+			'action'	: 'paghiper_answer_notice',
+			'noticeId'	: noticeId,
+			'userAction': noticeAction
+		};
+		
+		$.post( notice_params.ajaxurl, data, function() {
+		});
+
+		$(this).parentsUntil( ".paghiper-notice" ).hide();
+
+	});
+
 	// Provides maskable fields for date operations
 	$(".date").mask("00/00/0000", {placeholder: "__/__/____", clearIfNotMatch: true});
 
