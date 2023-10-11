@@ -112,6 +112,7 @@ function woocommerce_paghiper_check_ipn_response() {
 
     if(empty($_POST)) {
         wc_paghiper_add_log( $paghiper_log, 'Post de retorno da PagHiper veio sem conteúdo. Cheque nos logs se serviços de filtragem de tráfego, como mod_security, cPGuard, Imunify360 e similares para mais informações. Caso precise de mais ajuda, entre em contato com o nosso suporte.' );
+        return woocommerce_paghiper_get_transaction_status($transaction_type, $settings, $paghiper_log, $token, $api_key);
     }
 
     // Include SDK for our call
@@ -145,6 +146,18 @@ function woocommerce_paghiper_check_ipn_response() {
     }
 
 } 
+
+/**
+ * Search for transactions on Paghiper.
+ */
+function woocommerce_paghiper_get_transaction_status($transaction_type, $settings, $paghiper_log, $token, $api_key) {
+    
+    $order_id = (isset($_GET) && array_key_exists('orderId', $_GET)) ? sanitize_text_field($_GET['orderId']) : NULL;
+
+    if(!$order_id) {
+        wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), array( 'response' => 408 ) );
+    }
+}
 
 
 /**
