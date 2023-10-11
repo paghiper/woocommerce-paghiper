@@ -16,7 +16,8 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
     global $paghiper_log;
 
     $order          = new WC_Order($order_no);
-    $order_status   = $order->get_status();
+    $order_status   = $order->get_payment_method();
+    $gateway_name  = ($this->gateway_id !== 'paghiper_pix') ? 'boleto' : 'PIX';
 
     // Trata os retornos
 
@@ -48,7 +49,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
                 } else {
                     $order->add_order_note( __( 'PagHiper: Post de notificação recebido. Aguardando compensação do boleto.' , 'woo_paghiper' ) );
                 }*/
-                $order->add_order_note( __( 'PagHiper: Novo boleto emitido. Aguardando compensação.' , 'woo_paghiper' ) );
+                $order->add_order_note( __( 'PagHiper: Novo '.$gateway_name.' emitido. Aguardando compensação.' , 'woo_paghiper' ) );
                 break;
 
             case "reserved" :
@@ -61,13 +62,13 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 			        $paghiper_data = get_post_meta( $order_no, 'wc_paghiper_data', true );
 
                     if($return['transaction_id'] !== $paghiper_data['transaction_id']) {
-                        $order->add_order_note( __( 'PagHiper: Um boleto emitido para este pedido foi cancelado. Como não era o boleto mais atual, o pedido permanece aguardando pagamento.' , 'woo_paghiper' ) );
+                        $order->add_order_note( __( 'PagHiper: Um '.$gateway_name.' emitido para este pedido foi cancelado. Como não era o boleto mais atual, o pedido permanece aguardando pagamento.' , 'woo_paghiper' ) );
                         return;
                     }
 
                     $cancelled_status = (!empty($settings['set_status_when_cancelled'])) ? $settings['set_status_when_cancelled'] : 'cancelled';
                     
-                    $order->update_status( $cancelled_status, __( 'PagHiper: Boleto Cancelado.', 'woo_paghiper' ) );
+                    $order->update_status( $cancelled_status, __( 'PagHiper: '.ucfirst($gateway_name).' Cancelado.', 'woo_paghiper' ) );
                     paghiper_increase_order_stock( $order, $settings );
                 break;
             case "paid" :
@@ -79,7 +80,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
                 $order->payment_complete();
 
                 if(strpos('paid', $settings['set_status_when_paid']) === FALSE) {
-                    $order->update_status( $settings['set_status_when_paid'], __( 'PagHiper: Boleto Pago.', 'woo_paghiper' ) );
+                    $order->update_status( $settings['set_status_when_paid'], __( 'PagHiper: '.ucfirst($gateway_name).' Pago.', 'woo_paghiper' ) );
                 } else {
                     $order->add_order_note( __( 'PagHiper: Pagamento compensado.', 'woo_paghiper' ) );
                 }
