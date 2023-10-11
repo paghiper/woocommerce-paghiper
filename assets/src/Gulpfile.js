@@ -46,8 +46,7 @@ const include = require('gulp-include')
 const sourcemaps = require('gulp-sourcemaps');
 
 // Styles
-const sass = require('gulp-sass');
-//const scsslint = require('gulp-scss-lint');
+const sass = require('gulp-sass')(require('sass'));
 const cleancss = require('gulp-clean-css');
 
 // Images
