@@ -525,6 +525,17 @@ class WC_Paghiper_Base_Gateway {
 		$data['order_transaction_due_date'] = $transaction_due_date->format('Y-m-d');
 		$data['transaction_type'] = ($gateway_name == 'paghiper_pix') ? 'pix' : 'billet';
 
+		if ( $this->log ) {
+			wc_paghiper_add_log( 
+				$this->log, 
+				sprintf( 'Pedido #%s: Dados iniciais para o %s preparados. Detalhes: %s', 
+					$order_id, 
+					(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto'), 
+					var_export($data, true) 
+				) 
+			);
+		}
+
 		update_post_meta( $order->id, 'wc_paghiper_data', $data );
 		if(function_exists('update_meta_cache'))
 			update_meta_cache( 'shop_order', $order->id );
