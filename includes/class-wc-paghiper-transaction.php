@@ -95,7 +95,9 @@ class WC_PagHiper_Transaction {
 			$different_total = ( $this->order->get_total() == $this->order_data['value_cents'] ? NULL : TRUE );
 			$different_due_date = ( $this->order_data['order_transaction_due_date'] == $this->order_data['current_transaction_due_date'] ? NULL : TRUE );
 
-			$today_date = DateTime::createFromFormat('Y-m-d', date("Y-m-d"), $this->timezone);
+			$today_date = new DateTime;
+			$today_date->setTimezone($this->timezone);
+
 			$this->past_due_days = ($original_due_date && $current_billet_due_date) ? (int) $today_date->diff($original_due_date)->format("%r%a") : NULL ;
 
 			if($different_due_date) {
@@ -173,7 +175,8 @@ class WC_PagHiper_Transaction {
 		$order_due_date 	= $this->order_data['order_transaction_due_date'];
 		$transaction_days_due	= (!empty($this->gateway_settings['days_due_date'])) ? $this->gateway_settings['days_due_date'] : 5;
 
-		$today_date = DateTime::createFromFormat('Y-m-d', date("Y-m-d"), $this->timezone);
+		$today_date = new DateTime;
+		$today_date->setTimezone($this->timezone);
 
 		// TODO: Implement better logic here
 		if(!empty($order_due_date)) {
