@@ -6,11 +6,11 @@ O plug-in anexa o boleto, mostra código de barras e linha digitável nos e-mail
 
 Fácil, prático e rápido!
 
-* **Versão mais Recente:** 2.3
+* **Versão mais Recente:** 2.3.1
 * **Requer WooCommerce** versão mínima 4.0.0
 * **Requer Wordpress** preferencialmente atualizado
-* **Requisitos:** PHP >= 7.0, cURL ativado.
-* **Compatibilidade:** Wordpress 6.1, Woocommerce 7.0.1, PHP 8.1.11.
+* **Requisitos:** PHP >= 7.2, cURL ativado.
+* **Compatibilidade:** Wordpress 6.3.2, Woocommerce 8.2.1, PHP 8.2.0.
 
 
 # Como Instalar
@@ -43,6 +43,12 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 * Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
 * Implementação de funcionalidade de boleto parcelado
+
+## 2.3.1
+
+- Melhoria: Mais clareza e mais informações nos logs
+- Bugfix: Duplicação de transações em alguns casos (timezone)
+- Bugfix: Nome de transação (PIX/boleto) incorretos no painel ou nas telas de erro
 
 ## 2.3
 
