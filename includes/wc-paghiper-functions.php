@@ -99,9 +99,10 @@ function wc_paghiper_add_workdays( $due_date, $order, $workday_settings = NULL, 
 	}
 
 	if($format == 'days') {
-		
-		$today_date = new DateTime;
-		$today_date->setTimezone(new DateTimeZone('America/Sao_Paulo'));
+
+		$today = new DateTime;
+		$today->setTimezone(new DateTimeZone('America/Sao_Paulo'));
+		$today_date = DateTime::createFromFormat('Y-m-d', $today->format('Y-m-d'), new DateTimeZone('America/Sao_Paulo'));
 
 		$return = (int) $today_date->diff($due_date)->format("%r%a");
 	} else {

@@ -175,8 +175,9 @@ class WC_PagHiper_Transaction {
 		$order_due_date 	= $this->order_data['order_transaction_due_date'];
 		$transaction_days_due	= (!empty($this->gateway_settings['days_due_date'])) ? $this->gateway_settings['days_due_date'] : 5;
 
-		$today_date = new DateTime;
-		$today_date->setTimezone($this->timezone);
+		$today = new DateTime;
+		$today->setTimezone($this->timezone);
+		$today_date = DateTime::createFromFormat('Y-m-d', $today->format('Y-m-d'), $this->timezone);
 
 		// TODO: Implement better logic here
 		if(!empty($order_due_date)) {
