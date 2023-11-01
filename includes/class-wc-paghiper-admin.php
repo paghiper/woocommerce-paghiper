@@ -273,7 +273,7 @@ class WC_Paghiper_Admin {
 		}
 
 		if( !wp_script_is( 'paghiper-backend-js', 'registered' ) ) {
-			wp_register_script( 'paghiper-backend-js', wc_paghiper_assets_url() . 'js/backend.min.js', array( 'jquery' ),'1.0', false );
+			wp_register_script( 'paghiper-backend-js', wc_paghiper_assets_url() . 'js/backend.min.js', array( 'jquery' ),'1.1', false );
 		}
 		
         wp_register_style( 'paghiper-backend-css', wc_paghiper_assets_url() . 'css/backend.min.css', false, '1.0.0' );
