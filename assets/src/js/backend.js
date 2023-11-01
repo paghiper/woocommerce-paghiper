@@ -15,7 +15,8 @@ jQuery(document).ready( function($){
 	});
 
 	$( '.paghiper-notice' ).on( 'click', '.ajax-action', function() {
-		let noticeId 		= $(this).data('notice-key')
+
+		let noticeId 		= $(this).data('notice-key'),
 			noticeAction 	= $(this).data('action');
 
 		var data = {
@@ -27,7 +28,7 @@ jQuery(document).ready( function($){
 		$.post( notice_params.ajaxurl, data, function() {
 		});
 
-		$(this).parentsUntil( ".paghiper-notice" ).hide();
+		$(".paghiper-review-nag").hide();
 
 	});
 

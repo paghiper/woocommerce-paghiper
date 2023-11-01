@@ -361,7 +361,7 @@ class WC_Paghiper {
 			$is_reviewed_already 		= get_transient( 'woo_paghiper_notice_review_done' );
 			$doesnt_want_to_review 		= get_transient( 'woo_paghiper_notice_review_ignore' );
 
-			if( $is_installed_for_14_days && !$is_reviewed_already && !$doesnt_want_to_review ) {				
+			if( $is_installed_for_14_days && !$is_reviewed_already && !$doesnt_want_to_review ) {		
 				add_action( 'admin_notices', function() {
 					include_once 'includes/views/notices/html-nag-review.php';
 				});
@@ -691,8 +691,14 @@ class WC_Paghiper {
 			wp_register_script( 'jquery-mask', wc_paghiper_assets_url() . 'js/libs/jquery.mask/jquery.mask.min.js', array( 'jquery' ), '1.14.16', false );
 		}
 
-		wp_register_script( 'paghiper-admin-js', wc_paghiper_assets_url() . 'js/admin.min.js', array( 'jquery' ),'1.0', false );
-		wp_register_script( 'paghiper-frontend-js', wc_paghiper_assets_url() . 'js/frontend.min.js',array( 'jquery' ),'1.0', false );
+		if( !wp_script_is( 'paghiper-backend-js', 'registered' ) ) {
+			wp_register_script( 'paghiper-backend-js', wc_paghiper_assets_url() . 'js/backend.min.js', array( 'jquery' ),'1.0', false );
+		}
+
+		if( !wp_script_is( 'paghiper-frontend-js', 'registered' ) ) {
+			wp_register_script( 'paghiper-frontend-js', wc_paghiper_assets_url() . 'js/frontend.min.js',array( 'jquery' ),'1.0', false );
+		}
+
 		wp_register_style( 'paghiper-frontend-css', wc_paghiper_assets_url() . 'css/frontend.min.css','','1.0', false );
 
 		
@@ -708,11 +714,11 @@ class WC_Paghiper {
 
 		} else {
 			
-			wp_localize_script( 'paghiper-admin-js', 'notice_params', array(
+			wp_localize_script( 'paghiper-backend-js', 'notice_params', array(
 				'ajaxurl' => get_admin_url() . 'admin-ajax.php', 
 			));
 			
-			wp_enqueue_script(  'paghiper-admin-js' );
+			wp_enqueue_script(  'paghiper-backend-js' );
 		}
 	}
 

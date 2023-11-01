@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 } ?>
 
-<?php echo sprintf('<div class="paghiper-notice success updated">
+<?php echo sprintf('<div class="paghiper-notice paghiper-review-nag success updated">
 		<p><strong>%s</strong> %s</p>
 		<p>
 			<a data-action="set" data-notice-key="review_done" href="%s" class="ajax-action button button-primary" target="_blank"><span class="dashicons dashicons-yes-alt"></span> %s</a>
