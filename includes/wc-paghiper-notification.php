@@ -16,8 +16,9 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
     global $paghiper_log;
 
     $order          = new WC_Order($order_no);
-    $order_status   = $order->get_payment_method();
-    $gateway_name  = ($this->gateway_id !== 'paghiper_pix') ? 'boleto' : 'PIX';
+    $order_status   = $order->get_status();
+    $gateway_id     = $order->get_payment_method();
+    $gateway_name  = ($gateway_id !== 'paghiper_pix') ? 'boleto' : 'PIX';
 
     // Trata os retornos
 
