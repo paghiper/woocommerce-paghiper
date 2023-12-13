@@ -11,6 +11,7 @@ class WC_PagHiper_Transaction {
 	private $order_id;
 	private $order_data;
 	private $gateway_id;
+	private $gateway_name;
 	private $gateway_settings;
 	private $invalid_reason;
 	private $past_due_days;
@@ -30,6 +31,7 @@ class WC_PagHiper_Transaction {
 
 		// Pega a configuração atual do plug-in.
 		$this->gateway_id = $this->order->get_payment_method();
+		$this->gateway_name  = ($this->gateway_id !== 'paghiper_pix') ? 'boleto' : 'PIX';
 		$this->gateway_settings = ($this->gateway_id == 'paghiper_pix') ? get_option( 'woocommerce_paghiper_pix_settings' ) : get_option( 'woocommerce_paghiper_billet_settings' );
 
 		// Inicializa logs, caso ativados
@@ -78,7 +80,11 @@ class WC_PagHiper_Transaction {
 			$new_request = TRUE;
 
 			if ( $this->log ) {
-				wc_paghiper_add_log( $this->log, sprintf( 'Pedido #%s: Data de vencimento não presente no banco.', $this->order_id ) );
+				if( empty( get_post_meta( $this->order_id, 'wc_paghiper_data', true ) ) ) {
+					wc_paghiper_add_log( $this->log, sprintf( 'Pedido #%s: Gerando transação para o pedido pela primeira vez.', $this->order_id ) );
+				} else {
+					wc_paghiper_add_log( $this->log, sprintf( 'Pedido #%s: Data de vencimento não presente no banco.', $this->order_id ) );
+				}
 			}
 
 		} else {
@@ -89,7 +95,9 @@ class WC_PagHiper_Transaction {
 			$different_total = ( $this->order->get_total() == $this->order_data['value_cents'] ? NULL : TRUE );
 			$different_due_date = ( $this->order_data['order_transaction_due_date'] == $this->order_data['current_transaction_due_date'] ? NULL : TRUE );
 
-			$today_date = DateTime::createFromFormat('Y-m-d', date("Y-m-d"), $this->timezone);
+			$today_date = new DateTime;
+			$today_date->setTimezone($this->timezone);
+
 			$this->past_due_days = ($original_due_date && $current_billet_due_date) ? (int) $today_date->diff($original_due_date)->format("%r%a") : NULL ;
 
 			if($different_due_date) {
@@ -131,8 +139,9 @@ class WC_PagHiper_Transaction {
 					$this->invalid_reason = 'different_due_date';
 	
 					if ( $this->log ) {
-						$log_message = 'Pedido #%s: Data de vencimento da transação não bate com a informada no pedido. Uma nova transação será gerado.';
-						wc_paghiper_add_log( $this->log, sprintf( $log_message, $this->order_id ) );
+						$log_message = 'Pedido #%s: Data de vencimento da transação não bate com a informada no pedido. Uma novo %s será gerada.'.PHP_EOL;
+						$log_message .= 'Data de vencimento esperada é %s, data de vencimento recebida: %s';
+						wc_paghiper_add_log( $this->log, sprintf( $log_message, $this->order_id, $this->gateway_name, $this->order_data['order_transaction_due_date'],  $this->order_data['current_transaction_due_date']) );
 					}
 				}
 
@@ -145,8 +154,9 @@ class WC_PagHiper_Transaction {
 				$this->invalid_reason = 'different_total';
 
 				if ( $this->log ) {
-					$log_message = 'Pedido #%s: Valor total não bate com o informada no boleto gerado. Um novo boleto será gerado.';
-					wc_paghiper_add_log( $this->log, sprintf( $log_message, $this->order_id ) );
+					$log_message = 'Pedido #%s: Valor total não bate com o informada no boleto gerado. Um novo %s será gerado.'.PHP_EOL;
+					$log_message .= 'Valor da transação esperada é %s, valor recebido: %s';
+					wc_paghiper_add_log( $this->log, sprintf( $log_message, $this->order_id, $this->gateway_name, $this->order->get_total(), $this->order_data['value_cents'] ) );
 				}
 			}
 
@@ -165,7 +175,9 @@ class WC_PagHiper_Transaction {
 		$order_due_date 	= $this->order_data['order_transaction_due_date'];
 		$transaction_days_due	= (!empty($this->gateway_settings['days_due_date'])) ? $this->gateway_settings['days_due_date'] : 5;
 
-		$today_date = DateTime::createFromFormat('Y-m-d', date("Y-m-d"), $this->timezone);
+		$today = new DateTime;
+		$today->setTimezone($this->timezone);
+		$today_date = DateTime::createFromFormat('Y-m-d', $today->format('Y-m-d'), $this->timezone);
 
 		// TODO: Implement better logic here
 		if(!empty($order_due_date)) {
@@ -509,6 +521,7 @@ class WC_PagHiper_Transaction {
 		} catch (\Exception $e) {
 			if ( $this->log ) {
 				wc_paghiper_add_log( $this->log, sprintf( 'Erro: %s', $e->getMessage() ) );
+				wc_paghiper_add_log( $this->log, sprintf( 'Dados enviados: %s', $transaction_data ) );
 			}
 		}
 

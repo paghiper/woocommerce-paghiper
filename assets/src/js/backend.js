@@ -15,7 +15,8 @@ jQuery(document).ready( function($){
 	});
 
 	$( '.paghiper-notice' ).on( 'click', '.ajax-action', function() {
-		let noticeId 		= $(this).data('notice-key')
+
+		let noticeId 		= $(this).data('notice-key'),
 			noticeAction 	= $(this).data('action');
 
 		var data = {
@@ -27,11 +28,13 @@ jQuery(document).ready( function($){
 		$.post( notice_params.ajaxurl, data, function() {
 		});
 
-		$(this).parentsUntil( ".paghiper-notice" ).hide();
+		$(".paghiper-review-nag").hide();
 
 	});
 
 	// Provides maskable fields for date operations
-	$(".date").mask("00/00/0000", {placeholder: "__/__/____", clearIfNotMatch: true});
+	if(typeof $.fn.mask === 'function') {
+		$(".date").mask("00/00/0000", {placeholder: "__/__/____", clearIfNotMatch: true});
+	}
 
 });

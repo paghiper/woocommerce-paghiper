@@ -17,6 +17,8 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 
     $order          = new WC_Order($order_no);
     $order_status   = $order->get_status();
+    $gateway_id     = $order->get_payment_method();
+    $gateway_name  = ($gateway_id !== 'paghiper_pix') ? 'boleto' : 'PIX';
 
     // Trata os retornos
 
@@ -48,7 +50,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
                 } else {
                     $order->add_order_note( __( 'PagHiper: Post de notificação recebido. Aguardando compensação do boleto.' , 'woo_paghiper' ) );
                 }*/
-                $order->add_order_note( __( 'PagHiper: Novo boleto emitido. Aguardando compensação.' , 'woo_paghiper' ) );
+                $order->add_order_note( __( 'PagHiper: Novo '.$gateway_name.' emitido. Aguardando compensação.' , 'woo_paghiper' ) );
                 break;
 
             case "reserved" :
@@ -61,13 +63,13 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 			        $paghiper_data = get_post_meta( $order_no, 'wc_paghiper_data', true );
 
                     if($return['transaction_id'] !== $paghiper_data['transaction_id']) {
-                        $order->add_order_note( __( 'PagHiper: Um boleto emitido para este pedido foi cancelado. Como não era o boleto mais atual, o pedido permanece aguardando pagamento.' , 'woo_paghiper' ) );
+                        $order->add_order_note( __( 'PagHiper: Um '.$gateway_name.' emitido para este pedido foi cancelado. Como não era o boleto mais atual, o pedido permanece aguardando pagamento.' , 'woo_paghiper' ) );
                         return;
                     }
 
                     $cancelled_status = (!empty($settings['set_status_when_cancelled'])) ? $settings['set_status_when_cancelled'] : 'cancelled';
                     
-                    $order->update_status( $cancelled_status, __( 'PagHiper: Boleto Cancelado.', 'woo_paghiper' ) );
+                    $order->update_status( $cancelled_status, __( 'PagHiper: '.ucfirst($gateway_name).' Cancelado.', 'woo_paghiper' ) );
                     paghiper_increase_order_stock( $order, $settings );
                 break;
             case "paid" :
@@ -79,7 +81,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
                 $order->payment_complete();
 
                 if(strpos('paid', $settings['set_status_when_paid']) === FALSE) {
-                    $order->update_status( $settings['set_status_when_paid'], __( 'PagHiper: Boleto Pago.', 'woo_paghiper' ) );
+                    $order->update_status( $settings['set_status_when_paid'], __( 'PagHiper: '.ucfirst($gateway_name).' Pago.', 'woo_paghiper' ) );
                 } else {
                     $order->add_order_note( __( 'PagHiper: Pagamento compensado.', 'woo_paghiper' ) );
                 }
@@ -112,6 +114,7 @@ function woocommerce_paghiper_check_ipn_response() {
 
     if(empty($_POST)) {
         wc_paghiper_add_log( $paghiper_log, 'Post de retorno da PagHiper veio sem conteúdo. Cheque nos logs se serviços de filtragem de tráfego, como mod_security, cPGuard, Imunify360 e similares para mais informações. Caso precise de mais ajuda, entre em contato com o nosso suporte.' );
+        return woocommerce_paghiper_get_transaction_status($transaction_type, $settings, $paghiper_log, $token, $api_key);
     }
 
     // Include SDK for our call
@@ -145,6 +148,18 @@ function woocommerce_paghiper_check_ipn_response() {
     }
 
 } 
+
+/**
+ * Search for transactions on Paghiper.
+ */
+function woocommerce_paghiper_get_transaction_status($transaction_type, $settings, $paghiper_log, $token, $api_key) {
+    
+    $order_id = (isset($_GET) && array_key_exists('orderId', $_GET)) ? sanitize_text_field($_GET['orderId']) : NULL;
+
+    if(!$order_id) {
+        wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), array( 'response' => 408 ) );
+    }
+}
 
 
 /**
