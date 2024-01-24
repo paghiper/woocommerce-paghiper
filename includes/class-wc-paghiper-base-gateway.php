@@ -275,7 +275,7 @@ class WC_Paghiper_Base_Gateway {
 	public function has_taxid_fields() {
 		$order = $this->is_order();
 		if(!is_null($order)) {
-			return (!empty($order->billing_cpf) || !empty($order->billing_cnpj) || !empty($order->{'_'.$order->get_payment_method().'_cpf_cnpj'}));
+			return (!empty($order->get_meta( '_billing_cpf' )) || !empty($order->get_meta( '_billing_cnpj' )) || !empty($order->{'_'.$order->get_payment_method().'_cpf_cnpj'}));
 		}
 
 		return false;

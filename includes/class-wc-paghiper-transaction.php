@@ -240,23 +240,24 @@ class WC_PagHiper_Transaction {
 		$order_line_total = 0;
 
 		// Client data.
-		if(!empty($this->order->billing_persontype)) {
-			$data['payer_name'] = ($this->order->billing_persontype == 2 && !empty($this->order->billing_company)) ? $this->order->billing_company : $this->order->billing_first_name . ' ' . $this->order->billing_last_name;
-			$data['payer_cpf_cnpj'] = ($this->order->billing_persontype == 1) ? $this->order->billing_cpf : $this->order->billing_cnpj ;
+		$billing_person_type = $this->order->get_meta( '_billing_persontype' );
+		if(!empty($billing_person_type)) {
+			$data['payer_name'] = ($billing_person_type == 2 && !empty($this->order->billing_company)) ? $this->order->billing_company : $this->order->billing_first_name . ' ' . $this->order->billing_last_name;
+			$data['payer_cpf_cnpj'] = ($billing_person_type == 1) ? $this->order->get_meta( '_billing_cpf' ) : $this->order->get_meta( '_billing_cnpj' ) ;
 		} else {
 			// Get default field options if not using Brazilian Market on WooCommerce
-			if(!empty($this->order->billing_cnpj) && !empty($this->order->billing_company)) {
+			if(!empty($this->order->get_meta( '_billing_cnpj' )) && !empty($this->order->billing_company)) {
 				$data['payer_name'] = $this->order->billing_company;
-				$data['payer_cpf_cnpj'] = $this->order->billing_cnpj;
+				$data['payer_cpf_cnpj'] = $this->order->get_meta( '_billing_cnpj' );
 			} else {
 
 				// Get default field options if not using Brazilian Market on WooCommerce
-				if(!empty($this->order->billing_cnpj) && !empty($this->order->billing_company)) {
+				if(!empty($this->order->get_meta( '_billing_cnpj' )) && !empty($this->order->billing_company)) {
 					$data['payer_name'] = $this->order->billing_company;
-					$data['payer_cpf_cnpj'] = $this->order->billing_cnpj;
+					$data['payer_cpf_cnpj'] = $this->order->get_meta( '_billing_cnpj' );
 				} else {
 					$data['payer_name'] = $this->order->billing_first_name . ' ' . $this->order->billing_last_name;
-					$data['payer_cpf_cnpj'] = $this->order->billing_cpf;
+					$data['payer_cpf_cnpj'] = $this->order->get_meta( '_billing_cpf' );
 				}
 			}
 		}
