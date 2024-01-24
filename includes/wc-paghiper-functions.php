@@ -32,7 +32,7 @@ function wc_paghiper_get_paghiper_url( $code ) {
  */
 function wc_paghiper_get_paghiper_url_by_order_id( $order_id ) {
 	$order_id = trim(str_replace('#', '', $order_id ));
-	$order    = new WC_Order( $order_id );
+	$order    = wc_get_order( $order_id );
 
 	if ( isset( $order->order_key ) ) {
 		return wc_paghiper_get_paghiper_url( $order->order_key );
@@ -77,16 +77,18 @@ function wc_paghiper_add_workdays( $due_date, $order, $workday_settings = NULL, 
 			$date_diff = (8 - $due_date_weekday);
 			$due_date->modify( "+{$date_diff} days" );
 			
-			$paghiper_data_query = get_post_meta( $order->id, 'wc_paghiper_data', true );
+			$paghiper_data_query = $order->get_meta( 'wc_paghiper_data' );
 
 			$paghiper_data = (is_array($paghiper_data_query)) ? $paghiper_data_query : [];
 			$paghiper_data['order_transaction_due_date'] = $due_date->format( 'Y-m-d' );
 
-			$update = update_post_meta( $order->id, 'wc_paghiper_data', $paghiper_data );
+			$update = $order->update_meta_data( 'wc_paghiper_data', $paghiper_data );
+			$save 	= $order->save();
+			
 			if(function_exists('update_meta_cache'))
 				update_meta_cache( 'shop_order', $order->id );
 
-			if($update) {
+			if($update && $save) {
 				$order->add_order_note( sprintf( __( 'Data de vencimento ajustada para %s', 'woo_paghiper' ), $due_date->format('d/m/Y') ) );
 			} else {
 				$log = wc_paghiper_initialize_log( 'yes' );

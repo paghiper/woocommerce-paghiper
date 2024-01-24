@@ -15,7 +15,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 
     global $paghiper_log;
 
-    $order          = new WC_Order($order_no);
+    $order          = wc_get_order($order_no);
     $order_status   = $order->get_status();
     $gateway_id     = $order->get_payment_method();
     $gateway_name  = ($gateway_id !== 'paghiper_pix') ? 'boleto' : 'PIX';
@@ -60,7 +60,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
             case "canceled" :
 
                     // Se data do pedido for maior que a do boleto cancelado, não cancelar pedido
-			        $paghiper_data = get_post_meta( $order_no, 'wc_paghiper_data', true );
+			        $paghiper_data = $order->get_meta( 'wc_paghiper_data' );
 
                     if($return['transaction_id'] !== $paghiper_data['transaction_id']) {
                         $order->add_order_note( __( 'PagHiper: Um '.$gateway_name.' emitido para este pedido foi cancelado. Como não era o boleto mais atual, o pedido permanece aguardando pagamento.' , 'woo_paghiper' ) );
@@ -75,7 +75,8 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
             case "paid" :
 
                 // For WooCommerce 2.2 or later.
-                add_post_meta( $order_no, '_transaction_id', (string) $return['transaction_id'], true );
+                $order->add_meta_data( $order_no, '_transaction_id', (string) $return['transaction_id'] );
+                $order->save();
 
                 // Changing the order for processing and reduces the stock.
                 $order->payment_complete();

@@ -26,7 +26,7 @@ class WC_PagHiper_Transaction {
 		$this->order_id = $order_id;
 
 		// Pegamos o pedido completo
-		$this->order = new WC_Order( $order_id );
+		$this->order = wc_get_order( $order_id );
 		$this->order_status = (strpos($this->order->get_status(), 'wc-') === false) ? 'wc-'.$this->order->get_status() : $this->order->get_status();
 
 		// Pega a configuração atual do plug-in.
@@ -41,7 +41,7 @@ class WC_PagHiper_Transaction {
 		if(function_exists('update_meta_cache'))
 			update_meta_cache( 'shop_order', $this->order_id );
 
-		$order_meta_data = get_post_meta( $this->order_id, 'wc_paghiper_data', true );
+		$order_meta_data = $this->order->get_meta( 'wc_paghiper_data' ) ;
 		$this->order_data = (is_array($order_meta_data)) ? $order_meta_data : [];
 
 		// Compatibility with pre v2.1 keys
@@ -80,7 +80,7 @@ class WC_PagHiper_Transaction {
 			$new_request = TRUE;
 
 			if ( $this->log ) {
-				if( empty( get_post_meta( $this->order_id, 'wc_paghiper_data', true ) ) ) {
+				if( empty( $this->order->get_meta( 'wc_paghiper_data' ) ) ) {
 					wc_paghiper_add_log( $this->log, sprintf( 'Pedido #%s: Gerando transação para o pedido pela primeira vez.', $this->order_id ) );
 				} else {
 					wc_paghiper_add_log( $this->log, sprintf( 'Pedido #%s: Data de vencimento não presente no banco.', $this->order_id ) );
@@ -107,16 +107,18 @@ class WC_PagHiper_Transaction {
 
 				if ($current_billet_due_date->format('N') == 1 && $original_due_date->format('N') > 5) {
 					
-					$paghiper_data = get_post_meta( $this->order_id, 'wc_paghiper_data', true );
+					$paghiper_data = $this->order->get_meta( 'wc_paghiper_data' ) ;
 					$paghiper_data['order_transaction_due_date'] = $current_billet_due_date->format( 'Y-m-d' );
 
-					$update = update_post_meta( $this->order_id, 'wc_paghiper_data', $paghiper_data );
+					$update = $order->update_meta_data( 'wc_paghiper_data', $paghiper_data );
+					$save 	= $order->save();
+
 					if(function_exists('update_meta_cache'))
 						update_meta_cache( 'shop_order', $this->order_id );
 
 					$this->order_data = $paghiper_data;
 
-					if($update) {
+					if($update && $save) {
 						$this->order->add_order_note( sprintf( __( 'Data de vencimento ajustada para %s', 'woo_paghiper' ), $current_billet_due_date->format('d/m/Y') ) );
 					} else {
 						$this->order->add_order_note( sprintf( __( 'Data de vencimento deveria ser ajustada para %s mas houve um erro ao salvar a nova data.', 'woo_paghiper' ), $current_billet_due_date->format('d/m/Y') ) );
@@ -190,7 +192,7 @@ class WC_PagHiper_Transaction {
 
 		} else {
 
-			$order_data = get_post_meta( $this->order_id, 'wc_paghiper_data', true );
+			$order_data = $this->order->get_meta( 'wc_paghiper_data' ) ;
 			$order_data = (is_array($order_data)) ? $order_data : array();
 
 			// Calcular dias entre a data do pedido e os dias para vencimento na configuração
@@ -202,11 +204,14 @@ class WC_PagHiper_Transaction {
 			$order_data['order_transaction_due_date'] = $transaction_due_date->format( 'Y-m-d' );		
 			$this->order_data = $order_data;
 
-			$update = update_post_meta( $this->order_id, 'wc_paghiper_data', $order_data );
+
+			$update = $this->order->update_meta_data( 'wc_paghiper_data', $order_data );
+			$save 	= $order->save();
+
 			if(function_exists('update_meta_cache'))
 				update_meta_cache( 'shop_order', $this->order_id );
 
-			if(!$update) {
+			if(!$update || !$save) {
 				if ( $this->log ) {
 					wc_paghiper_add_log( $this->log, sprintf( 'Não foi possível guardar a data de vencimento: %s', var_export( $update, true) ) );
 					wc_paghiper_add_log( $this->log, sprintf( 'Dados a guardar: %s', var_export( $order_data, true) ) );
@@ -260,12 +265,12 @@ class WC_PagHiper_Transaction {
 		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-validation.php';
 		$validateAPI = new WC_PagHiper_Validation;
 
-		$checkout_payer_cpf_cnpj = get_post_meta($this->order_id, '_'.$this->gateway_id.'_cpf_cnpj', true);
+		$checkout_payer_cpf_cnpj = $this->order->get_meta( '_'.$this->gateway_id.'_cpf_cnpj' );
 		if(!empty($checkout_payer_cpf_cnpj) && $validateAPI->validate_taxid( $checkout_payer_cpf_cnpj )) {
 			$data['payer_cpf_cnpj'] = $checkout_payer_cpf_cnpj;
 		}
-
-		$checkout_payer_name = get_post_meta($this->order_id, '_'.$this->gateway_id.'_payer_name', true);
+		
+		$checkout_payer_name = $this->order->get_meta( '_'.$this->gateway_id.'_payer_name' );
 		if(!empty($checkout_payer_name)) {
 			$data['payer_name'] = $checkout_payer_name;
 		}
@@ -420,7 +425,7 @@ class WC_PagHiper_Transaction {
 			$PagHiperAPI 	= new PagHiper($api_key, $token);
 			$response 		= $PagHiperAPI->transaction()->create($transaction_data);
 
-			$billet_data = get_post_meta( $this->order_id, 'wc_paghiper_data', true );
+			$billet_data = $this->order->get_meta( 'wc_paghiper_data' );
 
 			$transaction_base_data = [
 				'transaction_id'				=> $response['transaction_id'],
@@ -460,13 +465,15 @@ class WC_PagHiper_Transaction {
 			$order_data = (is_array($this->order_data)) ? $this->order_data : array();
 			$data = array_merge($this->order_data, $current_billet);
 
-			$update = update_post_meta($this->order_id, 'wc_paghiper_data', $data);
+			$update = $order->update_meta_data( 'wc_paghiper_data', $data );
+			$save 	= $order->save();
+
 			if(function_exists('update_meta_cache'))
 				update_meta_cache( 'shop_order', $this->order_id );
 
 			$this->order_data = $data;
 
-			if(!$update) {
+			if(!$update || !$save) {
 				if ( $this->log ) {
 					wc_paghiper_add_log( $this->log, sprintf( 'Não foi possível guardar os dados do boleto: %s', var_export( $update, true) ) );
 					wc_paghiper_add_log( $this->log, sprintf( 'Dados a guardar: %s', var_export( $data, true) ) );

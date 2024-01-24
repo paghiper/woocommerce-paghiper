@@ -429,7 +429,7 @@ class WC_Paghiper_Base_Gateway {
 	 */
 	public function process_payment( $order_id, $is_frontend = true ) {
 
-		$order = new WC_Order( $order_id );
+		$order = wc_get_order( $order_id );
 		$taxid_keys = ["_{$this->gateway->id}_cpf_cnpj", "_{$this->gateway->id}_payer_name"];
 
 		foreach($taxid_keys as $taxid_key) {
@@ -536,7 +536,9 @@ class WC_Paghiper_Base_Gateway {
 			);
 		}
 
-		update_post_meta( $order->id, 'wc_paghiper_data', $data );
+		$order->update_meta_data( 'wc_paghiper_data', $data );
+		$order->save();
+
 		if(function_exists('update_meta_cache'))
 			update_meta_cache( 'shop_order', $order->id );
 

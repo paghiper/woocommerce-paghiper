@@ -83,6 +83,13 @@ class WC_Paghiper {
 
 			// Mostra opções de boleto para pedidos
 			add_filter( 'woocommerce_my_account_my_orders_actions', array( $this, 'order_banking_billet_link' ), 10, 2 );
+
+			// Declara compatibilidade com HPOS
+			add_action( 'before_woocommerce_init', function() {
+				if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+					\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+				}
+			} );
 			
 		}
 
@@ -191,7 +198,7 @@ class WC_Paghiper {
 					return; // Exit;
 								
 				// Get an instance of the WC_Order object
-				$order = new WC_Order( $order_id );
+				$order = wc_get_order( $order_id );
 				$payment_method = $order->get_payment_method();
 
 				do_action( "woocommerce_thankyou_{$payment_method}", $order_id );
@@ -564,7 +571,7 @@ class WC_Paghiper {
 
 			try {
 
-				$order_data = get_post_meta( $order->get_id(), 'wc_paghiper_data', true );
+				$order_data = $order->get_meta( 'wc_paghiper_data' ) ;
 
 				$transaction_id = 'Boleto bancário - '.$order_data['transaction_id'];
 				$billet_url		= $order_data['url_slip_pdf'];
