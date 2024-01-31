@@ -277,7 +277,7 @@ class WC_PagHiper_Transaction {
 		}
 
 		// Address
-		$data['payer_email']		= $this->order->billing_email;
+		$data['payer_email']		= $this->order->get_billing_email();
 		$data['payer_street']  		= $this->order->billing_address_1;
 		$data['payer_complement']  	= $this->order->billing_address_2;
 		$data['payer_district']		= $this->order->billing_neighborhood;
