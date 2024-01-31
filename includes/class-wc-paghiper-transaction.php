@@ -242,7 +242,7 @@ class WC_PagHiper_Transaction {
 		// Client data.
 		$billing_person_type = $this->order->get_meta( '_billing_persontype' );
 		if(!empty($billing_person_type)) {
-			$data['payer_name'] = ($billing_person_type == 2 && !empty($this->order->billing_company)) ? $this->order->billing_company : $this->order->billing_first_name . ' ' . $this->order->billing_last_name;
+			$data['payer_name'] = ($billing_person_type == 2 && !empty($this->order->billing_company)) ? $this->order->billing_company : $this->order->get_billing_first_name() . ' ' . $this->order->billing_last_name;
 			$data['payer_cpf_cnpj'] = ($billing_person_type == 1) ? $this->order->get_meta( '_billing_cpf' ) : $this->order->get_meta( '_billing_cnpj' ) ;
 		} else {
 			// Get default field options if not using Brazilian Market on WooCommerce
@@ -256,7 +256,7 @@ class WC_PagHiper_Transaction {
 					$data['payer_name'] = $this->order->billing_company;
 					$data['payer_cpf_cnpj'] = $this->order->get_meta( '_billing_cnpj' );
 				} else {
-					$data['payer_name'] = $this->order->billing_first_name . ' ' . $this->order->billing_last_name;
+					$data['payer_name'] = $this->order->get_billing_first_name() . ' ' . $this->order->billing_last_name;
 					$data['payer_cpf_cnpj'] = $this->order->get_meta( '_billing_cpf' );
 				}
 			}

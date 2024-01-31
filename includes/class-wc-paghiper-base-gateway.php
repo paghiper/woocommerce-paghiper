@@ -284,7 +284,7 @@ class WC_Paghiper_Base_Gateway {
 	public function has_payer_fields() {
 		$order = $this->is_order();
 		if(!is_null($order)) {
-			$has_payer_fields = ($order && (!empty($order->billing_first_name) || !empty($order->billing_company) || !empty($order->{'_'.$order->get_payment_method().'_payer_name'})));
+			$has_payer_fields = ($order && (!empty($order->get_billing_first_name()) || !empty($order->billing_company) || !empty($order->{'_'.$order->get_payment_method().'_payer_name'})));
 			
 			if( (strlen($payer_cpf_cnpj) > 11 && ( empty($order->billing_company) && empty($order->{'_'.$order->get_payment_method().'_payer_name'})) ) ) {
 				$has_payer_fields = false;
