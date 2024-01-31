@@ -86,13 +86,13 @@ function wc_paghiper_add_workdays( $due_date, $order, $workday_settings = NULL, 
 			$save 	= $order->save();
 			
 			if(function_exists('update_meta_cache'))
-				update_meta_cache( 'shop_order', $order->id );
+				update_meta_cache( 'shop_order', $order->get_id() );
 
 			if($update && $save) {
 				$order->add_order_note( sprintf( __( 'Data de vencimento ajustada para %s', 'woo_paghiper' ), $due_date->format('d/m/Y') ) );
 			} else {
 				$log = wc_paghiper_initialize_log( 'yes' );
-				wc_paghiper_add_log( $log, sprintf( 'Pedido #%s: Erro ao salvar data de vencimento: .', $order->id, var_export($update, TRUE) ) );
+				wc_paghiper_add_log( $log, sprintf( 'Pedido #%s: Erro ao salvar data de vencimento: .', $order->get_id(), var_export($update, TRUE) ) );
 
 				$order->add_order_note( sprintf( __( 'Data de vencimento deveria ser ajustada para %s mas houve um erro ao salvar a nova data.', 'woo_paghiper' ), $due_date->format('d/m/Y') ) );
 			}

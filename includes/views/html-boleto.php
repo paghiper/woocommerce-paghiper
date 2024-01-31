@@ -54,7 +54,7 @@ if ( isset( $boleto_code ) ) {
 			echo print_screen($ico, $title, $message);
 		
 			if ( $log ) {
-				wc_paghiper_add_log( $log, sprintf( 'Pedido #%s: Tela de boleto pago exibida.', $order->id ) );
+				wc_paghiper_add_log( $log, sprintf( 'Pedido #%s: Tela de boleto pago exibida.', $order->get_id() ) );
 			}
 		
 			exit();
@@ -69,7 +69,7 @@ if ( isset( $boleto_code ) ) {
 				echo print_screen($ico, $title, $message);
 			
 				if ( $log ) {
-					wc_paghiper_add_log( $log, sprintf( 'Pedido #%s: Tela de boleto aguardando compensação exibida.', $order->id ) );
+					wc_paghiper_add_log( $log, sprintf( 'Pedido #%s: Tela de boleto aguardando compensação exibida.', $order->get_id() ) );
 				}
 			
 				exit();
@@ -82,7 +82,7 @@ if ( isset( $boleto_code ) ) {
 				echo print_screen($ico, $title, $message);
 			
 				if ( $log ) {
-					wc_paghiper_add_log( $log, sprintf( 'Pedido #%s: Tela de boleto cancelado compensação exibida.', $order->id ) );
+					wc_paghiper_add_log( $log, sprintf( 'Pedido #%s: Tela de boleto cancelado compensação exibida.', $order->get_id() ) );
 				}
 			
 				exit();

@@ -257,7 +257,7 @@ class WC_Paghiper_Admin {
 		// Billet re-emission
 		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
 
-		$paghiperTransaction = new WC_PagHiper_Transaction( $order->id );
+		$paghiperTransaction = new WC_PagHiper_Transaction( $order->get_id() );
 
 		// Body message.
 		$main_message = '<p>' . sprintf( __( 'A data de vencimento do seu %s foi atualizada para: %s', 'woo_paghiper' ), ((($gateway_name !== 'paghiper_pix') ? 'boleto' : 'PIX')), '<code>' . $expiration_date . '</code>' ) . '</p>';

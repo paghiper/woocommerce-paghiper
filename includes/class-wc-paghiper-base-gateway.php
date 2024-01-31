@@ -529,7 +529,7 @@ class WC_Paghiper_Base_Gateway {
 			wc_paghiper_add_log( 
 				$this->log, 
 				sprintf( 'Pedido #%s: Dados iniciais para o %s preparados. Detalhes: %s', 
-					$order_id, 
+					$order->get_id(), 
 					(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto'), 
 					var_export($data, true) 
 				) 
@@ -540,7 +540,7 @@ class WC_Paghiper_Base_Gateway {
 		$order->save();
 
 		if(function_exists('update_meta_cache'))
-			update_meta_cache( 'shop_order', $order->id );
+			update_meta_cache( 'shop_order', $order->get_id() );
 
 		return;
 	}
@@ -615,7 +615,7 @@ class WC_Paghiper_Base_Gateway {
 		}
 
 		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
-		$paghiperTransaction = new WC_PagHiper_Transaction( $order->id );
+		$paghiperTransaction = new WC_PagHiper_Transaction( $order->get_id() );
 
 		$html = '<div class="woo-paghiper-boleto-details" style="text-align: center;">';
 		$html .= '<h2>' . __( 'Pagamento', 'woo-boleto-paghiper' ) . '</h2>';
