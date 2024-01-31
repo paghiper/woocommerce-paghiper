@@ -282,7 +282,7 @@ class WC_PagHiper_Transaction {
 		$data['payer_complement']  	= $this->order->get_billing_address_2();
 		$data['payer_district']		= $this->order->billing_neighborhood;
 		$data['payer_number']	 	= $this->order->billing_number;
-		$data['payer_city']       	= $this->order->billing_city;
+		$data['payer_city']       	= $this->order->get_billing_city();
 		$data['payer_state']      	= $this->order->get_billing_state();
 		$data['payer_zip_code']   	= $this->order->get_billing_postcode();
 
