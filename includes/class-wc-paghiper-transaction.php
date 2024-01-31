@@ -284,7 +284,7 @@ class WC_PagHiper_Transaction {
 		$data['payer_number']	 	= $this->order->billing_number;
 		$data['payer_city']       	= $this->order->billing_city;
 		$data['payer_state']      	= $this->order->get_billing_state();
-		$data['payer_zip_code']   	= $this->order->billing_postcode;
+		$data['payer_zip_code']   	= $this->order->get_billing_postcode();
 
 		// Phone
 		$billing_phone 			= $this->order->get_meta( '_billing_cellphone' );
