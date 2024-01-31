@@ -466,8 +466,8 @@ class WC_PagHiper_Transaction {
 			$order_data = (is_array($this->order_data)) ? $this->order_data : array();
 			$data = array_merge($this->order_data, $current_billet);
 
-			$update = $order->update_meta_data( 'wc_paghiper_data', $data );
-			$save 	= $order->save();
+			$update = $this->order->update_meta_data( 'wc_paghiper_data', $data );
+			$save 	= $this->order->save();
 
 			if(function_exists('update_meta_cache'))
 				update_meta_cache( 'shop_order', $this->order_id );
