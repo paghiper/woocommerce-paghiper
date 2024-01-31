@@ -61,7 +61,7 @@ class WC_PagHiper_Transaction {
 	
 	public function has_issued_valid_transaction() {
 
-		$order_date = DateTime::createFromFormat('Y-m-d', strtok($this->order->order_date, ' '), $this->timezone);
+		$order_date = DateTime::createFromFormat('Y-m-d', strtok($this->order->get_date_created()->date_i18n('Y-m-d H:i:s'), ' '), $this->timezone);
 		$new_request = FALSE;
 
 		// Novo request caso o método de pagamento tenha mudado
