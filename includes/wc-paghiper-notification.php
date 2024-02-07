@@ -114,7 +114,9 @@ function woocommerce_paghiper_check_ipn_response() {
     $api_key 		= $settings['api_key'];
 
     if(empty($_POST)) {
-        wc_paghiper_add_log( $paghiper_log, 'Post de retorno da PagHiper veio sem conteúdo. Cheque nos logs se serviços de filtragem de tráfego, como mod_security, cPGuard, Imunify360 e similares para mais informações. Caso precise de mais ajuda, entre em contato com o nosso suporte.' );
+        if ( $paghiper_log ) {
+            wc_paghiper_add_log( $paghiper_log, 'Post de retorno da PagHiper veio sem conteúdo. Cheque nos logs se serviços de filtragem de tráfego, como mod_security, cPGuard, Imunify360 e similares para mais informações. Caso precise de mais ajuda, entre em contato com o nosso suporte.' );
+        }
         return woocommerce_paghiper_get_transaction_status($transaction_type, $settings, $paghiper_log, $token, $api_key);
     }
 
