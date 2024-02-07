@@ -129,7 +129,7 @@ function woocommerce_paghiper_check_ipn_response() {
 
     if($response['result'] == 'success') {
 
-        if ( $log ) {
+        if ( $paghiper_log ) {
             wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: Post de retorno da PagHiper confirmado.', $response['order_id']) );
         }
 
