@@ -455,7 +455,7 @@ class WC_Paghiper_Base_Gateway {
 
 			$woocommerce->cart->empty_cart();
 
-			$url = add_query_arg( 'key', $order->order_key, add_query_arg( 'order', $order_id, get_permalink( woocommerce_get_page_id( 'thanks' ) ) ) );
+			$url = add_query_arg( 'key', $order->get_order_key(), add_query_arg( 'order', $order_id, get_permalink( woocommerce_get_page_id( 'thanks' ) ) ) );
 		}
 
 		// Gera um boleto e guarda os dados, pra reutilizarmos.
@@ -580,7 +580,7 @@ class WC_Paghiper_Base_Gateway {
 		if($order->get_payment_method() !== 'paghiper_pix') {
 
 			$html = '<div class="woocommerce-message">';
-			$html .= sprintf( '<a class="button button-primary wc-forward" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Pagar o Boleto', 'woo-boleto-paghiper' ) );
+			$html .= sprintf( '<a class="button button-primary wc-forward" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ), __( 'Pagar o Boleto', 'woo-boleto-paghiper' ) );
 	
 			$message = sprintf( __( '%sAtenção!%s Você NÃO vai receber o boleto pelos Correios.', 'woo-boleto-paghiper' ), '<strong>', '</strong>' ) . '<br />';
 			$message .= __( 'Clique no link abaixo e pague o boleto pelo seu aplicativo de Internet Banking .', 'woo-boleto-paghiper' ) . '<br />';
@@ -631,7 +631,7 @@ class WC_Paghiper_Base_Gateway {
 	
 			$html .= apply_filters( 'woo_paghiper_email_instructions', $message );
 	
-			$html .= '<br />' . sprintf( '<a class="button alt" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Veja o boleto completo &rarr;', 'woo-boleto-paghiper' ) ) . '<br />';
+			$html .= '<br />' . sprintf( '<a class="button alt" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ), __( 'Veja o boleto completo &rarr;', 'woo-boleto-paghiper' ) ) . '<br />';
 	
 			$html .= '<strong style="font-size: 0.8em">' . sprintf( __( 'Data de Vencimento: %s.', 'woo-boleto-paghiper' ), date( 'd/m/Y', time() + ( absint( $this->days_due_date ) * 86400 ) ) ) . '</strong>';
 	

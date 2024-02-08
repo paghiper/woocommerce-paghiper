@@ -121,7 +121,7 @@ class WC_Paghiper_Admin {
 			$html .= '<p><strong>' . __( 'Data de Vencimento:', 'woo_paghiper' ) . '</strong> ' . $formatted_due_date . '</p>';
 
 			if($gateway_name !== 'paghiper_pix')
-			$html .= '<p><strong>' . __( 'URL:', 'woo_paghiper' ) . '</strong> <a target="_blank" href="' . esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ) . '">' . __( 'Visualizar boleto', 'woo_paghiper' ) . '</a></p>';
+			$html .= '<p><strong>' . __( 'URL:', 'woo_paghiper' ) . '</strong> <a target="_blank" href="' . esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ) . '">' . __( 'Visualizar boleto', 'woo_paghiper' ) . '</a></p>';
 
 			$html .= '<p style="border-top: 1px solid #ccc;"></p>';
 
@@ -262,7 +262,7 @@ class WC_Paghiper_Admin {
 		// Body message.
 		$main_message = '<p>' . sprintf( __( 'A data de vencimento do seu %s foi atualizada para: %s', 'woo_paghiper' ), ((($gateway_name !== 'paghiper_pix') ? 'boleto' : 'PIX')), '<code>' . $expiration_date . '</code>' ) . '</p>';
 		$main_message .= $paghiperTransaction->printBarCode();
-		$main_message .= '<p>' . sprintf( '<a class="button" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Pagar o boleto &rarr;', 'woo_paghiper' ) ) . '</p>';
+		$main_message .= '<p>' . sprintf( '<a class="button" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ), __( 'Pagar o boleto &rarr;', 'woo_paghiper' ) ) . '</p>';
 
 		// Sets message template.
 		$message = $mailer->wrap_message( sprintf(__( 'Nova data de vencimento para o seu %s', 'woo_paghiper' ), ((($gateway_name !== 'paghiper_pix') ? 'boleto' : 'PIX'))), $main_message );
