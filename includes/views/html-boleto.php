@@ -27,9 +27,8 @@ if ( isset( $boleto_code ) ) {
 	// Sanitize the ref.
 	$ref = sanitize_title( $boleto_code );
 
-	// TODO: Substituir essa função. Está obsoleta desde WC 3.0
 	// Gets Order id.
-	$order_id = woocommerce_get_order_id_by_order_key( $ref );
+	$order_id = wc_get_order_id_by_order_key( $ref );
 
 	if ( $order_id ) {
 
