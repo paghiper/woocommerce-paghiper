@@ -307,9 +307,9 @@ class WC_Paghiper_Base_Gateway {
 	 
 		// Print fields only if there are no fields for the same purpose on the checkout
 		$has_taxid_fields = $this->has_taxid_fields();
-		if(!$has_taxid_fields) {
+		if(!$has_taxid_fields && isset($_POST) && array_key_exists('post_data', $_POST)) {
 			parse_str( $_POST['post_data'], $post_data );
-			$has_taxid_fields = (isset($post_data['billing_cpf'], $post_data['billing_cnpj']));
+			$has_taxid_fields = (array_key_exists('billing_cpf', $post_data) || array_key_exists('billing_cnpj', $post_data)) ? TRUE : FALSE;
 		}
 
 		if(!$has_taxid_fields) {
@@ -521,7 +521,7 @@ class WC_Paghiper_Base_Gateway {
 
 		// Maybe skip non-workdays as per configuration
 		$maybe_skip_non_workdays = ($gateway_name == 'paghiper_pix') ? null : $this->skip_non_workdays;
-		$transaction_due_date = wc_paghiper_add_workdays($transaction_due_date, $order, $maybe_skip_non_workdays, 'date');
+		$transaction_due_date = wc_paghiper_add_workdays($transaction_due_date, $order, 'date', $maybe_skip_non_workdays);
 		$data['order_transaction_due_date'] = $transaction_due_date->format('Y-m-d');
 		$data['transaction_type'] = ($gateway_name == 'paghiper_pix') ? 'pix' : 'billet';
 

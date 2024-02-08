@@ -67,7 +67,7 @@ function wc_paghiper_add_log( $log, $message ) {
  * 
  * @return object
  */
-function wc_paghiper_add_workdays( $due_date, $order, $workday_settings = NULL, $format) {
+function wc_paghiper_add_workdays( $due_date, $order, $format, $workday_settings = NULL) {
 
 	if($due_date && $workday_settings == 'yes') {
 

@@ -62,7 +62,9 @@ class WC_PagHiper_Transaction {
 	public function has_issued_valid_transaction() {
 
 		$order_date = DateTime::createFromFormat('Y-m-d', strtok($this->order->get_date_created()->date_i18n('Y-m-d H:i:s'), ' '), $this->timezone);
-		$new_request = FALSE;
+		$new_request 		= FALSE;
+		$different_total	= FALSE;
+		$different_due_date = FALSE;
 
 		// Novo request caso o método de pagamento tenha mudado
 		if( isset($this->order_data['transaction_type']) && ($this->order_data['transaction_type'] == 'pix' && $this->gateway_id !== 'paghiper_pix') ) {
@@ -222,7 +224,7 @@ class WC_PagHiper_Transaction {
 		}
 
 		$maybe_add_workdays = ($this->gateway_id == 'paghiper_pix') ? null : $this->gateway_settings['skip_non_workdays'];
-		$transaction_due_days = wc_paghiper_add_workdays($transaction_due_date, $this->order, $maybe_add_workdays, 'days');
+		$transaction_due_days = wc_paghiper_add_workdays($transaction_due_date, $this->order, 'days'), $maybe_add_workdays;
 
 		return $transaction_due_days;
 	}
@@ -379,10 +381,12 @@ class WC_PagHiper_Transaction {
 		$data['seller_description'] = apply_filters('woo_paghiper_transaction_description', $billet_description, $this->order_id);
 
 		// Fixed data (doesn't change per request)
-		$data['type_bank_slip']					= 'boletoA4';
-		$data['open_after_day_due'] 			= $this->gateway_settings['open_after_day_due'];
-		$data['early_payment_discounts_cents'] 	= $this->gateway_settings['early_payment_discounts_cents'];
-		$data['early_payment_discounts_days'] 	= $this->gateway_settings['early_payment_discounts_days'];
+		if(($this->gateway_id == 'paghiper_billet')) {
+			$data['type_bank_slip']					= 'boletoA4';
+			$data['open_after_day_due'] 			= $this->gateway_settings['open_after_day_due'];
+			$data['early_payment_discounts_cents'] 	= $this->gateway_settings['early_payment_discounts_cents'];
+			$data['early_payment_discounts_days'] 	= $this->gateway_settings['early_payment_discounts_days'];
+		}
 
 		$data['transaction_type']				= ($this->gateway_id == 'paghiper_pix') ? 'pix' : 'billet';
 		$data['notification_url']				= add_query_arg([
