@@ -12,12 +12,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 global $wp_query;
 
-// Pega a configuração atual do plug-in.
-$settings = get_option( 'woocommerce_paghiper_settings' );
-
-// Inicializa logs, caso ativados
-$log = wc_paghiper_initialize_log( $settings[ 'debug' ] );
-
 // Support for plugin older versions.
 $boleto_code = isset( $_GET['ref'] ) ? $_GET['ref'] : $wp_query->query_vars['paghiper'];
 
@@ -39,6 +33,13 @@ if ( isset( $boleto_code ) ) {
 
 		$order = $paghiperTransaction->_get_order();
 		$dias_vencimento = $paghiperTransaction->_get_past_due_days();
+
+		// Pega a configuração atual do plug-in.
+		$payment_method = $order->get_payment_method();
+		$settings = get_option("woocommerce_{$payment_method}_settings");;
+		
+		// Inicializa logs, caso ativados
+		$log = wc_paghiper_initialize_log( $settings[ 'debug' ] );
 
 		// Somamos os dias de tolerância para evitar bloqueios na retirada de segunda via.
 		$dias_vencimento += (!empty($settings['open_after_day_due']) && $settings['open_after_day_due'] >= 5 && $settings['open_after_day_due'] < 31) ? $settings['open_after_day_due'] : '0';
