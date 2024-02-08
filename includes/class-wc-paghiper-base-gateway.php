@@ -370,7 +370,7 @@ class WC_Paghiper_Base_Gateway {
 					// TODO: Check if item key exists in order meta too
 					if($validateAPI->validate_taxid($maybe_valid_taxid)) {
 						$valid_keys[] = $taxid_post_key;
-						$current_taxid = (strlen($taxid) < strlen($maybe_valid_taxid)) ? $maybe_valid_taxid : $current_taxid;
+						$current_taxid = (strlen($current_taxid) < strlen($maybe_valid_taxid)) ? $maybe_valid_taxid : $current_taxid;
 					}
 				}
 			}
