@@ -120,35 +120,61 @@ function woocommerce_paghiper_check_ipn_response() {
         return woocommerce_paghiper_get_transaction_status($transaction_type, $settings, $paghiper_log, $token, $api_key);
     }
 
-    // Include SDK for our call
-    require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/build/vendor/scoper-autoload.php';
-    wc_paghiper_check_sdk_includes( ($paghiper_log) ? $paghiper_log : false );
+    try {
 
-    $PagHiperAPI 	= new PagHiper($api_key, $token);
-    $response 		= $PagHiperAPI->transaction()->process_ipn_notification($_POST['notification_id'], $_POST['transaction_id'], $transaction_type);
+        // Include SDK for our call
+        require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/build/vendor/scoper-autoload.php';
+        wc_paghiper_check_sdk_includes( ($paghiper_log) ? $paghiper_log : false );
 
-    if($response['result'] == 'success') {
+        $PagHiperAPI 	= new PagHiper($api_key, $token);
+        $response 		= $PagHiperAPI->transaction()->process_ipn_notification($_POST['notification_id'], $_POST['transaction_id'], $transaction_type);
 
-        if ( $paghiper_log ) {
-            wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: Post de retorno da PagHiper confirmado.', $response['order_id']) );
+        if($response['result'] == 'success') {
+
+            if ( $paghiper_log ) {
+                wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: Post de retorno da PagHiper confirmado.', $response['order_id']) );
+            }
+
+            // Print a 200 HTTP code for the notification engine
+            header( 'HTTP/1.1 200 OK' );
+
+            // Carry on with the operation
+            woocommerce_paghiper_valid_ipn_request( $response, $response['order_id'], $settings );
+
+
+        } else {
+
+            if ( $paghiper_log ) {
+                $error = $response->get_error_message();
+                wc_paghiper_add_log( $paghiper_log, sprintf( 'Erro: não foi possível checar o post de retorno da PagHiper. Mensagem: %s', $response ) );
+            }
+
+            wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), array( 'response' => 401 ) );
+
         }
 
-        // Print a 200 HTTP code for the notification engine
-        header( 'HTTP/1.1 200 OK' );
+    } catch (ClientException $e) {
+        // catches all ClientExceptions
 
-        // Carry on with the operation
-        woocommerce_paghiper_valid_ipn_request( $response, $response['order_id'], $settings );
+            if ( $paghiper_log ) {
+                $error = $e->getMessage();
+                wc_paghiper_add_log( $paghiper_log, sprintf( 'Erro (ClientException): não foi possível checar o post de retorno da PagHiper. Mensagem: %s', $response ) );
+            }
 
+            wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), array( 'response' => 402 ) );
 
-    } else {
+    } catch (RequestException $e) {
+        // catches all RequestExceptions
 
-        if ( $paghiper_log ) {
-            $error = $response->get_error_message();
-            wc_paghiper_add_log( $paghiper_log, sprintf( 'Erro: não foi possível checar o post de retorno da PagHiper. Mensagem: %s', $response ) );
-        }
+            if ( $paghiper_log ) {
+                $error = $e->getMessage();
+                wc_paghiper_add_log( $paghiper_log, sprintf( 'Erro (RequestException): não foi possível checar o post de retorno da PagHiper. Mensagem: %s', $response ) );
+            }
 
-        wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), array( 'response' => 401 ) );
+            wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), array( 'response' => 500 ) );
+
     }
+
 
 } 
 
