@@ -573,17 +573,27 @@ class WC_Paghiper {
 
 				$order_data = $order->get_meta( 'wc_paghiper_data' ) ;
 
-				$transaction_id = 'Boleto bancário - '.$order_data['transaction_id'];
-				$billet_url		= $order_data['url_slip_pdf'];
+				if(array_key_exists('transaction_id', $order_data)) {
 
-				$uploads = wp_upload_dir();
-				$upload_dir = $uploads['basedir'];
-				$upload_dir = $upload_dir . '/paghiper';
+					$transaction_id = 'Boleto bancário - '.$order_data['transaction_id'];
+					$billet_url		= $order_data['url_slip_pdf'];
+	
+					$uploads = wp_upload_dir();
+					$upload_dir = $uploads['basedir'];
+					$upload_dir = $upload_dir . '/paghiper';
+	
+					$billet_pdf_file = $upload_dir.'/'.$transaction_id.'.pdf';
+	
+					if(file_exists($billet_pdf_file)) {
+						$attachments[] = $billet_pdf_file;
+					}
 
-				$billet_pdf_file = $upload_dir.'/'.$transaction_id.'.pdf';
+				} else {
 
-				if(file_exists($billet_pdf_file)) {
-					$attachments[] = $billet_pdf_file;
+					if ( $this->log ) {
+						wc_paghiper_add_log( $this->log, sprintf( 'Paghiper: Transação não gerada ainda. Template: %s', $email_id ) );
+					}
+
 				}
 
 			} catch(Exception $e) {
