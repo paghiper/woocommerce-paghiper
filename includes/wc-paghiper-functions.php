@@ -34,7 +34,7 @@ function wc_paghiper_get_paghiper_url_by_order_id( $order_id ) {
 	$order_id = trim(str_replace('#', '', $order_id ));
 	$order    = wc_get_order( $order_id );
 
-	if ( isset( $order->get_order_key() ) ) {
+	if ($order && !is_wp_error($order)) {
 		return wc_paghiper_get_paghiper_url( $order->get_order_key() );
 	}
 
