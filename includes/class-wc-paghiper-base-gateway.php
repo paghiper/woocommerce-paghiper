@@ -322,7 +322,7 @@ class WC_Paghiper_Base_Gateway {
 
 		if(array_key_exists('_'.$this->gateway->id.'_cpf_cnpj', $_POST)) {
 			$payer_cpf_cnpj_value = $_POST['_'.$this->gateway->id.'_cpf_cnpj'];
-		} elseif(is_array($post_data) && array_key_exists('billing_cpf', $post_data)) {
+		} elseif(isset($post_data) && is_array($post_data) && array_key_exists('billing_cpf', $post_data)) {
 			$payer_cpf_cnpj_value = $post_data['billing_cnpj'];
 		} else {
 			$payer_cpf_cnpj_value = NULL;
@@ -332,7 +332,7 @@ class WC_Paghiper_Base_Gateway {
 
 		$has_payer_fields = $this->has_payer_fields();
 		if(!$has_payer_fields) {
-			$has_payer_fields = ((strlen($payer_cpf_cnpj) > 11 && !isset($post_data['billing_company'])) || !isset($post_data['_'.$this->gateway->id.'_payer_name']));
+			$has_payer_fields = ((!is_null($payer_cpf_cnpj) && strlen($payer_cpf_cnpj) > 11 && !isset($post_data['billing_company'])) || !isset($post_data['_'.$this->gateway->id.'_payer_name']));
 		}
 
 		if(!$has_payer_fields) {
