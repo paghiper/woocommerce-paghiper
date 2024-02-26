@@ -224,7 +224,7 @@ class WC_PagHiper_Transaction {
 		}
 
 		$maybe_add_workdays = ($this->gateway_id == 'paghiper_pix') ? null : $this->gateway_settings['skip_non_workdays'];
-		$transaction_due_days = wc_paghiper_add_workdays($transaction_due_date, $this->order, 'days'), $maybe_add_workdays;
+		$transaction_due_days = wc_paghiper_add_workdays($transaction_due_date, $this->order, 'days', $maybe_add_workdays);
 
 		return $transaction_due_days;
 	}
