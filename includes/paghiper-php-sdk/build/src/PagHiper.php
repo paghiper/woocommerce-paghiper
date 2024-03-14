@@ -6,6 +6,8 @@ use PagHiper\BankAccount;
 use PagHiper\Invoice;
 use PagHiper\Transaction;
 use PagHiperSDK\GuzzleHttp\Client;
+use PagHiperSDK\GuzzleHttp\Exception\ClientException;
+use PagHiperSDK\GuzzleHttp\Exception\RequestException;
 class PagHiper
 {
     /**
@@ -51,6 +53,12 @@ class PagHiper
         try {
             $response = $this->client->request('POST', $url, ['json' => $data]);
             return \json_decode($response->getBody(), \true);
+        } catch (ClientException $e) {
+            // catches all ClientExceptions
+            throw $e;
+        } catch (RequestException $e) {
+            // catches all RequestExceptions
+            throw $e;
         } catch (\Exception $e) {
             throw $e;
         }
