@@ -575,6 +575,10 @@ class WC_Paghiper {
 
 				if(array_key_exists('transaction_id', $order_data)) {
 
+					if ( $this->log ) {
+						wc_paghiper_add_log( $this->log, sprintf( 'Paghiper: Transação disponível. ID:%s,  Template: %s', $order_data['transaction_id'], $email_id ) );
+					}
+
 					$transaction_id = 'Boleto bancário - '.$order_data['transaction_id'];
 					$billet_url		= $order_data['url_slip_pdf'];
 	
@@ -586,6 +590,10 @@ class WC_Paghiper {
 	
 					if(file_exists($billet_pdf_file)) {
 						$attachments[] = $billet_pdf_file;
+					}
+
+					if ( $this->log ) {
+						wc_paghiper_add_log( $this->log, sprintf( 'Paghiper: Boleto anexo com sucesso. Template: %s', $email_id ) );
 					}
 
 				} else {
