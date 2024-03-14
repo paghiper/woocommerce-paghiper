@@ -105,14 +105,14 @@ class WC_Paghiper_Admin {
 				$order->save();
 				
 				if(function_exists('update_meta_cache'))
-					update_meta_cache( 'shop_order', $post->ID );
+					update_meta_cache( 'shop_order', $order->get_id() );
 
 				$paghiper_data['order_transaction_due_date'] = $data['order_transaction_due_date'];
 			}
 
 			require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
 
-			$paghiperTransaction = new WC_PagHiper_Transaction( $post->ID );
+			$paghiperTransaction = new WC_PagHiper_Transaction( $order->get_id() );
 			$html = $paghiperTransaction->printBarCode(false, true, ['code', 'digitable']);
 
 			$order_transaction_due_date = DateTime::createFromFormat('Y-m-d', $paghiper_data['order_transaction_due_date'], $this->timezone);
@@ -130,16 +130,16 @@ class WC_Paghiper_Admin {
 			$html .= '<span class="description">' . sprintf(__( 'Ao configurar uma nova data de vencimento, o %s é re-enviado ao cliente por e-mail.', 'woo_paghiper' ), (($gateway_name !== 'paghiper_pix') ? 'boleto' : 'PIX')) . '</span>';
 
 			// Show errors related to user input (invalid or past inputted dates)
-			if ( $error = get_transient( "woo_paghiper_save_order_errors_{$post->ID}" ) ) {
+			if ( $error = get_transient( "woo_paghiper_save_order_errors_{$order->get_id()}" ) ) {
 
 				$html .= sprintf('<div class="error"><p>%s</p></div>', $error); 
-				delete_transient("woo_paghiper_save_order_errors_{$post->ID}");
+				delete_transient("woo_paghiper_save_order_errors_{$order->get_id()}");
 
 			}
 
 			
 			// Show due date errors (set on weekend, skipped to monday)
-			if ( $error = get_transient( "woo_paghiper_due_date_order_errors_{$post->ID}" ) ) {
+			if ( $error = get_transient( "woo_paghiper_due_date_order_errors_{$order->get_id()}" ) ) {
 
 				$html .= sprintf('<div class="error"><p>%s</p></div>', $error); 
 
