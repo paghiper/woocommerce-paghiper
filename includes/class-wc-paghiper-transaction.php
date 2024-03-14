@@ -533,7 +533,7 @@ class WC_PagHiper_Transaction {
 		} catch (\Exception $e) {
 			if ( $this->log ) {
 				wc_paghiper_add_log( $this->log, sprintf( 'Erro: %s', $e->getMessage() ) );
-				wc_paghiper_add_log( $this->log, sprintf( 'Dados enviados: %s', $transaction_data ) );
+				wc_paghiper_add_log( $this->log, sprintf( 'Dados enviados: %s', var_export( $transaction_data, TRUE ) ) );
 			}
 		}
 
