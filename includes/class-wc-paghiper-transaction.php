@@ -384,8 +384,14 @@ class WC_PagHiper_Transaction {
 		if(($this->gateway_id == 'paghiper_billet')) {
 			$data['type_bank_slip']					= 'boletoA4';
 			$data['open_after_day_due'] 			= $this->gateway_settings['open_after_day_due'];
-			$data['early_payment_discounts_cents'] 	= $this->gateway_settings['early_payment_discounts_cents'];
-			$data['early_payment_discounts_days'] 	= $this->gateway_settings['early_payment_discounts_days'];
+
+			if(array_key_exists('early_payment_discounts_cents', $this->gateway_settings)) {
+				$data['early_payment_discounts_cents'] 	= $this->gateway_settings['early_payment_discounts_cents'];
+			}
+
+			if(array_key_exists('early_payment_discounts_days', $this->gateway_settings)) {
+				$data['early_payment_discounts_days'] 	= $this->gateway_settings['early_payment_discounts_days'];
+			}
 		}
 
 		$data['transaction_type']				= ($this->gateway_id == 'paghiper_pix') ? 'pix' : 'billet';
@@ -482,6 +488,8 @@ class WC_PagHiper_Transaction {
 				if ( $this->log ) {
 					wc_paghiper_add_log( $this->log, sprintf( 'Não foi possível guardar os dados do boleto: %s', var_export( $update, true) ) );
 					wc_paghiper_add_log( $this->log, sprintf( 'Dados a guardar: %s', var_export( $data, true) ) );
+					wc_paghiper_add_log( $this->log, sprintf( 'Operação update_meta_data retornou: %s', var_export( $update, true) ) );
+					wc_paghiper_add_log( $this->log, sprintf( 'Operação order->save() retornou: %s', var_export( $save, true) ) );
 				}
 			}
 
