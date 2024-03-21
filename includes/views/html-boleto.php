@@ -12,12 +12,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 global $wp_query;
 
-// Pega a configuração atual do plug-in.
-$settings = get_option( 'woocommerce_paghiper_settings' );
-
-// Inicializa logs, caso ativados
-$log = wc_paghiper_initialize_log( $settings[ 'debug' ] );
-
 // Support for plugin older versions.
 $boleto_code = isset( $_GET['ref'] ) ? $_GET['ref'] : $wp_query->query_vars['paghiper'];
 
@@ -27,9 +21,8 @@ if ( isset( $boleto_code ) ) {
 	// Sanitize the ref.
 	$ref = sanitize_title( $boleto_code );
 
-	// TODO: Substituir essa função. Está obsoleta desde WC 3.0
 	// Gets Order id.
-	$order_id = woocommerce_get_order_id_by_order_key( $ref );
+	$order_id = wc_get_order_id_by_order_key( $ref );
 
 	if ( $order_id ) {
 
@@ -40,6 +33,13 @@ if ( isset( $boleto_code ) ) {
 
 		$order = $paghiperTransaction->_get_order();
 		$dias_vencimento = $paghiperTransaction->_get_past_due_days();
+
+		// Pega a configuração atual do plug-in.
+		$payment_method = $order->get_payment_method();
+		$settings = get_option("woocommerce_{$payment_method}_settings");;
+		
+		// Inicializa logs, caso ativados
+		$log = wc_paghiper_initialize_log( $settings[ 'debug' ] );
 
 		// Somamos os dias de tolerância para evitar bloqueios na retirada de segunda via.
 		$dias_vencimento += (!empty($settings['open_after_day_due']) && $settings['open_after_day_due'] >= 5 && $settings['open_after_day_due'] < 31) ? $settings['open_after_day_due'] : '0';
@@ -54,7 +54,7 @@ if ( isset( $boleto_code ) ) {
 			echo print_screen($ico, $title, $message);
 		
 			if ( $log ) {
-				wc_paghiper_add_log( $log, sprintf( 'Pedido #%s: Tela de boleto pago exibida.', $order->id ) );
+				wc_paghiper_add_log( $log, sprintf( 'Pedido #%s: Tela de boleto pago exibida.', $order->get_id() ) );
 			}
 		
 			exit();
@@ -69,7 +69,7 @@ if ( isset( $boleto_code ) ) {
 				echo print_screen($ico, $title, $message);
 			
 				if ( $log ) {
-					wc_paghiper_add_log( $log, sprintf( 'Pedido #%s: Tela de boleto aguardando compensação exibida.', $order->id ) );
+					wc_paghiper_add_log( $log, sprintf( 'Pedido #%s: Tela de boleto aguardando compensação exibida.', $order->get_id() ) );
 				}
 			
 				exit();
@@ -82,7 +82,7 @@ if ( isset( $boleto_code ) ) {
 				echo print_screen($ico, $title, $message);
 			
 				if ( $log ) {
-					wc_paghiper_add_log( $log, sprintf( 'Pedido #%s: Tela de boleto cancelado compensação exibida.', $order->id ) );
+					wc_paghiper_add_log( $log, sprintf( 'Pedido #%s: Tela de boleto cancelado compensação exibida.', $order->get_id() ) );
 				}
 			
 				exit();

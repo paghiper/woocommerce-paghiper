@@ -36,7 +36,7 @@ class Paghiper_Variable_Order_DigitableLine extends AutomateWoo\Variable {
 
 		// Billet re-emission
 		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
-		$paghiperTransaction = new WC_PagHiper_Transaction( $order->id );
+		$paghiperTransaction = new WC_PagHiper_Transaction( $order->get_id() );
 
 		if($paghiperTransaction)
 			return $paghiperTransaction->_get_digitable_line();
@@ -64,7 +64,7 @@ class Paghiper_Variable_Order_Barcode extends AutomateWoo\Variable {
 
 		// Billet re-emission
 		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
-		$paghiperTransaction = new WC_PagHiper_Transaction( $order->id );
+		$paghiperTransaction = new WC_PagHiper_Transaction( $order->get_id() );
 
 		if($paghiperTransaction)
 			return sprintf("<img src='%s' title='Código de barras para pagamento deste pedido.'>", $paghiperTransaction->_get_barcode());
@@ -92,7 +92,7 @@ class Paghiper_Variable_Order_DueDate extends AutomateWoo\Variable {
 
 		// Billet re-emission
 		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
-		$paghiperTransaction = new WC_PagHiper_Transaction( $order->id );
+		$paghiperTransaction = new WC_PagHiper_Transaction( $order->get_id() );
 
 		if($paghiperTransaction)
 			return $paghiperTransaction->_get_due_date();

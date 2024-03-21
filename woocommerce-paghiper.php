@@ -5,14 +5,14 @@
  * Description: 			Ofereça a seus clientes pagamento por PIX e boleto bancário com a PagHiper. Fácil, prático e rapido!
  * Author: 					PagHiper Pagamentos
  * Author URI: 				https://www.paghiper.com
- * Version: 				2.3.2
- * Tested up to: 			6.3.2
+ * Version: 				2.3.3
+ * Tested up to: 			6.5.0
  * License:              	GPLv3
  * License URI:          	http://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain: 			woo-boleto-paghiper
  * Domain Path: 			/languages/
  * WC requires at least: 	4.0.0
- * WC tested up to: 		8.2.1
+ * WC tested up to: 		8.7.0
  */	
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -33,7 +33,7 @@ class WC_Paghiper {
 	 *
 	 * @var string
 	 */
-	const VERSION = '2.3.2';
+	const VERSION = '2.3.3';
 
 	/**
 	 * Instance of this class.
@@ -83,6 +83,13 @@ class WC_Paghiper {
 
 			// Mostra opções de boleto para pedidos
 			add_filter( 'woocommerce_my_account_my_orders_actions', array( $this, 'order_banking_billet_link' ), 10, 2 );
+
+			// Declara compatibilidade com HPOS
+			add_action( 'before_woocommerce_init', function() {
+				if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+					\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+				}
+			} );
 			
 		}
 
@@ -191,7 +198,7 @@ class WC_Paghiper {
 					return; // Exit;
 								
 				// Get an instance of the WC_Order object
-				$order = new WC_Order( $order_id );
+				$order = wc_get_order( $order_id );
 				$payment_method = $order->get_payment_method();
 
 				do_action( "woocommerce_thankyou_{$payment_method}", $order_id );
@@ -564,19 +571,37 @@ class WC_Paghiper {
 
 			try {
 
-				$order_data = get_post_meta( $order->get_id(), 'wc_paghiper_data', true );
+				$order_data = $order->get_meta( 'wc_paghiper_data' ) ;
 
-				$transaction_id = 'Boleto bancário - '.$order_data['transaction_id'];
-				$billet_url		= $order_data['url_slip_pdf'];
+				if(array_key_exists('transaction_id', $order_data)) {
 
-				$uploads = wp_upload_dir();
-				$upload_dir = $uploads['basedir'];
-				$upload_dir = $upload_dir . '/paghiper';
+					if ( $this->log ) {
+						wc_paghiper_add_log( $this->log, sprintf( 'Paghiper: Transação disponível. ID:%s,  Template: %s', $order_data['transaction_id'], $email_id ) );
+					}
 
-				$billet_pdf_file = $upload_dir.'/'.$transaction_id.'.pdf';
+					$transaction_id = 'Boleto bancário - '.$order_data['transaction_id'];
+					$billet_url		= $order_data['url_slip_pdf'];
+	
+					$uploads = wp_upload_dir();
+					$upload_dir = $uploads['basedir'];
+					$upload_dir = $upload_dir . '/paghiper';
+	
+					$billet_pdf_file = $upload_dir.'/'.$transaction_id.'.pdf';
+	
+					if(file_exists($billet_pdf_file)) {
+						$attachments[] = $billet_pdf_file;
+					}
 
-				if(file_exists($billet_pdf_file)) {
-					$attachments[] = $billet_pdf_file;
+					if ( $this->log ) {
+						wc_paghiper_add_log( $this->log, sprintf( 'Paghiper: Boleto anexo com sucesso. Template: %s', $email_id ) );
+					}
+
+				} else {
+
+					if ( $this->log ) {
+						wc_paghiper_add_log( $this->log, sprintf( 'Paghiper: Transação não gerada ainda. Template: %s', $email_id ) );
+					}
+
 				}
 
 			} catch(Exception $e) {

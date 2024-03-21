@@ -26,7 +26,7 @@ class WC_PagHiper_Transaction {
 		$this->order_id = $order_id;
 
 		// Pegamos o pedido completo
-		$this->order = new WC_Order( $order_id );
+		$this->order = wc_get_order( $order_id );
 		$this->order_status = (strpos($this->order->get_status(), 'wc-') === false) ? 'wc-'.$this->order->get_status() : $this->order->get_status();
 
 		// Pega a configuração atual do plug-in.
@@ -41,7 +41,7 @@ class WC_PagHiper_Transaction {
 		if(function_exists('update_meta_cache'))
 			update_meta_cache( 'shop_order', $this->order_id );
 
-		$order_meta_data = get_post_meta( $this->order_id, 'wc_paghiper_data', true );
+		$order_meta_data = $this->order->get_meta( 'wc_paghiper_data' ) ;
 		$this->order_data = (is_array($order_meta_data)) ? $order_meta_data : [];
 
 		// Compatibility with pre v2.1 keys
@@ -61,8 +61,10 @@ class WC_PagHiper_Transaction {
 	
 	public function has_issued_valid_transaction() {
 
-		$order_date = DateTime::createFromFormat('Y-m-d', strtok($this->order->order_date, ' '), $this->timezone);
-		$new_request = FALSE;
+		$order_date = DateTime::createFromFormat('Y-m-d', strtok($this->order->get_date_created()->date_i18n('Y-m-d H:i:s'), ' '), $this->timezone);
+		$new_request 		= FALSE;
+		$different_total	= FALSE;
+		$different_due_date = FALSE;
 
 		// Novo request caso o método de pagamento tenha mudado
 		if( isset($this->order_data['transaction_type']) && ($this->order_data['transaction_type'] == 'pix' && $this->gateway_id !== 'paghiper_pix') ) {
@@ -80,7 +82,7 @@ class WC_PagHiper_Transaction {
 			$new_request = TRUE;
 
 			if ( $this->log ) {
-				if( empty( get_post_meta( $this->order_id, 'wc_paghiper_data', true ) ) ) {
+				if( empty( $this->order->get_meta( 'wc_paghiper_data' ) ) ) {
 					wc_paghiper_add_log( $this->log, sprintf( 'Pedido #%s: Gerando transação para o pedido pela primeira vez.', $this->order_id ) );
 				} else {
 					wc_paghiper_add_log( $this->log, sprintf( 'Pedido #%s: Data de vencimento não presente no banco.', $this->order_id ) );
@@ -107,16 +109,18 @@ class WC_PagHiper_Transaction {
 
 				if ($current_billet_due_date->format('N') == 1 && $original_due_date->format('N') > 5) {
 					
-					$paghiper_data = get_post_meta( $this->order_id, 'wc_paghiper_data', true );
+					$paghiper_data = $this->order->get_meta( 'wc_paghiper_data' ) ;
 					$paghiper_data['order_transaction_due_date'] = $current_billet_due_date->format( 'Y-m-d' );
 
-					$update = update_post_meta( $this->order_id, 'wc_paghiper_data', $paghiper_data );
+					$update = $order->update_meta_data( 'wc_paghiper_data', $paghiper_data );
+					$save 	= $order->save();
+
 					if(function_exists('update_meta_cache'))
 						update_meta_cache( 'shop_order', $this->order_id );
 
 					$this->order_data = $paghiper_data;
 
-					if($update) {
+					if($update && $save) {
 						$this->order->add_order_note( sprintf( __( 'Data de vencimento ajustada para %s', 'woo_paghiper' ), $current_billet_due_date->format('d/m/Y') ) );
 					} else {
 						$this->order->add_order_note( sprintf( __( 'Data de vencimento deveria ser ajustada para %s mas houve um erro ao salvar a nova data.', 'woo_paghiper' ), $current_billet_due_date->format('d/m/Y') ) );
@@ -190,7 +194,7 @@ class WC_PagHiper_Transaction {
 
 		} else {
 
-			$order_data = get_post_meta( $this->order_id, 'wc_paghiper_data', true );
+			$order_data = $this->order->get_meta( 'wc_paghiper_data' ) ;
 			$order_data = (is_array($order_data)) ? $order_data : array();
 
 			// Calcular dias entre a data do pedido e os dias para vencimento na configuração
@@ -202,11 +206,14 @@ class WC_PagHiper_Transaction {
 			$order_data['order_transaction_due_date'] = $transaction_due_date->format( 'Y-m-d' );		
 			$this->order_data = $order_data;
 
-			$update = update_post_meta( $this->order_id, 'wc_paghiper_data', $order_data );
+
+			$update = $this->order->update_meta_data( 'wc_paghiper_data', $order_data );
+			$save 	= $order->save();
+
 			if(function_exists('update_meta_cache'))
 				update_meta_cache( 'shop_order', $this->order_id );
 
-			if(!$update) {
+			if(!$update || !$save) {
 				if ( $this->log ) {
 					wc_paghiper_add_log( $this->log, sprintf( 'Não foi possível guardar a data de vencimento: %s', var_export( $update, true) ) );
 					wc_paghiper_add_log( $this->log, sprintf( 'Dados a guardar: %s', var_export( $order_data, true) ) );
@@ -217,7 +224,7 @@ class WC_PagHiper_Transaction {
 		}
 
 		$maybe_add_workdays = ($this->gateway_id == 'paghiper_pix') ? null : $this->gateway_settings['skip_non_workdays'];
-		$transaction_due_days = wc_paghiper_add_workdays($transaction_due_date, $this->order, $maybe_add_workdays, 'days');
+		$transaction_due_days = wc_paghiper_add_workdays($transaction_due_date, $this->order, 'days', $maybe_add_workdays);
 
 		return $transaction_due_days;
 	}
@@ -235,23 +242,24 @@ class WC_PagHiper_Transaction {
 		$order_line_total = 0;
 
 		// Client data.
-		if(!empty($this->order->billing_persontype)) {
-			$data['payer_name'] = ($this->order->billing_persontype == 2 && !empty($this->order->billing_company)) ? $this->order->billing_company : $this->order->billing_first_name . ' ' . $this->order->billing_last_name;
-			$data['payer_cpf_cnpj'] = ($this->order->billing_persontype == 1) ? $this->order->billing_cpf : $this->order->billing_cnpj ;
+		$billing_person_type = $this->order->get_meta( '_billing_persontype' );
+		if(!empty($billing_person_type)) {
+			$data['payer_name'] = ($billing_person_type == 2 && !empty($this->order->get_billing_company())) ? $this->order->get_billing_company() : $this->order->get_billing_first_name() . ' ' . $this->order->get_billing_last_name();
+			$data['payer_cpf_cnpj'] = ($billing_person_type == 1) ? $this->order->get_meta( '_billing_cpf' ) : $this->order->get_meta( '_billing_cnpj' ) ;
 		} else {
 			// Get default field options if not using Brazilian Market on WooCommerce
-			if(!empty($this->order->billing_cnpj) && !empty($this->order->billing_company)) {
-				$data['payer_name'] = $this->order->billing_company;
-				$data['payer_cpf_cnpj'] = $this->order->billing_cnpj;
+			if(!empty($this->order->get_meta( '_billing_cnpj' )) && !empty($this->order->get_billing_company())) {
+				$data['payer_name'] = $this->order->get_billing_company();
+				$data['payer_cpf_cnpj'] = $this->order->get_meta( '_billing_cnpj' );
 			} else {
 
 				// Get default field options if not using Brazilian Market on WooCommerce
-				if(!empty($this->order->billing_cnpj) && !empty($this->order->billing_company)) {
-					$data['payer_name'] = $this->order->billing_company;
-					$data['payer_cpf_cnpj'] = $this->order->billing_cnpj;
+				if(!empty($this->order->get_meta( '_billing_cnpj' )) && !empty($this->order->get_billing_company())) {
+					$data['payer_name'] = $this->order->get_billing_company();
+					$data['payer_cpf_cnpj'] = $this->order->get_meta( '_billing_cnpj' );
 				} else {
-					$data['payer_name'] = $this->order->billing_first_name . ' ' . $this->order->billing_last_name;
-					$data['payer_cpf_cnpj'] = $this->order->billing_cpf;
+					$data['payer_name'] = $this->order->get_billing_first_name() . ' ' . $this->order->get_billing_last_name();
+					$data['payer_cpf_cnpj'] = $this->order->get_meta( '_billing_cpf' );
 				}
 			}
 		}
@@ -260,25 +268,25 @@ class WC_PagHiper_Transaction {
 		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-validation.php';
 		$validateAPI = new WC_PagHiper_Validation;
 
-		$checkout_payer_cpf_cnpj = get_post_meta($this->order_id, '_'.$this->gateway_id.'_cpf_cnpj', true);
+		$checkout_payer_cpf_cnpj = $this->order->get_meta( '_'.$this->gateway_id.'_cpf_cnpj' );
 		if(!empty($checkout_payer_cpf_cnpj) && $validateAPI->validate_taxid( $checkout_payer_cpf_cnpj )) {
 			$data['payer_cpf_cnpj'] = $checkout_payer_cpf_cnpj;
 		}
-
-		$checkout_payer_name = get_post_meta($this->order_id, '_'.$this->gateway_id.'_payer_name', true);
+		
+		$checkout_payer_name = $this->order->get_meta( '_'.$this->gateway_id.'_payer_name' );
 		if(!empty($checkout_payer_name)) {
 			$data['payer_name'] = $checkout_payer_name;
 		}
 
 		// Address
-		$data['payer_email']		= $this->order->billing_email;
-		$data['payer_street']  		= $this->order->billing_address_1;
-		$data['payer_complement']  	= $this->order->billing_address_2;
-		$data['payer_district']		= $this->order->billing_neighborhood;
-		$data['payer_number']	 	= $this->order->billing_number;
-		$data['payer_city']       	= $this->order->billing_city;
-		$data['payer_state']      	= $this->order->billing_state;
-		$data['payer_zip_code']   	= $this->order->billing_postcode;
+		$data['payer_email']		= $this->order->get_billing_email();
+		$data['payer_street']  		= $this->order->get_billing_address_1();
+		$data['payer_complement']  	= $this->order->get_billing_address_2();
+		$data['payer_district']		= $this->order->get_meta( '_billing_neighborhood' );
+		$data['payer_number']	 	= $this->order->get_meta( '_billing_number' );
+		$data['payer_city']       	= $this->order->get_billing_city();
+		$data['payer_state']      	= $this->order->get_billing_state();
+		$data['payer_zip_code']   	= $this->order->get_billing_postcode();
 
 		// Phone
 		$billing_phone 			= $this->order->get_meta( '_billing_cellphone' );
@@ -373,10 +381,18 @@ class WC_PagHiper_Transaction {
 		$data['seller_description'] = apply_filters('woo_paghiper_transaction_description', $billet_description, $this->order_id);
 
 		// Fixed data (doesn't change per request)
-		$data['type_bank_slip']					= 'boletoA4';
-		$data['open_after_day_due'] 			= $this->gateway_settings['open_after_day_due'];
-		$data['early_payment_discounts_cents'] 	= $this->gateway_settings['early_payment_discounts_cents'];
-		$data['early_payment_discounts_days'] 	= $this->gateway_settings['early_payment_discounts_days'];
+		if(($this->gateway_id == 'paghiper_billet')) {
+			$data['type_bank_slip']					= 'boletoA4';
+			$data['open_after_day_due'] 			= $this->gateway_settings['open_after_day_due'];
+
+			if(array_key_exists('early_payment_discounts_cents', $this->gateway_settings)) {
+				$data['early_payment_discounts_cents'] 	= $this->gateway_settings['early_payment_discounts_cents'];
+			}
+
+			if(array_key_exists('early_payment_discounts_days', $this->gateway_settings)) {
+				$data['early_payment_discounts_days'] 	= $this->gateway_settings['early_payment_discounts_days'];
+			}
+		}
 
 		$data['transaction_type']				= ($this->gateway_id == 'paghiper_pix') ? 'pix' : 'billet';
 		$data['notification_url']				= add_query_arg([
@@ -420,7 +436,7 @@ class WC_PagHiper_Transaction {
 			$PagHiperAPI 	= new PagHiper($api_key, $token);
 			$response 		= $PagHiperAPI->transaction()->create($transaction_data);
 
-			$billet_data = get_post_meta( $this->order_id, 'wc_paghiper_data', true );
+			$billet_data = $this->order->get_meta( 'wc_paghiper_data' );
 
 			$transaction_base_data = [
 				'transaction_id'				=> $response['transaction_id'],
@@ -460,16 +476,20 @@ class WC_PagHiper_Transaction {
 			$order_data = (is_array($this->order_data)) ? $this->order_data : array();
 			$data = array_merge($this->order_data, $current_billet);
 
-			$update = update_post_meta($this->order_id, 'wc_paghiper_data', $data);
+			$update = $this->order->update_meta_data( 'wc_paghiper_data', $data );
+			$save 	= $this->order->save();
+
 			if(function_exists('update_meta_cache'))
 				update_meta_cache( 'shop_order', $this->order_id );
 
 			$this->order_data = $data;
 
-			if(!$update) {
+			if(!$update || !$save) {
 				if ( $this->log ) {
 					wc_paghiper_add_log( $this->log, sprintf( 'Não foi possível guardar os dados do boleto: %s', var_export( $update, true) ) );
 					wc_paghiper_add_log( $this->log, sprintf( 'Dados a guardar: %s', var_export( $data, true) ) );
+					wc_paghiper_add_log( $this->log, sprintf( 'Operação update_meta_data retornou: %s', var_export( $update, true) ) );
+					wc_paghiper_add_log( $this->log, sprintf( 'Operação order->save() retornou: %s', var_export( $save, true) ) );
 				}
 			}
 
@@ -521,7 +541,7 @@ class WC_PagHiper_Transaction {
 		} catch (\Exception $e) {
 			if ( $this->log ) {
 				wc_paghiper_add_log( $this->log, sprintf( 'Erro: %s', $e->getMessage() ) );
-				wc_paghiper_add_log( $this->log, sprintf( 'Dados enviados: %s', $transaction_data ) );
+				wc_paghiper_add_log( $this->log, sprintf( 'Dados enviados: %s', var_export( $transaction_data, TRUE ) ) );
 			}
 		}
 

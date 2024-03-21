@@ -3,6 +3,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController;
+use Automattic\WooCommerce\Utilities\OrderUtil;
+
 /**
  * Boleto Admin.
  */
@@ -41,18 +44,22 @@ class WC_Paghiper_Admin {
 			return;
 		}
 		
-		$order = new WC_Order( $post->ID );
+		$order = wc_get_order( $post->ID );
 		$payment_method = $order->get_payment_method();
 		
 		if(in_array($payment_method, ['paghiper', 'paghiper_billet', 'paghiper_pix'])) {
 
 			$method_title = ($payment_method == 'paghiper_pix') ? "PIX" : "Boleto";
 
+			$target_screen = class_exists( '\Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController' ) && wc_get_container()->get( CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled()
+				? wc_get_page_screen_id( 'shop-order' )
+				: 'shop_order';
+
 			add_meta_box(
 				'paghiper-boleto',
 				__( "Configurações do {$method_title}", 'woo_paghiper' ),
 				array( $this, 'metabox_content' ),
-				'shop_order',
+				$target_screen,
 				'side',
 				'default'
 			);
@@ -68,16 +75,16 @@ class WC_Paghiper_Admin {
 	 *
 	 * @return string       Metabox HTML.
 	 */
-	public function metabox_content( $post ) {
+	public function metabox_content( $post_or_order_object ) {
 		// Get order data.
-		$order = new WC_Order( $post->ID );
+		$order = ( $post_or_order_object instanceof WP_Post ) ? wc_get_order( $post_or_order_object->ID ) : $post_or_order_object;
 
 		// Use nonce for verification.
 		wp_nonce_field( basename( __FILE__ ), 'woo_paghiper_metabox_nonce' );
 		$gateway_name = $order->get_payment_method();
 
 		if ( in_array($gateway_name, ['paghiper', 'paghiper_pix', 'paghiper_billet']) ) {
-			$paghiper_data = get_post_meta( $post->ID, 'wc_paghiper_data', true );
+			$paghiper_data = $order->get_meta( 'wc_paghiper_data' ) ;
 
 			// Compatibility with pre v2.1 keys
 			if( isset($paghiper_data['order_billet_due_date']) && !isset($paghiper_data['order_transaction_due_date']) ) {
@@ -93,17 +100,19 @@ class WC_Paghiper_Admin {
 				$order_transaction_due_date			= isset( $settings['days_due_date'] ) ? absint( $settings['days_due_date'] ) : 5;
 				$data                   			= array();
 				$data['order_transaction_due_date']	= date( 'Y-m-d', time() + ( $order_transaction_due_date * 86400 ) );
-
-				update_post_meta( $post->ID, 'wc_paghiper_data', $data );
+				
+				$order->update_meta_data( 'wc_paghiper_data', $data );
+				$order->save();
+				
 				if(function_exists('update_meta_cache'))
-					update_meta_cache( 'shop_order', $post->ID );
+					update_meta_cache( 'shop_order', $order->get_id() );
 
 				$paghiper_data['order_transaction_due_date'] = $data['order_transaction_due_date'];
 			}
 
 			require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
 
-			$paghiperTransaction = new WC_PagHiper_Transaction( $post->ID );
+			$paghiperTransaction = new WC_PagHiper_Transaction( $order->get_id() );
 			$html = $paghiperTransaction->printBarCode(false, true, ['code', 'digitable']);
 
 			$order_transaction_due_date = DateTime::createFromFormat('Y-m-d', $paghiper_data['order_transaction_due_date'], $this->timezone);
@@ -112,7 +121,7 @@ class WC_Paghiper_Admin {
 			$html .= '<p><strong>' . __( 'Data de Vencimento:', 'woo_paghiper' ) . '</strong> ' . $formatted_due_date . '</p>';
 
 			if($gateway_name !== 'paghiper_pix')
-			$html .= '<p><strong>' . __( 'URL:', 'woo_paghiper' ) . '</strong> <a target="_blank" href="' . esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ) . '">' . __( 'Visualizar boleto', 'woo_paghiper' ) . '</a></p>';
+			$html .= '<p><strong>' . __( 'URL:', 'woo_paghiper' ) . '</strong> <a target="_blank" href="' . esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ) . '">' . __( 'Visualizar boleto', 'woo_paghiper' ) . '</a></p>';
 
 			$html .= '<p style="border-top: 1px solid #ccc;"></p>';
 
@@ -121,16 +130,16 @@ class WC_Paghiper_Admin {
 			$html .= '<span class="description">' . sprintf(__( 'Ao configurar uma nova data de vencimento, o %s é re-enviado ao cliente por e-mail.', 'woo_paghiper' ), (($gateway_name !== 'paghiper_pix') ? 'boleto' : 'PIX')) . '</span>';
 
 			// Show errors related to user input (invalid or past inputted dates)
-			if ( $error = get_transient( "woo_paghiper_save_order_errors_{$post->ID}" ) ) {
+			if ( $error = get_transient( "woo_paghiper_save_order_errors_{$order->get_id()}" ) ) {
 
 				$html .= sprintf('<div class="error"><p>%s</p></div>', $error); 
-				delete_transient("woo_paghiper_save_order_errors_{$post->ID}");
+				delete_transient("woo_paghiper_save_order_errors_{$order->get_id()}");
 
 			}
 
 			
 			// Show due date errors (set on weekend, skipped to monday)
-			if ( $error = get_transient( "woo_paghiper_due_date_order_errors_{$post->ID}" ) ) {
+			if ( $error = get_transient( "woo_paghiper_due_date_order_errors_{$order->get_id()}" ) ) {
 
 				$html .= sprintf('<div class="error"><p>%s</p></div>', $error); 
 
@@ -163,7 +172,7 @@ class WC_Paghiper_Admin {
 		}
 
 		// Check permissions.
-		if ( 'shop_order' == $_POST['post_type'] && ! current_user_can( 'edit_page', $post_id ) ) {
+		if ( OrderUtil::is_order( $post_id, wc_get_order_types() ) && ! current_user_can( 'edit_page', $post_id ) ) {
 			return $post_id;
 		}
 
@@ -175,7 +184,8 @@ class WC_Paghiper_Admin {
 			$today_date = new \DateTime();
 			$today_date->setTimezone($this->timezone);
 
-			$paghiper_data = get_post_meta( $post_id, 'wc_paghiper_data', true );
+			$order = wc_get_order( $post_id );
+			$paghiper_data = $order->get_meta( 'wc_paghiper_data' ) ;
 			$new_due_date = DateTime::createFromFormat('d/m/Y', $input_date, $this->timezone);
 
 			$formatted_date = ($new_due_date) ? $new_due_date->format('d/m/Y') : NULL ;
@@ -198,15 +208,14 @@ class WC_Paghiper_Admin {
 
 			// Update ticket data.
 			$paghiper_data['order_transaction_due_date'] = $new_due_date->format('Y-m-d');
-			update_post_meta( $post_id, 'wc_paghiper_data', $paghiper_data );
+			$order->update_meta_data( 'wc_paghiper_data', $paghiper_data );
+			$order->save();
+
 			if(function_exists('update_meta_cache'))
 				update_meta_cache( 'shop_order', $post_id );
 				
 			// Delete notification if order due date has been modified
 			delete_transient("woo_paghiper_due_date_order_errors_{$post_id}");
-
-			// Gets order data.
-			$order = new WC_Order( $post_id );
 
 			// Add order note.
 			$order->add_order_note( sprintf( __( 'Data de vencimento alterada para %s', 'woo_paghiper' ), $formatted_date ) );
@@ -248,12 +257,12 @@ class WC_Paghiper_Admin {
 		// Billet re-emission
 		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
 
-		$paghiperTransaction = new WC_PagHiper_Transaction( $order->id );
+		$paghiperTransaction = new WC_PagHiper_Transaction( $order->get_id() );
 
 		// Body message.
 		$main_message = '<p>' . sprintf( __( 'A data de vencimento do seu %s foi atualizada para: %s', 'woo_paghiper' ), ((($gateway_name !== 'paghiper_pix') ? 'boleto' : 'PIX')), '<code>' . $expiration_date . '</code>' ) . '</p>';
 		$main_message .= $paghiperTransaction->printBarCode();
-		$main_message .= '<p>' . sprintf( '<a class="button" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Pagar o boleto &rarr;', 'woo_paghiper' ) ) . '</p>';
+		$main_message .= '<p>' . sprintf( '<a class="button" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ), __( 'Pagar o boleto &rarr;', 'woo_paghiper' ) ) . '</p>';
 
 		// Sets message template.
 		$message = $mailer->wrap_message( sprintf(__( 'Nova data de vencimento para o seu %s', 'woo_paghiper' ), ((($gateway_name !== 'paghiper_pix') ? 'boleto' : 'PIX'))), $main_message );
@@ -275,7 +284,7 @@ class WC_Paghiper_Admin {
 		if( !wp_script_is( 'paghiper-backend-js', 'registered' ) ) {
 			wp_register_script( 'paghiper-backend-js', wc_paghiper_assets_url() . 'js/backend.min.js', array( 'jquery' ),'1.1', false );
 		}
-		
+
         wp_register_style( 'paghiper-backend-css', wc_paghiper_assets_url() . 'css/backend.min.css', false, '1.0.0' );
 
 		if(is_admin()) {

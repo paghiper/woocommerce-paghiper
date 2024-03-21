@@ -275,7 +275,7 @@ class WC_Paghiper_Base_Gateway {
 	public function has_taxid_fields() {
 		$order = $this->is_order();
 		if(!is_null($order)) {
-			return (!empty($order->billing_cpf) || !empty($order->billing_cnpj) || !empty($order->{'_'.$order->get_payment_method().'_cpf_cnpj'}));
+			return (!empty($order->get_meta( '_billing_cpf' )) || !empty($order->get_meta( '_billing_cnpj' )) || !empty($order->{'_'.$order->get_payment_method().'_cpf_cnpj'}));
 		}
 
 		return false;
@@ -284,9 +284,9 @@ class WC_Paghiper_Base_Gateway {
 	public function has_payer_fields() {
 		$order = $this->is_order();
 		if(!is_null($order)) {
-			$has_payer_fields = ($order && (!empty($order->billing_first_name) || !empty($order->billing_company) || !empty($order->{'_'.$order->get_payment_method().'_payer_name'})));
+			$has_payer_fields = ($order && (!empty($order->get_billing_first_name()) || !empty($order->get_billing_company()) || !empty($order->{'_'.$order->get_payment_method().'_payer_name'})));
 			
-			if( (strlen($payer_cpf_cnpj) > 11 && ( empty($order->billing_company) && empty($order->{'_'.$order->get_payment_method().'_payer_name'})) ) ) {
+			if( (strlen($payer_cpf_cnpj) > 11 && ( empty($order->get_billing_company()) && empty($order->{'_'.$order->get_payment_method().'_payer_name'})) ) ) {
 				$has_payer_fields = false;
 			}
 
@@ -307,9 +307,9 @@ class WC_Paghiper_Base_Gateway {
 	 
 		// Print fields only if there are no fields for the same purpose on the checkout
 		$has_taxid_fields = $this->has_taxid_fields();
-		if(!$has_taxid_fields) {
+		if(!$has_taxid_fields && isset($_POST) && array_key_exists('post_data', $_POST)) {
 			parse_str( $_POST['post_data'], $post_data );
-			$has_taxid_fields = (isset($post_data['billing_cpf'], $post_data['billing_cnpj']));
+			$has_taxid_fields = (array_key_exists('billing_cpf', $post_data) || array_key_exists('billing_cnpj', $post_data)) ? TRUE : FALSE;
 		}
 
 		if(!$has_taxid_fields) {
@@ -322,7 +322,7 @@ class WC_Paghiper_Base_Gateway {
 
 		if(array_key_exists('_'.$this->gateway->id.'_cpf_cnpj', $_POST)) {
 			$payer_cpf_cnpj_value = $_POST['_'.$this->gateway->id.'_cpf_cnpj'];
-		} elseif(is_array($post_data) && array_key_exists('billing_cpf', $post_data)) {
+		} elseif(isset($post_data) && is_array($post_data) && array_key_exists('billing_cpf', $post_data)) {
 			$payer_cpf_cnpj_value = $post_data['billing_cnpj'];
 		} else {
 			$payer_cpf_cnpj_value = NULL;
@@ -332,7 +332,7 @@ class WC_Paghiper_Base_Gateway {
 
 		$has_payer_fields = $this->has_payer_fields();
 		if(!$has_payer_fields) {
-			$has_payer_fields = ((strlen($payer_cpf_cnpj) > 11 && !isset($post_data['billing_company'])) || !isset($post_data['_'.$this->gateway->id.'_payer_name']));
+			$has_payer_fields = ((!is_null($payer_cpf_cnpj) && strlen($payer_cpf_cnpj) > 11 && !isset($post_data['billing_company'])) || !isset($post_data['_'.$this->gateway->id.'_payer_name']));
 		}
 
 		if(!$has_payer_fields) {
@@ -370,7 +370,13 @@ class WC_Paghiper_Base_Gateway {
 					// TODO: Check if item key exists in order meta too
 					if($validateAPI->validate_taxid($maybe_valid_taxid)) {
 						$valid_keys[] = $taxid_post_key;
-						$current_taxid = (strlen($taxid) < strlen($maybe_valid_taxid)) ? $maybe_valid_taxid : $current_taxid;
+
+						if( isset($current_taxid) ) {
+							$current_taxid = (strlen($current_taxid) < strlen($maybe_valid_taxid)) ? $maybe_valid_taxid : $current_taxid;
+						} else {
+							$current_taxid = $maybe_valid_taxid;
+						}
+						
 					}
 				}
 			}
@@ -429,7 +435,7 @@ class WC_Paghiper_Base_Gateway {
 	 */
 	public function process_payment( $order_id, $is_frontend = true ) {
 
-		$order = new WC_Order( $order_id );
+		$order = wc_get_order( $order_id );
 		$taxid_keys = ["_{$this->gateway->id}_cpf_cnpj", "_{$this->gateway->id}_payer_name"];
 
 		foreach($taxid_keys as $taxid_key) {
@@ -455,7 +461,7 @@ class WC_Paghiper_Base_Gateway {
 
 			$woocommerce->cart->empty_cart();
 
-			$url = add_query_arg( 'key', $order->order_key, add_query_arg( 'order', $order_id, get_permalink( woocommerce_get_page_id( 'thanks' ) ) ) );
+			$url = add_query_arg( 'key', $order->get_order_key(), add_query_arg( 'order', $order_id, get_permalink( woocommerce_get_page_id( 'thanks' ) ) ) );
 		}
 
 		// Gera um boleto e guarda os dados, pra reutilizarmos.
@@ -521,7 +527,7 @@ class WC_Paghiper_Base_Gateway {
 
 		// Maybe skip non-workdays as per configuration
 		$maybe_skip_non_workdays = ($gateway_name == 'paghiper_pix') ? null : $this->skip_non_workdays;
-		$transaction_due_date = wc_paghiper_add_workdays($transaction_due_date, $order, $maybe_skip_non_workdays, 'date');
+		$transaction_due_date = wc_paghiper_add_workdays($transaction_due_date, $order, 'date', $maybe_skip_non_workdays);
 		$data['order_transaction_due_date'] = $transaction_due_date->format('Y-m-d');
 		$data['transaction_type'] = ($gateway_name == 'paghiper_pix') ? 'pix' : 'billet';
 
@@ -529,16 +535,18 @@ class WC_Paghiper_Base_Gateway {
 			wc_paghiper_add_log( 
 				$this->log, 
 				sprintf( 'Pedido #%s: Dados iniciais para o %s preparados. Detalhes: %s', 
-					$order_id, 
+					$order->get_id(), 
 					(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto'), 
 					var_export($data, true) 
 				) 
 			);
 		}
 
-		update_post_meta( $order->id, 'wc_paghiper_data', $data );
+		$order->update_meta_data( 'wc_paghiper_data', $data );
+		$order->save();
+
 		if(function_exists('update_meta_cache'))
-			update_meta_cache( 'shop_order', $order->id );
+			update_meta_cache( 'shop_order', $order->get_id() );
 
 		return;
 	}
@@ -578,7 +586,7 @@ class WC_Paghiper_Base_Gateway {
 		if($order->get_payment_method() !== 'paghiper_pix') {
 
 			$html = '<div class="woocommerce-message">';
-			$html .= sprintf( '<a class="button button-primary wc-forward" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Pagar o Boleto', 'woo-boleto-paghiper' ) );
+			$html .= sprintf( '<a class="button button-primary wc-forward" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ), __( 'Pagar o Boleto', 'woo-boleto-paghiper' ) );
 	
 			$message = sprintf( __( '%sAtenção!%s Você NÃO vai receber o boleto pelos Correios.', 'woo-boleto-paghiper' ), '<strong>', '</strong>' ) . '<br />';
 			$message .= __( 'Clique no link abaixo e pague o boleto pelo seu aplicativo de Internet Banking .', 'woo-boleto-paghiper' ) . '<br />';
@@ -613,7 +621,7 @@ class WC_Paghiper_Base_Gateway {
 		}
 
 		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
-		$paghiperTransaction = new WC_PagHiper_Transaction( $order->id );
+		$paghiperTransaction = new WC_PagHiper_Transaction( $order->get_id() );
 
 		$html = '<div class="woo-paghiper-boleto-details" style="text-align: center;">';
 		$html .= '<h2>' . __( 'Pagamento', 'woo-boleto-paghiper' ) . '</h2>';
@@ -629,7 +637,7 @@ class WC_Paghiper_Base_Gateway {
 	
 			$html .= apply_filters( 'woo_paghiper_email_instructions', $message );
 	
-			$html .= '<br />' . sprintf( '<a class="button alt" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->order_key ) ), __( 'Veja o boleto completo &rarr;', 'woo-boleto-paghiper' ) ) . '<br />';
+			$html .= '<br />' . sprintf( '<a class="button alt" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ), __( 'Veja o boleto completo &rarr;', 'woo-boleto-paghiper' ) ) . '<br />';
 	
 			$html .= '<strong style="font-size: 0.8em">' . sprintf( __( 'Data de Vencimento: %s.', 'woo-boleto-paghiper' ), date( 'd/m/Y', time() + ( absint( $this->days_due_date ) * 86400 ) ) ) . '</strong>';
 	
