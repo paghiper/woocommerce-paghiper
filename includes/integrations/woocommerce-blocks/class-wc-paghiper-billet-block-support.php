@@ -18,8 +18,8 @@ final class WC_Paghiper_Billet_Gateway_Blocks_Support extends AbstractPaymentMet
 	public function get_payment_method_script_handles() {
 
 		wp_register_script(
-			'wc-paghiper-blocks-integration',
-			plugin_dir_url( __DIR__ ) . 'assets/js/index.js',
+			'wc-paghiper-billet-blocks-integration',
+			plugin_dir_url( __DIR__ ) . '/integrations/woocommerce-blocks/assets/js/paghiper-billet.js',
 			array(
 				'wc-blocks-registry',
 				'wc-settings',
@@ -30,7 +30,7 @@ final class WC_Paghiper_Billet_Gateway_Blocks_Support extends AbstractPaymentMet
 			true
 		);
 
-		return array( 'wc-paghiper-billet-integration' );
+		return array( 'wc-paghiper-billet-blocks-integration' );
 
 	}
 

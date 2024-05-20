@@ -18,8 +18,8 @@ final class  WC_Paghiper_Pix_Gateway_Blocks_Support extends AbstractPaymentMetho
 	public function get_payment_method_script_handles() {
 
 		wp_register_script(
-			'wc-paghiper-blocks-integration',
-			plugin_dir_url( __DIR__ ) . 'assets/js/index.js',
+			'wc-paghiper-pix-blocks-integration',
+			plugin_dir_url( __DIR__ ) . '/integrations/woocommerce-blocks/assets/js/paghiper-pix.js',
 			array(
 				'wc-blocks-registry',
 				'wc-settings',
@@ -30,7 +30,7 @@ final class  WC_Paghiper_Pix_Gateway_Blocks_Support extends AbstractPaymentMetho
 			true
 		);
 
-		return array( 'wc-paghiper-pix-integration' );
+		return array( 'wc-paghiper-pix-blocks-integration' );
 
 	}
 
