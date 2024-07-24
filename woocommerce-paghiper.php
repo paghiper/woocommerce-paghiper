@@ -84,10 +84,21 @@ class WC_Paghiper {
 			// Mostra opções de boleto para pedidos
 			add_filter( 'woocommerce_my_account_my_orders_actions', array( $this, 'order_banking_billet_link' ), 10, 2 );
 
-			// Declara compatibilidade com HPOS
-			add_action( 'before_woocommerce_init', function() {
-				if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
-					\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+			// Inicializamos gateways para a interface de blocks do Woocommerce
+			add_action( 'woocommerce_blocks_loaded', function() {
+
+				if ( class_exists( 'Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType' ) ) {
+					
+					require_once __DIR__ . '/includes/integrations/woocommerce-blocks/class-wc-paghiper-pix-blocks-support.php';
+					require_once __DIR__ . '/includes/integrations/woocommerce-blocks/class-wc-paghiper-billet-blocks-support.php';
+
+					add_action(
+						'woocommerce_blocks_payment_method_type_registration',
+						function( Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $payment_method_registry ) {
+							$payment_method_registry->register( new WC_Paghiper_Pix_Gateway_Blocks_Support() );
+							$payment_method_registry->register( new WC_Paghiper_Billet_Gateway_Blocks_Support() );
+						}
+					);
 				}
 			} );
 			
@@ -843,6 +854,19 @@ class WC_Paghiper {
  */
 register_activation_hook( __FILE__, array( 'WC_Paghiper', 'activate' ) );
 register_deactivation_hook( __FILE__, array( 'WC_Paghiper', 'deactivate' ) );
+
+/**
+ * Declare Woocommerce compatibilities
+ */
+add_action( 'before_woocommerce_init', function() {
+	if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+		// High Performance Order Storage
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+		// Woocommerce Blocks
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'cart_checkout_blocks',__FILE__, true );
+		
+	}
+} );
 
 /**
  * Initialize the plugin.

@@ -45,8 +45,6 @@ class WC_Paghiper_Billet_Gateway extends WC_Payment_Gateway {
 		add_action( 'woocommerce_email_after_order_table', array( $this->paghiper_gateway, 'email_instructions' ), 10, 2 );
 		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
 
-		add_action( 'woocommerce_blocks_loaded', array($this, 'initialize_gateway_block_support') );
-		add_action( 'before_woocommerce_init', array($this, 'declare_block_compatibility') );
 	}
 
 	/**
@@ -81,30 +79,6 @@ class WC_Paghiper_Billet_Gateway extends WC_Payment_Gateway {
 	 */
 	public function process_payment( $order_id, $is_frontend = true ) {
 		return $this->paghiper_gateway->process_payment( $order_id, $is_frontend = true );
-	}
-
-	public function initialize_gateway_block_support() {
-		require_once __DIR__ . '/includes/integrations/woocommerce-blocks/class-wc-paghiper-billet-blocks-support.php';
-
-		add_action(
-			'woocommerce_blocks_payment_method_type_registration',
-			function( Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $payment_method_registry ) {
-				$payment_method_registry->register( new WC_Paghiper_Billet_Gateway_Blocks_Support );
-			}
-		);
-
-	}
-
-	public function declare_block_compatibility() {
-
-		if( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
-			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
-					'cart_checkout_blocks',
-					__FILE__,
-					false // true (compatible, default) or false (not compatible)
-				);
-		}
-
 	}
 
 }
