@@ -68,10 +68,6 @@ class WC_Paghiper_Pix_Gateway extends WC_Payment_Gateway {
 		return $this->paghiper_gateway->validate_fields();
 	}
 
-	public function retrieve_order_total() {
-		return $this->get_order_total();
-	}
-
 	/**
 	 * Process the payment and return the result.
 	 *
