@@ -58,6 +58,7 @@ class WC_Paghiper_Base_Gateway {
 	 * @return bool
 	 */
 	public function is_available() {
+
 		// Test if is valid for use.
 		$available = ( 'yes' == $this->gateway->get_option( 'enabled' ) ) && $this->using_supported_currency();
 		$has_met_min_amount = false;
@@ -66,8 +67,9 @@ class WC_Paghiper_Base_Gateway {
 		$total = 0;
 
 		if ( WC()->cart ) {
+
 			$cart = WC()->cart;
-			$total = $this->gateway->retrieve_order_total();
+			$total = $this->retrieve_order_total();
 
 			$min_value = apply_filters( "woo_{$this->gateway->id}_max_value", 3, $cart );
 			$max_value = apply_filters( "woo_{$this->gateway->id}_max_value", PHP_INT_MAX, $cart );
@@ -86,6 +88,27 @@ class WC_Paghiper_Base_Gateway {
 		}
 
 		return false;
+	}
+
+	public function retrieve_order_total() {
+
+		$total    = 0;
+		$order_id = absint( get_query_var( 'order-pay' ) );
+
+		// Gets order total from "pay for order" page.
+		if ( 0 < $order_id ) {
+
+			$order = wc_get_order( $order_id );
+			if ( $order ) {
+				$total = (float) $order->get_total();
+			}
+
+		// Gets order total from cart/checkout.
+		} elseif ( 0 < WC()->cart->total ) {
+			$total = (float) WC()->cart->total;
+		}
+
+		return $total;
 	}
 
 
