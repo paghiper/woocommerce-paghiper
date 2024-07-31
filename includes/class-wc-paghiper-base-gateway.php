@@ -343,19 +343,36 @@ class WC_Paghiper_Base_Gateway {
 				<div class="clear"></div>';
 		}
 
+		// CPF/CNPJ default value
+		$payer_cpf_cnpj_value = NULL;
+
+		// CNPJ/CNPJ came from our own checkout field
 		if(array_key_exists('_'.$this->gateway->id.'_cpf_cnpj', $_POST)) {
 			$payer_cpf_cnpj_value = $_POST['_'.$this->gateway->id.'_cpf_cnpj'];
-		} elseif(isset($post_data) && is_array($post_data) && array_key_exists('billing_cpf', $post_data)) {
-			$payer_cpf_cnpj_value = $post_data['billing_cnpj'];
-		} else {
-			$payer_cpf_cnpj_value = NULL;
+
+		// Check if we have a TaxID field comes from Brazilian Market on Woocommerce 
+		} elseif(isset($post_data) && is_array($post_data) && ) {
+
+			// CPF validation
+			if(array_key_exists('billing_cpf', $post_data)) {
+				$payer_cpf_cnpj_value = $post_data['billing_cpf'];
+
+			// CNPJ validation
+			} elseif(array_key_exists('billing_cnpj', $post_data)) {
+				$payer_cpf_cnpj_value = $post_data['billing_cnpj'];
+			}
+
 		}
 
 		$payer_cpf_cnpj = preg_replace('/\D/', '', sanitize_text_field($payer_cpf_cnpj_value));
 
 		$has_payer_fields = $this->has_payer_fields();
 		if(!$has_payer_fields) {
-			$has_payer_fields = ((!is_null($payer_cpf_cnpj) && strlen($payer_cpf_cnpj) > 11 && !isset($post_data['billing_company'])) || !isset($post_data['_'.$this->gateway->id.'_payer_name']));
+			$has_payer_fields = ((!is_null($payer_cpf_cnpj) && 
+				strlen($payer_cpf_cnpj) > 11 && 
+				!array_key_exists('billing_company', $post_data) && 
+				!empty($post_data['billing_company'])) || 
+				(array_key_exists('_'.$this->gateway->id.'_cpf_cnpj', $post_data) && !isset($post_data['_'.$this->gateway->id.'_payer_name'])));
 		}
 
 		if(!$has_payer_fields) {
