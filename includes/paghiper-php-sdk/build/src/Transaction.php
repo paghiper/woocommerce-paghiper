@@ -28,7 +28,9 @@ class Transaction extends \PagHiper\PagHiper
     public function create(array $data = [])
     {
         $transaction_type = \array_key_exists('transaction_type', $data) && $data['transaction_type'] !== '' ? $data['transaction_type'] : 'pix';
-        $data['partners_id'] = $transaction_type == 'pix' ? "EMIIKD1R" : "S0CS1BY0";
+        if (!isset($data['partners_id'])) {
+            $data['partners_id']    = $transaction_type == 'pix' ? "EMIIKD1R" : "S0CS1BY0";
+        }
         $create_transaction = $this->paghiper->request($transaction_type == 'pix' ? self::CREATE_PIX_ENDPOINT : self::CREATE_BILLET_ENDPOINT, $data);
         $transaction = $transaction_type == 'pix' ? $create_transaction['pix_create_request'] : $create_transaction['create_request'];
         if ($transaction['result'] === 'reject') {
