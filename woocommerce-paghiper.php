@@ -826,15 +826,24 @@ class WC_Paghiper {
 		$upload_dir = $uploads['basedir'];
 		$upload_dir = $upload_dir . '/paghiper';
 
-		$test_filename = $upload_dir.'/'.time ();
-        if (touch($test_filename)) {
-            if (!chmod($test_filename, 0666)) {
+		if (!is_dir($upload_dir) || !is_writable($upload_dir)) {
+
+			include_once 'includes/views/notices/html-notice-paghiper-folder-not-writable.php';
+			
+		} else {
+
+			$test_filename = $upload_dir.'/'.time();
+			if (touch($test_filename)) {
+				if (!chmod($test_filename, 0666)) {
+					include_once 'includes/views/notices/html-notice-paghiper-folder-not-writable.php';
+				}
+
+				if(is_file($test_filename)) {
+					@unlink($test_filename);
+				}
+			} else {
 				include_once 'includes/views/notices/html-notice-paghiper-folder-not-writable.php';
 			}
-		}
-
-		if(file_exists($test_filename)) {
-			unlink($test_filename);
 		}
 
 		/**
