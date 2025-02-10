@@ -112,8 +112,8 @@ class WC_PagHiper_Transaction {
 					$paghiper_data = $this->order->get_meta( 'wc_paghiper_data' ) ;
 					$paghiper_data['order_transaction_due_date'] = $current_billet_due_date->format( 'Y-m-d' );
 
-					$update = $order->update_meta_data( 'wc_paghiper_data', $paghiper_data );
-					$save 	= $order->save();
+					$update = $this->order->update_meta_data( 'wc_paghiper_data', $paghiper_data );
+					$save 	= $this->order->save();
 
 					if(function_exists('update_meta_cache'))
 						update_meta_cache( 'shop_order', $this->order_id );
