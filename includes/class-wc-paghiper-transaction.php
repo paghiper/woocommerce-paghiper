@@ -448,6 +448,15 @@ class WC_PagHiper_Transaction {
 
 
 			if($this->gateway_id == 'paghiper_pix') {
+
+				if(!array_key_exists('pix_code', $response)) {
+					if ( $this->log ) {
+						wc_paghiper_add_log( $this->log, sprintf( 'Erro: %s', 'Não foi possível emitir seu PIX' ) );
+					}
+
+					throw new \Exception('Resposta da API não tem o dado pix_code e esse dado é fundamental. Cheque suas credenciais. Caso o erro persista, entre em contato com o suporte.');
+				}
+
 				$transaction = [
 					'qrcode_base64'		        => $response['pix_code']['qrcode_base64'],
 					'qrcode_image_url'	        => $response['pix_code']['qrcode_image_url'],
@@ -456,7 +465,17 @@ class WC_PagHiper_Transaction {
 					'pix_url'			        => $response['pix_code']['pix_url'],
 					'transaction_type'			=> 'pix'
 				];
+
 			} else {
+
+				if(!array_key_exists('bank_slip', $response)) {
+					if ( $this->log ) {
+						wc_paghiper_add_log( $this->log, sprintf( 'Erro: %s', 'Não foi possível emitir seu boleto' ) );
+					}
+
+					throw new \Exception('Resposta da API não tem o dado bank_slip e esse dado é fundamental. Cheque suas credenciais. Caso o erro persista, entre em contato com o suporte.');
+				}
+
 				$transaction = [
 					'digitable_line'			=> $response['bank_slip']['digitable_line'],
 					'url_slip'					=> $response['bank_slip']['url_slip'],
@@ -464,6 +483,7 @@ class WC_PagHiper_Transaction {
 					'barcode'					=> $response['bank_slip']['bar_code_number_to_image'],
 					'transaction_type'			=> 'billet'
 				];
+
 			}
 
 			$current_billet = array_merge($transaction_base_data, $transaction);
