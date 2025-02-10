@@ -22,6 +22,28 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 
     // Trata os retornos
 
+    // Resolvemos disputas entre notifications enviadas simultaneamente
+    $request_bytes      = openssl_random_pseudo_bytes(16, $is_strong);
+    $request_id         = bin2hex($request_bytes);
+    $store_request_id   = $order->update_meta_data( 'wc_paghiper_ipn_request_id', $request_id );
+
+    if(!$lock_id || !$is_strong || !$store_request_id) {
+        if ( $paghiper_log ) {
+            wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: Não foi possível gerar um ID único para a requisição. O pedido não será processado.', $order_no) );
+        }
+        return;
+    }
+
+    sleep(3);
+
+    $last_request_id = $order->get_meta( 'wc_paghiper_ipn_request_id' );
+    if($request_id !== $last_request_id) {
+        if ( $paghiper_log ) {
+            wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: Requisição de notificação duplicada. O pedido não será processado.', $order_no) );
+        }
+        return;
+    }
+
     // Primeiro checa se o pedido ja foi pago.
     $statuses = ((strpos($order_status, 'wc-') === FALSE) ? array('processing', 'completed') : array('wc-processing', 'wc-completed'));
     $already_paid = (in_array( $order_status, $statuses )) ? true : false;
