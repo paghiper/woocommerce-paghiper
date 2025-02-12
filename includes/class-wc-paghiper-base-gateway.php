@@ -351,7 +351,7 @@ class WC_Paghiper_Base_Gateway {
 			$payer_cpf_cnpj_value = $_POST['_'.$this->gateway->id.'_cpf_cnpj'];
 
 		// Check if we have a TaxID field comes from Brazilian Market on Woocommerce 
-		} elseif(isset($post_data) && is_array($post_data) && ) {
+		} elseif(isset($post_data) && is_array($post_data)) {
 
 			// CPF validation
 			if(array_key_exists('billing_cpf', $post_data)) {
