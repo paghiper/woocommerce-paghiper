@@ -619,10 +619,11 @@ class WC_PagHiper_Transaction {
 
 		$due_date = (DateTime::createFromFormat('Y-m-d', $this->order_data['order_transaction_due_date']))->format('d/m/Y');
 
-		$html = '<div class="woo_paghiper_digitable_line" style="margin-bottom: 40px;">';
 		$assets_url = wc_paghiper_assets_url().'images';
 
 		if($this->gateway_id !== 'paghiper_pix') :
+
+			$html = '<div class="woo_paghiper_digitable_line" style="margin-bottom: 40px;">';
 			
 			$barcode_number = $this->_get_barcode();
 			if(!$barcode_number) {
@@ -653,6 +654,8 @@ class WC_PagHiper_Transaction {
 			}
 
 		else :
+
+			$html = '<div class="woo_paghiper_digitable_line" style="max-width: 700px; margin-bottom: 0 auto 40px;">';
 
 			$barcode_url = $this->_get_barcode();
 			if(!$barcode_url) {
