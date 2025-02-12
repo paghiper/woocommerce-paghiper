@@ -2,3 +2,5 @@
 .svn
 
 assets/src/node_modules/
+
+includes/integrations/woocommerce-blocks/assets/js/node_modules/

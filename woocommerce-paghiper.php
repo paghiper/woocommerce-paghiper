@@ -5,14 +5,14 @@
  * Description: 			Ofereça a seus clientes pagamento por PIX e boleto bancário com a PagHiper. Fácil, prático e rapido!
  * Author: 					PagHiper Pagamentos
  * Author URI: 				https://www.paghiper.com
- * Version: 				2.3.3
- * Tested up to: 			6.5.0
+ * Version: 				2.4.0
+ * Tested up to: 			6.7.2
  * License:              	GPLv3
  * License URI:          	http://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain: 			woo-boleto-paghiper
  * Domain Path: 			/languages/
  * WC requires at least: 	4.0.0
- * WC tested up to: 		8.7.0
+ * WC tested up to: 		9.7.0
  */	
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -33,7 +33,7 @@ class WC_Paghiper {
 	 *
 	 * @var string
 	 */
-	const VERSION = '2.3.3';
+	const VERSION = '2.4.0';
 
 	/**
 	 * Instance of this class.
@@ -84,10 +84,21 @@ class WC_Paghiper {
 			// Mostra opções de boleto para pedidos
 			add_filter( 'woocommerce_my_account_my_orders_actions', array( $this, 'order_banking_billet_link' ), 10, 2 );
 
-			// Declara compatibilidade com HPOS
-			add_action( 'before_woocommerce_init', function() {
-				if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
-					\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+			// Inicializamos gateways para a interface de blocks do Woocommerce
+			add_action( 'woocommerce_blocks_loaded', function() {
+
+				if ( class_exists( 'Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType' ) ) {
+					
+					require_once __DIR__ . '/includes/integrations/woocommerce-blocks/class-wc-paghiper-pix-blocks-support.php';
+					require_once __DIR__ . '/includes/integrations/woocommerce-blocks/class-wc-paghiper-billet-blocks-support.php';
+
+					add_action(
+						'woocommerce_blocks_payment_method_type_registration',
+						function( Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $payment_method_registry ) {
+							$payment_method_registry->register( new WC_Paghiper_Pix_Gateway_Blocks_Support() );
+							$payment_method_registry->register( new WC_Paghiper_Billet_Gateway_Blocks_Support() );
+						}
+					);
 				}
 			} );
 			
@@ -815,15 +826,24 @@ class WC_Paghiper {
 		$upload_dir = $uploads['basedir'];
 		$upload_dir = $upload_dir . '/paghiper';
 
-		$test_filename = $upload_dir.'/'.time ();
-        if (touch($test_filename)) {
-            if (!chmod($test_filename, 0666)) {
+		if (!is_dir($upload_dir) || !is_writable($upload_dir)) {
+
+			include_once 'includes/views/notices/html-notice-paghiper-folder-not-writable.php';
+			
+		} else {
+
+			$test_filename = $upload_dir.'/'.time();
+			if (touch($test_filename)) {
+				if (!chmod($test_filename, 0666)) {
+					include_once 'includes/views/notices/html-notice-paghiper-folder-not-writable.php';
+				}
+
+				if(is_file($test_filename)) {
+					@unlink($test_filename);
+				}
+			} else {
 				include_once 'includes/views/notices/html-notice-paghiper-folder-not-writable.php';
 			}
-		}
-
-		if(file_exists($test_filename)) {
-			unlink($test_filename);
 		}
 
 		/**
@@ -843,6 +863,19 @@ class WC_Paghiper {
  */
 register_activation_hook( __FILE__, array( 'WC_Paghiper', 'activate' ) );
 register_deactivation_hook( __FILE__, array( 'WC_Paghiper', 'deactivate' ) );
+
+/**
+ * Declare Woocommerce compatibilities
+ */
+add_action( 'before_woocommerce_init', function() {
+	if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+		// High Performance Order Storage
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+		// Woocommerce Blocks
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'cart_checkout_blocks',__FILE__, true );
+		
+	}
+} );
 
 /**
  * Initialize the plugin.

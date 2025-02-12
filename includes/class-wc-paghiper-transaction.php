@@ -112,8 +112,8 @@ class WC_PagHiper_Transaction {
 					$paghiper_data = $this->order->get_meta( 'wc_paghiper_data' ) ;
 					$paghiper_data['order_transaction_due_date'] = $current_billet_due_date->format( 'Y-m-d' );
 
-					$update = $order->update_meta_data( 'wc_paghiper_data', $paghiper_data );
-					$save 	= $order->save();
+					$update = $this->order->update_meta_data( 'wc_paghiper_data', $paghiper_data );
+					$save 	= $this->order->save();
 
 					if(function_exists('update_meta_cache'))
 						update_meta_cache( 'shop_order', $this->order_id );
@@ -448,6 +448,15 @@ class WC_PagHiper_Transaction {
 
 
 			if($this->gateway_id == 'paghiper_pix') {
+
+				if(!array_key_exists('pix_code', $response)) {
+					if ( $this->log ) {
+						wc_paghiper_add_log( $this->log, sprintf( 'Erro: %s', 'Não foi possível emitir seu PIX' ) );
+					}
+
+					throw new \Exception('Resposta da API não tem o dado pix_code e esse dado é fundamental. Cheque suas credenciais. Caso o erro persista, entre em contato com o suporte.');
+				}
+
 				$transaction = [
 					'qrcode_base64'		        => $response['pix_code']['qrcode_base64'],
 					'qrcode_image_url'	        => $response['pix_code']['qrcode_image_url'],
@@ -456,7 +465,17 @@ class WC_PagHiper_Transaction {
 					'pix_url'			        => $response['pix_code']['pix_url'],
 					'transaction_type'			=> 'pix'
 				];
+
 			} else {
+
+				if(!array_key_exists('bank_slip', $response)) {
+					if ( $this->log ) {
+						wc_paghiper_add_log( $this->log, sprintf( 'Erro: %s', 'Não foi possível emitir seu boleto' ) );
+					}
+
+					throw new \Exception('Resposta da API não tem o dado bank_slip e esse dado é fundamental. Cheque suas credenciais. Caso o erro persista, entre em contato com o suporte.');
+				}
+
 				$transaction = [
 					'digitable_line'			=> $response['bank_slip']['digitable_line'],
 					'url_slip'					=> $response['bank_slip']['url_slip'],
@@ -464,6 +483,7 @@ class WC_PagHiper_Transaction {
 					'barcode'					=> $response['bank_slip']['bar_code_number_to_image'],
 					'transaction_type'			=> 'billet'
 				];
+
 			}
 
 			$current_billet = array_merge($transaction_base_data, $transaction);
@@ -493,45 +513,49 @@ class WC_PagHiper_Transaction {
 				}
 			}
 
-			// Download the attachment to our storage directory
-			$transaction_id = 'Boleto bancário - '.$response['transaction_id'];
-			$billet_url		= $response['bank_slip']['url_slip_pdf'];
-
-			$uploads = wp_upload_dir();
-			$upload_dir = $uploads['basedir'];
-			$upload_dir = $upload_dir . '/paghiper';
-
-			$billet_pdf_file = $upload_dir.'/'.$transaction_id.'.pdf';
-
 			// Don't try downloading PDF files for PIX transacitons
-			if(in_array($this->gateway_id, ['paghiper_billet', 'paghiper']) && !file_exists($billet_pdf_file)) {
+			if(in_array($this->gateway_id, ['paghiper_billet', 'paghiper'])) {
 
-				global $wp_filesystem;
-				require_once ABSPATH . 'wp-admin/includes/file.php'; // for get_filesystem_method(), request_filesystem_credentials()
-
-				if ( empty( $wp_filesystem ) ) {
-					$creds = request_filesystem_credentials( admin_url(), '', FALSE, FALSE, NULL ); // @since 2.5.0
-					
-					// initialize the API @since 2.5.0
-					WP_Filesystem( $creds );
-				}
-				
-				$billet_download = wp_remote_get($billet_url);
-
-				if ( is_array( $billet_download ) && ! is_wp_error( $billet_download ) ) {
-
-					$billet_content = $billet_download['body'];
+				// Download the attachment to our storage directory
+				$transaction_id = 'Boleto bancário - '.$response['transaction_id'];
+				$billet_url		= $response['bank_slip']['url_slip_pdf'];
 	
-					if(get_filesystem_method() == 'direct') {
-						file_put_contents( $billet_pdf_file, $billet_content, LOCK_EX );
-					} else {
-						$wp_filesystem->put_contents($billet_pdf_file, $billet_content);
-					}
+				$uploads = wp_upload_dir();
+				$upload_dir = $uploads['basedir'];
+				$upload_dir = $upload_dir . '/paghiper';
+	
+				$billet_pdf_file = $upload_dir.'/'.$transaction_id.'.pdf';
 
-				} elseif( is_wp_error( $billet_download ) ) {
-					if ( $this->log ) {
-						wc_paghiper_add_log( $this->log, sprintf( 'Erro: %s', $billet_download->get_error_message() ) );
+				if(!is_file($billet_pdf_file)) {
+	
+					global $wp_filesystem;
+					require_once ABSPATH . 'wp-admin/includes/file.php'; // for get_filesystem_method(), request_filesystem_credentials()
+	
+					if ( empty( $wp_filesystem ) ) {
+						$creds = request_filesystem_credentials( admin_url(), '', FALSE, FALSE, NULL ); // @since 2.5.0
+						
+						// initialize the API @since 2.5.0
+						WP_Filesystem( $creds );
 					}
+					
+					$billet_download = wp_remote_get($billet_url);
+	
+					if ( is_array( $billet_download ) && ! is_wp_error( $billet_download ) ) {
+	
+						$billet_content = $billet_download['body'];
+		
+						if(get_filesystem_method() == 'direct') {
+							file_put_contents( $billet_pdf_file, $billet_content, LOCK_EX );
+						} else {
+							$wp_filesystem->put_contents($billet_pdf_file, $billet_content);
+						}
+	
+					} elseif( is_wp_error( $billet_download ) ) {
+						if ( $this->log ) {
+							wc_paghiper_add_log( $this->log, sprintf( 'Erro: %s', $billet_download->get_error_message() ) );
+						}
+					}
+	
 				}
 
 			}
@@ -595,10 +619,11 @@ class WC_PagHiper_Transaction {
 
 		$due_date = (DateTime::createFromFormat('Y-m-d', $this->order_data['order_transaction_due_date']))->format('d/m/Y');
 
-		$html = '<div class="woo_paghiper_digitable_line" style="margin-bottom: 40px;">';
 		$assets_url = wc_paghiper_assets_url().'images';
 
 		if($this->gateway_id !== 'paghiper_pix') :
+
+			$html = '<div class="woo_paghiper_digitable_line" style="margin-bottom: 40px;">';
 			
 			$barcode_number = $this->_get_barcode();
 			if(!$barcode_number) {
@@ -629,6 +654,8 @@ class WC_PagHiper_Transaction {
 			}
 
 		else :
+
+			$html = '<div class="woo_paghiper_digitable_line" style="max-width: 700px; margin-bottom: 0 auto 40px;">';
 
 			$barcode_url = $this->_get_barcode();
 			if(!$barcode_url) {

@@ -131,3 +131,35 @@
 .paghiper-hidden {
 	display: none !important;
 }
+
+.wc-block-components-form div.paghiper-taxid-fieldset {
+
+	label {
+		line-height: 1;
+	}
+
+	input[type=text] {
+
+		transition: background 0.15s ease, border 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+		border: 1px solid #e6e6e6;
+		box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.03), 0px 3px 6px rgba(0, 0, 0, 0.02);
+
+		&:focus {
+			outline: 0px;
+			border-color: hsla(210, 96%, 45%, 50%);
+			box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.03), 
+				0px 3px 6px rgba(0, 0, 0, 0.02), 
+				0 0 0 3px hsla(210, 96%, 45%, 25%), 
+				0 1px 1px 0 rgba(0, 0, 0, 0.08);
+		}
+		&.invalid {
+			border-color: #df1b41;
+			box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.03), 0px 3px 6px rgba(0, 0, 0, 0.02), 0 0 0 1px #df1b41;
+		}
+	}
+
+	.wc-block-components-validation-error {
+		font-size: 0.93rem;
+		color: #df1b41;
+	}
+}

@@ -1,4 +1,5 @@
 <?php
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -20,6 +21,10 @@ class WC_Paghiper_Pix_Gateway extends WC_Payment_Gateway {
 		$this->id                 = 'paghiper_pix';
 		$this->icon               = apply_filters( 'woo_paghiper_pix_icon', plugins_url( 'assets/images/pix.png', plugin_dir_path( __FILE__ ) ) );
 		$this->has_fields         = true;
+		$this->supports           = array(
+			'pre-orders',
+			'products'
+		);
 		$this->method_title       = __( 'PagHiper PIX', 'woo-boleto-paghiper' );
 		$this->method_description = __( 'Receba pagamentos por PIX usando PagHiper.', 'woo-boleto-paghiper' );
 
@@ -61,10 +66,6 @@ class WC_Paghiper_Pix_Gateway extends WC_Payment_Gateway {
 
 	public function validate_fields() {
 		return $this->paghiper_gateway->validate_fields();
-	}
-
-	public function retrieve_order_total() {
-		return $this->get_order_total();
 	}
 
 	/**

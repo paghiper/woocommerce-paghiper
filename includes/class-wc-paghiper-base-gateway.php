@@ -58,6 +58,7 @@ class WC_Paghiper_Base_Gateway {
 	 * @return bool
 	 */
 	public function is_available() {
+
 		// Test if is valid for use.
 		$available = ( 'yes' == $this->gateway->get_option( 'enabled' ) ) && $this->using_supported_currency();
 		$has_met_min_amount = false;
@@ -66,8 +67,9 @@ class WC_Paghiper_Base_Gateway {
 		$total = 0;
 
 		if ( WC()->cart ) {
+
 			$cart = WC()->cart;
-			$total = $this->gateway->retrieve_order_total();
+			$total = $this->retrieve_order_total();
 
 			$min_value = apply_filters( "woo_{$this->gateway->id}_max_value", 3, $cart );
 			$max_value = apply_filters( "woo_{$this->gateway->id}_max_value", PHP_INT_MAX, $cart );
@@ -86,6 +88,27 @@ class WC_Paghiper_Base_Gateway {
 		}
 
 		return false;
+	}
+
+	public function retrieve_order_total() {
+
+		$total    = 0;
+		$order_id = absint( get_query_var( 'order-pay' ) );
+
+		// Gets order total from "pay for order" page.
+		if ( 0 < $order_id ) {
+
+			$order = wc_get_order( $order_id );
+			if ( $order ) {
+				$total = (float) $order->get_total();
+			}
+
+		// Gets order total from cart/checkout.
+		} elseif ( 0 < WC()->cart->total ) {
+			$total = (float) WC()->cart->total;
+		}
+
+		return $total;
 	}
 
 
@@ -320,19 +343,36 @@ class WC_Paghiper_Base_Gateway {
 				<div class="clear"></div>';
 		}
 
+		// CPF/CNPJ default value
+		$payer_cpf_cnpj_value = NULL;
+
+		// CNPJ/CNPJ came from our own checkout field
 		if(array_key_exists('_'.$this->gateway->id.'_cpf_cnpj', $_POST)) {
 			$payer_cpf_cnpj_value = $_POST['_'.$this->gateway->id.'_cpf_cnpj'];
-		} elseif(isset($post_data) && is_array($post_data) && array_key_exists('billing_cpf', $post_data)) {
-			$payer_cpf_cnpj_value = $post_data['billing_cnpj'];
-		} else {
-			$payer_cpf_cnpj_value = NULL;
+
+		// Check if we have a TaxID field comes from Brazilian Market on Woocommerce 
+		} elseif(isset($post_data) && is_array($post_data)) {
+
+			// CPF validation
+			if(array_key_exists('billing_cpf', $post_data)) {
+				$payer_cpf_cnpj_value = $post_data['billing_cpf'];
+
+			// CNPJ validation
+			} elseif(array_key_exists('billing_cnpj', $post_data)) {
+				$payer_cpf_cnpj_value = $post_data['billing_cnpj'];
+			}
+
 		}
 
 		$payer_cpf_cnpj = preg_replace('/\D/', '', sanitize_text_field($payer_cpf_cnpj_value));
 
 		$has_payer_fields = $this->has_payer_fields();
 		if(!$has_payer_fields) {
-			$has_payer_fields = ((!is_null($payer_cpf_cnpj) && strlen($payer_cpf_cnpj) > 11 && !isset($post_data['billing_company'])) || !isset($post_data['_'.$this->gateway->id.'_payer_name']));
+			$has_payer_fields = ((!is_null($payer_cpf_cnpj) && 
+				strlen($payer_cpf_cnpj) > 11 && 
+				!array_key_exists('billing_company', $post_data) && 
+				!empty($post_data['billing_company'])) || 
+				(array_key_exists('_'.$this->gateway->id.'_cpf_cnpj', $post_data) && !isset($post_data['_'.$this->gateway->id.'_payer_name'])));
 		}
 
 		if(!$has_payer_fields) {
@@ -474,7 +514,7 @@ class WC_Paghiper_Base_Gateway {
 
 			// Mark as on-hold (we're awaiting the ticket).
 			$waiting_status = (!empty($this->set_status_when_waiting)) ? $this->set_status_when_waiting : 'on-hold';
-			$order->update_status( $waiting_status, __( 'PagHiper: '. ($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'Boleto' .' gerado e enviado por e-mail.', 'woo-boleto-paghiper' ) );
+			$order->update_status( $waiting_status, __( 'PagHiper: '. (($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'Boleto') .' gerado e enviado por e-mail.', 'woo-boleto-paghiper' ) );
 
 		} else {
 
