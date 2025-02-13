@@ -369,10 +369,16 @@ class WC_Paghiper_Base_Gateway {
 		$has_payer_fields = $this->has_payer_fields();
 		if(!$has_payer_fields) {
 			$has_payer_fields = ((!is_null($payer_cpf_cnpj) && 
-				strlen($payer_cpf_cnpj) > 11 && 
-				!array_key_exists('billing_company', $post_data) && 
-				!empty($post_data['billing_company'])) || 
-				(array_key_exists('_'.$this->gateway->id.'_cpf_cnpj', $post_data) && !isset($post_data['_'.$this->gateway->id.'_payer_name'])));
+									strlen($payer_cpf_cnpj) > 11 && 
+									is_array($post_data) &&
+									array_key_exists('billing_company', $post_data) && 
+									!empty($post_data['billing_company'])
+								) || 
+								(is_array($post_data) &&
+									array_key_exists('_'.$this->gateway->id.'_cpf_cnpj', $post_data) && 
+									array_key_exists('_'.$this->gateway->id.'_payer_name', $post_data) &&
+									!empty($post_data['_'.$this->gateway->id.'_payer_name'])
+								));
 		}
 
 		if(!$has_payer_fields) {
