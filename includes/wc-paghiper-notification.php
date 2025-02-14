@@ -27,9 +27,12 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
     $request_id         = bin2hex($request_bytes);
     $store_request_id   = $order->update_meta_data( 'wc_paghiper_ipn_request_id', $request_id );
 
-    if(!$lock_id || !$is_strong || !$store_request_id) {
+    if(!$request_id || !$is_strong || !$store_request_id) {
         if ( $paghiper_log ) {
             wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: Não foi possível gerar um ID único para a requisição. O pedido não será processado.', $order_no) );
+            wc_paghiper_add_log( $paghiper_log, sprintf('Request ID: %s', var_export($request_id, TRUE)) );
+            wc_paghiper_add_log( $paghiper_log, sprintf('Request ID contem chave forte? %s', var_export($is_strong, TRUE)) );
+            wc_paghiper_add_log( $paghiper_log, sprintf('Request ID for armazenado corretamente?: %s', var_export($store_request_id, TRUE)) );
         }
         return;
     }
