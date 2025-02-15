@@ -112,19 +112,14 @@ class WC_PagHiper_Transaction {
 					$paghiper_data = $this->order->get_meta( 'wc_paghiper_data' ) ;
 					$paghiper_data['order_transaction_due_date'] = $current_billet_due_date->format( 'Y-m-d' );
 
-					$update = $this->order->update_meta_data( 'wc_paghiper_data', $paghiper_data );
-					$save 	= $this->order->save();
+					$this->order->update_meta_data( 'wc_paghiper_data', $paghiper_data );
+					$this->order->save();
 
 					if(function_exists('update_meta_cache'))
 						update_meta_cache( 'shop_order', $this->order_id );
 
 					$this->order_data = $paghiper_data;
-
-					if($update && $save) {
-						$this->order->add_order_note( sprintf( __( 'Data de vencimento ajustada para %s', 'woo_paghiper' ), $current_billet_due_date->format('d/m/Y') ) );
-					} else {
-						$this->order->add_order_note( sprintf( __( 'Data de vencimento deveria ser ajustada para %s mas houve um erro ao salvar a nova data.', 'woo_paghiper' ), $current_billet_due_date->format('d/m/Y') ) );
-					}
+					$this->order->add_order_note( sprintf( __( 'Data de vencimento ajustada para %s', 'woo_paghiper' ), $current_billet_due_date->format('d/m/Y') ) );
 
 					$log_message = 'Pedido #%s: Data de vencimento do boleto não bate com a informada no pedido. Cheque a opção "Vencimento em finais de semana" no <a href="https://www.paghiper.com/painel/prazo-vencimento-boleto/" target="_blank">Painel da PagHiper</a>.';
 					wc_paghiper_add_log( $this->log, sprintf( $log_message, $this->order_id ) );
@@ -207,20 +202,12 @@ class WC_PagHiper_Transaction {
 			$this->order_data = $order_data;
 
 
-			$update = $this->order->update_meta_data( 'wc_paghiper_data', $order_data );
-			$save 	= $order->save();
+			$this->order->update_meta_data( 'wc_paghiper_data', $order_data );
+			$order->save();
 
 			if(function_exists('update_meta_cache'))
 				update_meta_cache( 'shop_order', $this->order_id );
 
-			if(!$update || !$save) {
-				if ( $this->log ) {
-					wc_paghiper_add_log( $this->log, sprintf( 'Não foi possível guardar a data de vencimento: %s', var_export( $update, true) ) );
-					wc_paghiper_add_log( $this->log, sprintf( 'Dados a guardar: %s', var_export( $order_data, true) ) );
-				}
-			}
-
-			
 		}
 
 		$maybe_add_workdays = ($this->gateway_id == 'paghiper_pix') ? null : $this->gateway_settings['skip_non_workdays'];
@@ -496,22 +483,13 @@ class WC_PagHiper_Transaction {
 			$order_data = (is_array($this->order_data)) ? $this->order_data : array();
 			$data = array_merge($this->order_data, $current_billet);
 
-			$update = $this->order->update_meta_data( 'wc_paghiper_data', $data );
-			$save 	= $this->order->save();
+			$this->order->update_meta_data( 'wc_paghiper_data', $data );
+			$this->order->save();
 
 			if(function_exists('update_meta_cache'))
 				update_meta_cache( 'shop_order', $this->order_id );
 
 			$this->order_data = $data;
-
-			if(!$update || !$save) {
-				if ( $this->log ) {
-					wc_paghiper_add_log( $this->log, sprintf( 'Não foi possível guardar os dados do boleto: %s', var_export( $update, true) ) );
-					wc_paghiper_add_log( $this->log, sprintf( 'Dados a guardar: %s', var_export( $data, true) ) );
-					wc_paghiper_add_log( $this->log, sprintf( 'Operação update_meta_data retornou: %s', var_export( $update, true) ) );
-					wc_paghiper_add_log( $this->log, sprintf( 'Operação order->save() retornou: %s', var_export( $save, true) ) );
-				}
-			}
 
 			// Don't try downloading PDF files for PIX transacitons
 			if(in_array($this->gateway_id, ['paghiper_billet', 'paghiper'])) {
