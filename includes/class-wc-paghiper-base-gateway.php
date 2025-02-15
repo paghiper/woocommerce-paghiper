@@ -374,7 +374,8 @@ class WC_Paghiper_Base_Gateway {
 									array_key_exists('billing_company', $post_data) && 
 									!empty($post_data['billing_company'])
 								) || 
-								(is_array($post_data) &&
+								(isset($post_data) &&
+									is_array($post_data) &&
 									array_key_exists('_'.$this->gateway->id.'_cpf_cnpj', $post_data) && 
 									array_key_exists('_'.$this->gateway->id.'_payer_name', $post_data) &&
 									!empty($post_data['_'.$this->gateway->id.'_payer_name'])
