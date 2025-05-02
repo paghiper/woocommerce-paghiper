@@ -49,7 +49,7 @@ function wc_paghiper_get_paghiper_url_by_order_id( $order_id ) {
  * @return string
  */
 function wc_paghiper_initialize_log( $debug_settings ) {
-	return ( 'yes' == $debug_settings ) ? ((function_exists( 'wc_get_logger' )) ? wc_get_logger() : new WC_Logger()) : false;
+	return ( 'yes' == $debug_settings ) ? (new WC_Logger()) : false;
 }
 
 /**
@@ -57,9 +57,16 @@ function wc_paghiper_initialize_log( $debug_settings ) {
  *
  * @return object
  */
-function wc_paghiper_add_log( $log, $message ) {
-	$gateway_id = 'paghiper';
-	return ($log && $log->add( $gateway_id, $message )) ? TRUE : FALSE;
+function wc_paghiper_add_log( $logger, $message, $context = [], $level = WC_Log_Levels::NOTICE ) {
+
+	if($logger) {
+		$context['source'] = 'paghiper';
+		if($logger->log( $level, $message, $context )) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 /**
