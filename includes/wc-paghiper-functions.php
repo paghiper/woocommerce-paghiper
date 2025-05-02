@@ -49,7 +49,7 @@ function wc_paghiper_get_paghiper_url_by_order_id( $order_id ) {
  * @return string
  */
 function wc_paghiper_initialize_log( $debug_settings ) {
-	return ( 'yes' == $debug_settings ) ? ((function_exists( 'wc_get_logger' )) ? wc_get_logger() : new WC_Logger()) : NULL;
+	return ( 'yes' == $debug_settings ) ? ((function_exists( 'wc_get_logger' )) ? wc_get_logger() : new WC_Logger()) : false;
 }
 
 /**
@@ -132,4 +132,17 @@ function wc_paghiper_check_sdk_includes( $log = false ) {
 	}
 
 	return true;
+}
+
+/**
+ * Includes the SDK autoload file
+ * 
+ * @return boolean
+ */
+
+function wc_paghiper_initialize_sdk( $log = false ) {
+
+	require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/build/vendor/scoper-autoload.php';
+	return wc_paghiper_check_sdk_includes( $log );
+
 }

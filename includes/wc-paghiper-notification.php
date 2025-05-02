@@ -164,8 +164,7 @@ function woocommerce_paghiper_check_ipn_response() {
     try {
 
         // Include SDK for our call
-        require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/build/vendor/scoper-autoload.php';
-        wc_paghiper_check_sdk_includes( ($paghiper_log) ? $paghiper_log : false );
+        wc_paghiper_initialize_sdk($paghiper_log);
 
         $PagHiperAPI 	= new PagHiper($api_key, $token);
         $response 		= $PagHiperAPI->transaction()->process_ipn_notification($_POST['notification_id'], $_POST['transaction_id'], $transaction_type);

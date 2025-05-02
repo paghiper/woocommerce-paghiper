@@ -407,8 +407,7 @@ class WC_PagHiper_Transaction {
 		}
 
 		// Include SDK for our call
-		require_once WC_Paghiper::get_plugin_path() . 'includes/paghiper-php-sdk/build/vendor/scoper-autoload.php';
-		wc_paghiper_check_sdk_includes( ($this->log) ? $this->log : false );
+        wc_paghiper_initialize_sdk($this->log);
 		
 		$transaction_data = $this->prepare_data_for_transaction();
 		if(!$transaction_data) {
