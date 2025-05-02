@@ -43,7 +43,8 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 
     sleep(3);
 
-    $last_request_id = $order->get_meta( 'wc_paghiper_ipn_request_id' );
+    $order              = wc_get_order($order_no);
+    $last_request_id    = $order->get_meta( 'wc_paghiper_ipn_request_id' );
     if($request_id !== $last_request_id) {
         if ( $paghiper_log ) {
             wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: Requisição de notificação duplicada. O pedido não será processado.', $order_no) );
@@ -109,12 +110,22 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
                 $order->save();
 
                 // Changing the order for processing and reduces the stock.
-                $order->payment_complete();
+                $target_status = $settings['set_status_when_paid'];
+                $default_paid_statuses = ['wc-completed', 'wc-processing'];
 
-                if(strpos('paid', $settings['set_status_when_paid']) === FALSE) {
-                    $order->update_status( $settings['set_status_when_paid'], __( 'PagHiper: '.ucfirst($gateway_name).' Pago.', 'woo_paghiper' ) );
+                if(!in_array($target_status, $default_paid_statuses)) {
+                    $paid_statuses = $default_paid_statuses;
+                    $paid_statuses[] = $target_status;
                 } else {
-                    $order->add_order_note( __( 'PagHiper: Pagamento compensado.', 'woo_paghiper' ) );
+                    $paid_statuses = $target_status;
+                }
+
+                if(!$order->has_status( $paid_statuses )) {
+                    $order->payment_complete();
+                    $order->update_status( $target_status, __( 'PagHiper: '.ucfirst($gateway_name).' pago.', 'woo_paghiper' ) );
+
+                } else {
+                    $order->add_order_note( __( 'PagHiper: '.ucfirst($gateway_name).' compensado.', 'woo_paghiper' ) );
                 }
 
                 break;
