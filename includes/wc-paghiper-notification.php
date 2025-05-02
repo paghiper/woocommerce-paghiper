@@ -106,7 +106,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
             case "paid" :
 
                 // For WooCommerce 2.2 or later.
-                $order->add_meta_data( $order_no, '_transaction_id', (string) $return['transaction_id'] );
+                $order->add_meta_data( '_transaction_id', (string) $return['transaction_id'] );
                 $order->save();
 
                 // Changing the order for processing and reduces the stock.
