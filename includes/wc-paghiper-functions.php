@@ -61,6 +61,7 @@ function wc_paghiper_add_log( $logger, $message, $context = [], $level = WC_Log_
 
 	if($logger) {
 		$context['source'] = 'paghiper';
+		$context['plugin_version'] = WC_Paghiper::VERSION;
 		if($logger->log( $level, $message, $context )) {
 			return true;
 		}
