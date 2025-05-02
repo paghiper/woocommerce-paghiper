@@ -203,9 +203,12 @@ function woocommerce_paghiper_check_ipn_response() {
         if($response['result'] == 'success') {
 
             if ( $paghiper_log ) {
-                wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: Post de retorno da PagHiper confirmado.', $response['order_id']) );
-                wc_paghiper_add_log( $paghiper_log, sprintf('Payload recebido: %s', var_export($_POST, TRUE)) );
-                wc_paghiper_add_log( $paghiper_log, sprintf('Payload completo: %s', var_export($response, TRUE)) );
+                $context = [
+                    'received_payload' => var_export($_POST, TRUE),
+                    'retrieved_payload' => var_export($response, TRUE)
+                ];
+
+                wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: Post de retorno da PagHiper confirmado.', $response['order_id']), $context );
             }
 
             // Print a 200 HTTP code for the notification engine
