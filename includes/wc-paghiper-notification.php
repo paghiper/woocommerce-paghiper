@@ -218,8 +218,15 @@ function woocommerce_paghiper_check_ipn_response() {
         } else {
 
             if ( $paghiper_log ) {
-                $error = $response->get_error_message();
-                wc_paghiper_add_log( $paghiper_log, sprintf( 'Erro: não foi possível checar o post de retorno da PagHiper. Mensagem: %s', var_export($response, TRUE) ) );
+                $message    = sprintf( 'Não foi possível checar o post de retorno da PagHiper.');
+
+                $error      = $response->get_error_message();
+                $context    = [
+                    'error'             => $error,
+                    'received_payload'  => var_export($_POST, TRUE),
+                    'retrieved_payload' => var_export($response, TRUE)
+                ];
+                wc_paghiper_add_log( $paghiper_log, $message, $context, WC_Log_Levels::CRITICAL );
             }
 
             wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), array( 'response' => 401 ) );
@@ -230,8 +237,16 @@ function woocommerce_paghiper_check_ipn_response() {
         // catches all ClientExceptions
 
             if ( $paghiper_log ) {
-                $error = $e->getMessage();
-                wc_paghiper_add_log( $paghiper_log, sprintf( 'Erro (ClientException): não foi possível checar o post de retorno da PagHiper. Mensagem: %s', var_export($response, TRUE) ) );
+                $message    = sprintf( 'Não foi possível checar o post de retorno da PagHiper.');
+
+                $error      = $e->getMessage();
+                $context    = [
+                    'error'             => $error,
+                    'exception_type'    => 'ClientException',
+                    'received_payload'  => var_export($_POST, TRUE),
+                    'retrieved_payload' => var_export($response, TRUE)
+                ];
+                wc_paghiper_add_log( $paghiper_log, $message, $context, WC_Log_Levels::CRITICAL );
             }
 
             wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), array( 'response' => 402 ) );
@@ -240,8 +255,16 @@ function woocommerce_paghiper_check_ipn_response() {
         // catches all RequestExceptions
 
             if ( $paghiper_log ) {
-                $error = $e->getMessage();
-                wc_paghiper_add_log( $paghiper_log, sprintf( 'Erro (RequestException): não foi possível checar o post de retorno da PagHiper. Mensagem: %s', var_export($response, TRUE) ) );
+                $message    = sprintf( 'Não foi possível checar o post de retorno da PagHiper.');
+
+                $error      = $e->getMessage();
+                $context    = [
+                    'error'             => $error,
+                    'exception_type'    => 'RequestException',
+                    'received_payload'  => var_export($_POST, TRUE),
+                    'retrieved_payload' => var_export($response, TRUE)
+                ];
+                wc_paghiper_add_log( $paghiper_log, $message, $context, WC_Log_Levels::CRITICAL );
             }
 
             wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), array( 'response' => 500 ) );
