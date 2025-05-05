@@ -57,7 +57,7 @@ function wc_paghiper_initialize_log( $debug_settings ) {
  *
  * @return object
  */
-function wc_paghiper_add_log( $logger, $message, $context = [], $level = WC_Log_Levels::NOTICE ) {
+function wc_paghiper_add_log( $logger, $message, $context = [], $level = WC_Log_Levels::INFO ) {
 
 	if($logger) {
 		$context['source'] = 'paghiper';
