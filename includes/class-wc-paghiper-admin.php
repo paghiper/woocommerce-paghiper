@@ -17,6 +17,7 @@ class WC_Paghiper_Admin {
 	 * Initialize the admin.
 	 */
 	public function __construct() {
+
 		// Add metabox.
 		add_action( 'add_meta_boxes', array( $this, 'register_metabox' ) );
 
@@ -39,32 +40,48 @@ class WC_Paghiper_Admin {
 	public function register_metabox() {
 
 		global $post;
+		if($post || $post->post_type == 'shop_order') {
 
-		if(!$post || $post->post_type !== 'shop_order') {
-			return;
+			$order = wc_get_order( $post->ID );
+
+		} else {
+
+			$current_page 	= $_GET['page'];
+			$current_action = $_GET['action'];
+
+			if( $current_page == 'wc-orders' && $current_action == 'edit' ) {
+				$order_id = absint( $_GET['id'] );
+				$order = wc_get_order( $order_id );
+
+				if(!$order)
+					return;
+			} else {
+				return;
+			}
+
 		}
 		
-		$order = wc_get_order( $post->ID );
 		$payment_method = $order->get_payment_method();
 		
-		if(in_array($payment_method, ['paghiper', 'paghiper_billet', 'paghiper_pix'])) {
-
-			$method_title = ($payment_method == 'paghiper_pix') ? "PIX" : "Boleto";
-
-			$target_screen = class_exists( '\Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController' ) && wc_get_container()->get( CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled()
-				? wc_get_page_screen_id( 'shop-order' )
-				: 'shop_order';
-
-			add_meta_box(
-				'paghiper-boleto',
-				__( "Configurações do {$method_title}", 'woo_paghiper' ),
-				array( $this, 'metabox_content' ),
-				$target_screen,
-				'side',
-				'default'
-			);
-
+		if(!in_array($payment_method, ['paghiper', 'paghiper_billet', 'paghiper_pix'])) {
+			return;
 		}
+
+		$method_title = ($payment_method == 'paghiper_pix') ? "PIX" : "Boleto";
+
+		$target_screen = class_exists( '\Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController' ) &&
+			wc_get_container()->get( CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled() ? 
+			wc_get_page_screen_id( 'shop-order' ) : 
+			'shop_order';
+
+		add_meta_box(
+			'paghiper-boleto',
+			__( "Configurações do {$method_title}", 'woo_paghiper' ),
+			array( $this, 'metabox_content' ),
+			$target_screen,
+			'side',
+			'high'
+		);
 		
 	}
 
