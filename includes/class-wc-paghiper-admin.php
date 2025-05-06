@@ -40,7 +40,7 @@ class WC_Paghiper_Admin {
 	public function register_metabox() {
 
 		global $post;
-		if($post || $post->post_type == 'shop_order') {
+		if($post && $post->post_type == 'shop_order') {
 
 			$order = wc_get_order( $post->ID );
 
@@ -53,14 +53,16 @@ class WC_Paghiper_Admin {
 				$order_id = absint( $_GET['id'] );
 				$order = wc_get_order( $order_id );
 
-				if(!$order)
-					return;
 			} else {
 				return;
 			}
 
 		}
 		
+		if(!$order) {
+			return;
+		}
+
 		$payment_method = $order->get_payment_method();
 		
 		if(!in_array($payment_method, ['paghiper', 'paghiper_billet', 'paghiper_pix'])) {
