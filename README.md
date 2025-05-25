@@ -6,11 +6,11 @@ O plug-in anexa o boleto, mostra código de barras e linha digitável nos e-mail
 
 Fácil, prático e rápido!
 
-* **Versão mais Recente:** 2.4.2
+* **Versão mais Recente:** 2.4.3
 * **Requer WooCommerce** versão mínima 4.0.0
 * **Requer Wordpress** preferencialmente atualizado
 * **Requisitos:** PHP >= 7.2, cURL ativado.
-* **Compatibilidade:** Wordpress 6.7.2, Woocommerce 9.7.0, PHP 8.3.0.
+* **Compatibilidade:** Wordpress 6.8.1, Woocommerce 9.8.5, PHP 8.3.0.
 
 
 # Como Instalar
@@ -43,6 +43,15 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 * Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
 * Implementação de funcionalidade de boleto parcelado
+
+## 2.4.3
+
+- Melhoria: Otimizações e refatoração de código em diversas rotas e jornadas
+- Melhoria: Mais informações de log
+- Fix: Mudanças de status duplicadas
+- Fix: Remoção de diversos warnings
+- Fix: Metabox não aparece para pedidos com HPOS ativado em algumas circunstâncias
+- FIx: Erros ocasionais nas áreas de admin, a depender da combinação de plug-ins utilizada
 
 ## 2.4.2
 
