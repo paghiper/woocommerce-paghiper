@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: 			WooCommerce Boleto e PIX PagHiper
+ * Plugin Name: 			PagHiper Boleto e PIX para WooCommerce
  * Plugin URI: 				https://github.com/paghiper/woocommerce-paghiper/
  * Description: 			Ofereça a seus clientes pagamento por PIX e boleto bancário com a PagHiper. Fácil, prático e rapido!
  * Author: 					PagHiper Pagamentos
