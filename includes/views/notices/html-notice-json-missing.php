@@ -8,5 +8,5 @@ if ( ! defined( 'ABSPATH' ) ) {
 } ?>
 
 <div class="error">
-	<p><strong><?php _e( 'Temos um problema!', 'woocommerce-boleto' ); ?></strong>: <?php echo __( 'Este plugin precisa que seu PHP esteja compilado com suporte a JSON! Entre em contato com seu provedor de hospedagem, informando o problema.', 'woocommerce-boleto' ); ?></p>
+	<p><strong><?php _e( 'Temos um problema!', 'paghiper-payments' ); ?></strong>: <?php echo __( 'Este plugin precisa que seu PHP esteja compilado com suporte a JSON! Entre em contato com seu provedor de hospedagem, informando o problema.', 'paghiper-payments' ); ?></p>
 </div>

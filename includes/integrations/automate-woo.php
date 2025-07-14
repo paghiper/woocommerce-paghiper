@@ -24,7 +24,7 @@ class Paghiper_Variable_Order_DigitableLine extends AutomateWoo\Variable {
 	public $use_fallback = false;
 
 	public function load_admin_details() {
-		$this->description = __( "Displays the PIX digitable for a Paghiper transaction", 'paghiper');
+		$this->description = __( "Displays the PIX digitable for a Paghiper transaction", 'paghiper-payments');
 	}
 
 	/**
@@ -52,7 +52,7 @@ class Paghiper_Variable_Order_Barcode extends AutomateWoo\Variable {
 	public $use_fallback = false;
 
 	public function load_admin_details() {
-		$this->description = __( "Displays the scanable code for a Paghiper transaction", 'paghiper');
+		$this->description = __( "Displays the scanable code for a Paghiper transaction", 'paghiper-payments');
 	}
 
 	/**
@@ -80,7 +80,7 @@ class Paghiper_Variable_Order_DueDate extends AutomateWoo\Variable {
 	public $use_fallback = false;
 
 	public function load_admin_details() {
-		$this->description = __( "Displays the due date for a Paghiper transaction", 'paghiper');
+		$this->description = __( "Displays the due date for a Paghiper transaction", 'paghiper-payments');
 	}
 
 	/**

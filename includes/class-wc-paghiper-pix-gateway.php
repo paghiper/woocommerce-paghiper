@@ -25,8 +25,8 @@ class WC_Paghiper_Pix_Gateway extends WC_Payment_Gateway {
 			'pre-orders',
 			'products'
 		);
-		$this->method_title       = __( 'PagHiper PIX', 'woo-boleto-paghiper' );
-		$this->method_description = __( 'Receba pagamentos por PIX usando PagHiper.', 'woo-boleto-paghiper' );
+		$this->method_title       = __( 'PagHiper PIX', 'paghiper-payments' );
+		$this->method_description = __( 'Receba pagamentos por PIX usando PagHiper.', 'paghiper-payments' );
 
 		// Define as variáveis que vamos usar e popula com os dados de configuração
 		$this->title       				= $this->get_option( 'title' );

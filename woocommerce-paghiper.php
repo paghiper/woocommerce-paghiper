@@ -137,10 +137,10 @@ class WC_Paghiper {
 	 * Load the plugin text domain for translation.
 	 */
 	public function load_plugin_textdomain() {
-		$locale = apply_filters( 'plugin_locale', get_locale(), 'woo-boleto-paghiper' );
+		$locale = apply_filters( 'plugin_locale', get_locale(), 'paghiper-payments' );
 
-		load_textdomain( 'woo-boleto-paghiper', trailingslashit( WP_LANG_DIR ) . 'woo_paghiper/woo_paghiper-' . $locale . '.mo' );
-		load_plugin_textdomain( 'woo-boleto-paghiper', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+		load_textdomain( 'paghiper-payments', trailingslashit( WP_LANG_DIR ) . 'woo_paghiper/woo_paghiper-' . $locale . '.mo' );
+		load_plugin_textdomain( 'paghiper-payments', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 	}
 
 	/**
@@ -291,7 +291,7 @@ class WC_Paghiper {
 				$gateway_class = ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
 	
 				if(!array_key_exists('api_key', $gateway_settings) || empty($gateway_settings['api_key'])) {
-					echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __($gateway_name), __('Você ainda não configurou sua apiKey! Finalize a configuração do seu plug-in aqui:'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), __("Configurações de integração {$gateway_name}"));
+					echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __($gateway_name, 'paghiper-payments'), __('Você ainda não configurou sua apiKey! Finalize a configuração do seu plug-in aqui:', 'paghiper-payments'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), __("Configurações de integração {$gateway_name}", 'paghiper-payments'));
 		
 				}
 	
@@ -314,7 +314,7 @@ class WC_Paghiper {
 					} catch(Exception $e) {
 		
 						if (strpos($e->getMessage(), 'apiKey') !== false) {
-							echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __($gateway_name), __('Sua apiKey é inválida! Confira novamente seus dados aqui:'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), __("Configurações de integração {$gateway_name}"));
+							echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __($gateway_name, 'paghiper-payments'), __('Sua apiKey é inválida! Confira novamente seus dados aqui:', 'paghiper-payments'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), __("Configurações de integração {$gateway_name}", 'paghiper-payments'));
 						}
 					}
 				}
@@ -339,7 +339,7 @@ class WC_Paghiper {
 
 			// Print notices
 			add_action( 'admin_notices', function() {
-				echo sprintf('<div class="error notice paghiper-dismiss-notice is-dismissible" data-notice-id="notice_2_1"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __('PIX PagHiper'), __('Você ja pode receber pagamentos por PIX! Configure aqui:'), admin_url('admin.php?page=wc-settings&tab=checkout&section=wc_paghiper_pix_gateway'), __('Configurações do PIX PagHiper'));
+				echo sprintf('<div class="error notice paghiper-dismiss-notice is-dismissible" data-notice-id="notice_2_1"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __('PIX PagHiper', 'paghiper-payments'), __('Você ja pode receber pagamentos por PIX! Configure aqui:', 'paghiper-payments'), admin_url('admin.php?page=wc-settings&tab=checkout&section=wc_paghiper_pix_gateway'), __('Configurações do PIX PagHiper', 'paghiper-payments'));
 			});
 			
 		}
@@ -358,7 +358,7 @@ class WC_Paghiper {
 					$gateway_class = ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
 	
 					if(!apply_filters('hide_waiting_status_warning', false, $gateway_class)) {
-						echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __($gateway_name), __('O status após a emissão deve ser "Aguardando" ou equivalente. Caso contrário, o Woocommerce pode cancelar os pedidos antes do pagamento! <br>Finalize a configuração do seu plug-in aqui:'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), __("Configurações de integração {$gateway_name}"));
+						echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __($gateway_name, 'paghiper-payments'), __('O status após a emissão deve ser "Aguardando" ou equivalente. Caso contrário, o Woocommerce pode cancelar os pedidos antes do pagamento! <br>Finalize a configuração do seu plug-in aqui:', 'paghiper-payments'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), __("Configurações de integração {$gateway_name}", 'paghiper-payments'));
 					}
 				}
 			}
@@ -711,7 +711,7 @@ class WC_Paghiper {
 		if ( ! empty( $boleto_url ) ) {
 			$actions[] = array(
 				'url'  => $boleto_url,
-				'name' => __( 'Pagar boleto', 'paghiper' ),
+				'name' => __( 'Pagar boleto', 'paghiper-payments' ),
 			);
 		}
 
@@ -776,8 +776,8 @@ class WC_Paghiper {
 			$pix_settings_url = admin_url( 'admin.php?page=woocommerce_settings&tab=payment_gateways&section=WC_Paghiper_Pix_Gateway' );
 		}
 
-		$plugin_links[] = '<a href="' . esc_url( $billet_settings_url ) . '">' . __( 'Opções de Boleto', 'woo-boleto-paghiper' ) . '</a>';
-		$plugin_links[] = '<a href="' . esc_url( $pix_settings_url ) . '">' . __( 'Opções de PIX', 'woo-boleto-paghiper' ) . '</a>';
+		$plugin_links[] = '<a href="' . esc_url( $billet_settings_url ) . '">' . __( 'Opções de Boleto', 'paghiper-payments' ) . '</a>';
+		$plugin_links[] = '<a href="' . esc_url( $pix_settings_url ) . '">' . __( 'Opções de PIX', 'paghiper-payments' ) . '</a>';
 
 		return array_merge( $plugin_links, $links );
 	}

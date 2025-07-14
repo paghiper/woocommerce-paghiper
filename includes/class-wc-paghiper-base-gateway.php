@@ -47,7 +47,12 @@ class WC_Paghiper_Base_Gateway {
      * @return string 
      */ 
     public function currency_not_supported_message() { 
-		echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __(($this->gateway->id == 'paghiper_pix') ? 'PIX Paghiper' : 'Boleto Paghiper'), __('A moeda-padrão do seu Woocommerce não é o R$. Ajuste suas configurações aqui:'), admin_url('admin.php?page=wc-settings&tab=general'), __('Configurações de moeda'));
+		if($this->gateway->id == 'paghiper_pix') {
+			$gateway_name = __('PIX Paghiper', 'paghiper-payments');
+		} else {
+			$gateway_name = __('Boleto Paghiper', 'paghiper-payments');
+		}
+		echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', $gateway_name, __('A moeda-padrão do seu Woocommerce não é o R$. Ajuste suas configurações aqui:', 'paghiper-payments'), admin_url('admin.php?page=wc-settings&tab=general'), __('Configurações de moeda', 'paghiper-payments'));
 	}
 
 	/**
@@ -128,7 +133,7 @@ class WC_Paghiper_Base_Gateway {
 	 */
 	protected function get_log_view() {
 		if ( defined( 'WC_VERSION' ) && version_compare( WC_VERSION, '2.2', '>=' ) ) {
-			return '<a href="' . esc_url( admin_url( 'admin.php?page=wc-status&tab=logs&log_file=' . esc_attr( $this->gateway->id ) . '-' . sanitize_file_name( wp_hash( $this->gateway->id ) ) . '.log' ) ) . '">' . __( 'System Status &gt; Logs', 'woo-boleto-paghiper' ) . '</a>';
+			return '<a href="' . esc_url( admin_url( 'admin.php?page=wc-status&tab=logs&log_file=' . esc_attr( $this->gateway->id ) . '-' . sanitize_file_name( wp_hash( $this->gateway->id ) ) . '.log' ) ) . '">' . __( 'System Status &gt; Logs', 'paghiper-payments' ) . '</a>';
 		}
 		return '<code>woocommerce/logs/' . esc_attr( $this->gateway->id ) . '-' . sanitize_file_name( wp_hash( $this->gateway->id ) ) . '.txt</code>';
 	}
@@ -139,65 +144,67 @@ class WC_Paghiper_Base_Gateway {
 	public function init_form_fields() {
 		$shop_name = get_bloginfo( 'name' );
 
-		$default_label 			= ($this->gateway->id == 'paghiper_pix') ? 'Ativar PIX PagHiper' : 'Ativar Boleto PagHiper';
-		$default_title 			= ($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'Boleto Bancário';
-		$default_description	= ($this->gateway->id == 'paghiper_pix') ? 'Pague de maneira rápida e segura com PIX' : 'Pagar com Boleto Bancário';
+		$default_label 			= ($this->gateway->id == 'paghiper_pix') ? __('Ativar PIX PagHiper', 'paghiper-payments') : __('Ativar Boleto PagHiper', 'paghiper-payments');
+		$default_title 			= ($this->gateway->id == 'paghiper_pix') ? __('PIX', 'paghiper-payments') : __('Boleto Bancário', 'paghiper-payments');
+		$default_description	= ($this->gateway->id == 'paghiper_pix') ? __('Pague de maneira rápida e segura com PIX', 'paghiper-payments') : __('Pagar com Boleto Bancário', 'paghiper-payments');
+
+		$default_gateway_name 	= ($this->gateway->id == 'paghiper_pix') ? __('PIX', 'paghiper-payments') : __('boleto', 'paghiper-payments');
 
 		$first = array(
 			'enabled' => array(
-				'title'   => __( $default_label, 'woo-boleto-paghiper' ),
+				'title'   => __( $default_label, 'paghiper-payments' ),
 				'type'    => 'checkbox',
-				'label'   => __( 'Ativar/Desativar', 'woo-boleto-paghiper' ),
+				'label'   => __( 'Ativar/Desativar', 'paghiper-payments' ),
 				'default' => 'yes'
 			),
 			'title' => array(
-				'title'       => __( 'Título', 'woo-boleto-paghiper' ),
+				'title'       => __( 'Título', 'paghiper-payments' ),
 				'type'        => 'text',
-				'description' => __( 'Esse campo controla o título da seção que o usuário vê durante o checkout.', 'woo-boleto-paghiper' ),
+				'description' => __( 'Esse campo controla o título da seção que o usuário vê durante o checkout.', 'paghiper-payments' ),
 				'desc_tip'    => true,
-				'default'     => __( $default_title, 'woo-boleto-paghiper' )
+				'default'     => __( $default_title, 'paghiper-payments' )
 			),
 			'description' => array(
-				'title'       => __( 'Descrição', 'woo-boleto-paghiper' ),
+				'title'       => __( 'Descrição', 'paghiper-payments' ),
 				'type'        => 'textarea',
-				'description' => __( 'Esse campo controla o texto da seção que o usuário vê durante o checkout.', 'woo-boleto-paghiper' ),
+				'description' => __( 'Esse campo controla o texto da seção que o usuário vê durante o checkout.', 'paghiper-payments' ),
 				'desc_tip'    => true,
-				'default'     => __( $default_description, 'woo-boleto-paghiper' )
+				'default'     => __( $default_description, 'paghiper-payments' )
 			),
 			'paghiper_details' => array(
-				'title' => __( 'Configurações do PagHiper '.(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'Boleto bancário'), 'woo-boleto-paghiper' ),
+				'title' => sprintf(__( 'Configurações do PagHiper %s', 'paghiper-payments' ), (($this->gateway->id == 'paghiper_pix') ? __('PIX', 'paghiper-payments') : __('Boleto bancário', 'paghiper-payments')) ),
 				'type'  => 'title'
 			),
 			'api_key' => array(
-				'title'       => __( 'API Key', 'woo-boleto-paghiper' ),
+				'title'       => __( 'API Key', 'paghiper-payments' ),
 				'type'        => 'text',
 				'placeholder' => 'apk_',
-				'description' => __( 'Chave de API para integração com a PagHiper', 'woo-boleto-paghiper' ),
+				'description' => __( 'Chave de API para integração com a PagHiper', 'paghiper-payments' ),
 			),
 			'token' => array(
-				'title'       => __( 'Token PagHiper', 'woo-boleto-paghiper' ),
+				'title'       => __( 'Token PagHiper', 'paghiper-payments' ),
 				'type'        => 'text',
-				'description' => __( 'Extremamente importante, você pode gerar seu token em nossa pagina: Painel > Ferramentas > Token.', 'woo-boleto-paghiper' ),
+				'description' => __( 'Extremamente importante, você pode gerar seu token em nossa pagina: Painel > Ferramentas > Token.', 'paghiper-payments' ),
 			),
 			'days_due_date' => array(
-				'title'       => __( 'Dias corridos para o vencimento', 'woo-boleto-paghiper' ),
+				'title'       => __( 'Dias corridos para o vencimento', 'paghiper-payments' ),
 				'type'        => 'number',
-				'description' => __( 'Número de dias para calcular a data de vencimento do '.(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto').'. Caso a data de vencimento não seja útil, o sistema bancário considera o dia útil seguinte como data de vencimento.', 'woo-boleto-paghiper' ),
+				'description' => __( 'Número de dias para calcular a data de vencimento do '.$default_gateway_name.'. Caso a data de vencimento não seja útil, o sistema bancário considera o dia útil seguinte como data de vencimento.', 'paghiper-payments' ),
 				'desc_tip'    => true,
 				'default'     => 2
 			),
 			'open_after_day_due' => array(
-				'title'       => __( 'Dias de tolerância para pagto. do '.(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto'), 'woo-boleto-paghiper' ),
+				'title'       => __( 'Dias de tolerância para pagto. do '.(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto'), 'paghiper-payments' ),
 				'type'        => 'number',
-				'description' => __( 'Ao configurar este item, será possível pagar o '.(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto').' por uma quantidade de dias após o vencimento. O mínimo é de 5 dias e máximo de 30 dias.', 'woo-boleto-paghiper' ),
+				'description' => __( 'Ao configurar este item, será possível pagar o '.$default_gateway_name.' por uma quantidade de dias após o vencimento. O mínimo é de 5 dias e máximo de 30 dias.', 'paghiper-payments' ),
 				'desc_tip'    => true,
 				'default'     => 0
 			),
 			'skip_non_workdays' => array(
-				'title'       => __( 'Ajustar data de vencimento dos '.(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto').' para dias úteis', 'woo-boleto-paghiper' ),
+				'title'       => __( 'Ajustar data de vencimento dos '.$default_gateway_name.' para dias úteis', 'paghiper-payments' ),
 				'type'    	  => 'checkbox',
-				'label'   	  => __( 'Ativar/Desativar', 'woo-boleto-paghiper' ),
-				'description' => __( 'Ative esta opção para evitar '.(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto').' com vencimento aos sábados ou domingos.', 'woo-boleto-paghiper' ),
+				'label'   	  => __( 'Ativar/Desativar', 'paghiper-payments' ),
+				'description' => __( 'Ative esta opção para evitar '.$default_gateway_name.' com vencimento aos sábados ou domingos.', 'paghiper-payments' ),
 				'desc_tip'    => true,
 				'default' 	  => 'yes'
 			)
@@ -205,48 +212,48 @@ class WC_Paghiper_Base_Gateway {
 
 		$last = array(
 			'extra_details' => array(
-				'title' => __( 'Configurações extra', 'woo-boleto-paghiper' ),
+				'title' => __( 'Configurações extra', 'paghiper-payments' ),
 				'type'  => 'title'
 			),
 			'replenish_stock' => array(
-				'title'   => __( 'Restituir estoque, caso o pedido seja cancelado?', 'woo-boleto-paghiper' ),
+				'title'   => __( 'Restituir estoque, caso o pedido seja cancelado?', 'paghiper-payments' ),
 				'type'    => 'checkbox',
-				'label'   => __( 'O plug-in subtrai os itens comprados no pedido por padrão. Essa opção os incrementa de volta, caso o pedido seja cancelado. Ativar/Desativar', 'woo-boleto-paghiper' ),
+				'label'   => __( 'O plug-in subtrai os itens comprados no pedido por padrão. Essa opção os incrementa de volta, caso o pedido seja cancelado. Ativar/Desativar', 'paghiper-payments' ),
 				'default' => 'yes'
 			),
 			'fixed_description' => array(
-				'title'   => __( 'Exibir frase customizada no '.(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto').'?', 'woo-boleto-paghiper' ),
+				'title'   => __( 'Exibir frase customizada no '.$default_gateway_name.'?', 'paghiper-payments' ),
 				'type'    => 'checkbox',
-				'label'   => __( 'Ativar/Desativar', 'woo-boleto-paghiper' ),
+				'label'   => __( 'Ativar/Desativar', 'paghiper-payments' ),
 				'default' => 'yes'
 			),
 			'set_status_when_waiting' => array(
-				'title'	  => __('Mudar status após emissão do '.(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto').' para:', 'woo-boleto-paghiper'),
+				'title'	  => __('Mudar status após emissão do '.$default_gateway_name.' para:', 'paghiper-payments'),
 				'type'	  => 'select',
 				'options' => $this->get_available_status(),
 				'default'  => $this->get_available_status('on-hold'),
 
 			),
 			'set_status_when_paid' => array(
-				'title'	  => __('Mudar status após pagamento do '.(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto').' para:', 'woo-boleto-paghiper'),
+				'title'	  => __('Mudar status após pagamento do '.$default_gateway_name.' para:', 'paghiper-payments'),
 				'type'	  => 'select',
 				'options' => $this->get_available_status(),
 				'default'  => $this->get_available_status('processing'),
 
 			),
 			'set_status_when_cancelled' => array(
-				'title'	  => __('Mudar status após cancelamento do '.(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto').' para:', 'woo-boleto-paghiper'),
+				'title'	  => __('Mudar status após cancelamento do '.$default_gateway_name.' para:', 'paghiper-payments'),
 				'type'	  => 'select',
 				'options' => $this->get_available_status(),
 				'default'  => $this->get_available_status('cancelled'),
 
 			),
 			'debug' => array(
-				'title'       => __( 'Log de depuração', 'woo-boleto-paghiper' ),
+				'title'       => __( 'Log de depuração', 'paghiper-payments' ),
 				'type'        => 'checkbox',
-				'label'       => __( 'Ativa o log de erros', 'woo-boleto-paghiper' ),
+				'label'       => __( 'Ativa o log de erros', 'paghiper-payments' ),
 				'default'     => 'yes',
-				'description' => sprintf( __( 'Armazena eventos e erros, como chamadas API e exibições, dentro do arquivo %s Ative caso enfrente problemas.', 'woo-boleto-paghiper' ), $this->get_log_view() ),
+				'description' => sprintf( __( 'Armazena eventos e erros, como chamadas API e exibições, dentro do arquivo %s Ative caso enfrente problemas.', 'paghiper-payments' ), $this->get_log_view() ),
 			),
 		);
 
@@ -521,14 +528,14 @@ class WC_Paghiper_Base_Gateway {
 
 			// Mark as on-hold (we're awaiting the ticket).
 			$waiting_status = (!empty($this->set_status_when_waiting)) ? $this->set_status_when_waiting : 'on-hold';
-			$order->update_status( $waiting_status, __( 'PagHiper: '. (($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'Boleto') .' gerado e enviado por e-mail.', 'woo-boleto-paghiper' ) );
+			$order->update_status( $waiting_status, sprintf(__( 'PagHiper: %s gerado e enviado por e-mail.', 'paghiper-payments' ), (($this->gateway->id == 'paghiper_pix') ? __('PIX', 'paghiper-payments') : __('Boleto', 'paghiper-payments')) ) );
 
 		} else {
 
 			// Prints a notice, case order total surpasses our normal commercial limits
 			$order_total = round(floatval($order->get_total()));
 			if($order_total > 9000) {
-				$order->add_order_note( sprintf( __( 'Atenção! Total da transação excede R$ 9.000. Caso ainda não o tenha feito, entre em contato com nossa equipe comercial para liberação através do e-mail <a href="comercial@paghiper.com" target="_blank">comercial@paghiper.com</a>', 'woo_paghiper' ) ) );
+				$order->add_order_note( sprintf( __( 'Atenção! Total da transação excede R$ 9.000. Caso ainda não o tenha feito, entre em contato com nossa equipe comercial para liberação através do e-mail <a href="comercial@paghiper.com" target="_blank">comercial@paghiper.com</a>', 'paghiper-payments' ) ) );
 			}
 
 			if ( $this->log ) {
@@ -633,15 +640,15 @@ class WC_Paghiper_Base_Gateway {
 		if($order->get_payment_method() !== 'paghiper_pix') {
 
 			$html = '<div class="woocommerce-message">';
-			$html .= sprintf( '<a class="button button-primary wc-forward" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ), __( 'Pagar o Boleto', 'woo-boleto-paghiper' ) );
+			$html .= sprintf( '<a class="button button-primary wc-forward" href="%s" target="_blank" style="display: block !important; visibility: visible !important;">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ), __( 'Pagar o Boleto', 'paghiper-payments' ) );
 	
-			$message = sprintf( __( '%sAtenção!%s Você NÃO vai receber o boleto pelos Correios.', 'woo-boleto-paghiper' ), '<strong>', '</strong>' ) . '<br />';
-			$message .= __( 'Clique no link abaixo e pague o boleto pelo seu aplicativo de Internet Banking .', 'woo-boleto-paghiper' ) . '<br />';
-			$message .= __( 'Se preferir, você pode imprimir e pagar o boleto em qualquer agência bancária ou lotérica.', 'woo-boleto-paghiper' ) . '<br />';
+			$message = sprintf( __( '%sAtenção!%s Você NÃO vai receber o boleto pelos Correios.', 'paghiper-payments' ), '<strong>', '</strong>' ) . '<br />';
+			$message .= __( 'Clique no link abaixo e pague o boleto pelo seu aplicativo de Internet Banking .', 'paghiper-payments' ) . '<br />';
+			$message .= __( 'Se preferir, você pode imprimir e pagar o boleto em qualquer agência bancária ou lotérica.', 'paghiper-payments' ) . '<br />';
 	
 			$html .= apply_filters( 'woo_paghiper_thankyou_page_message', $message );
 	
-			$html .= '<strong style="display: block; margin-top: 15px; font-size: 0.8em">' . sprintf( __( 'Data de vencimento do Boleto: %s.', 'woo-boleto-paghiper' ), date( 'd/m/Y', time() + ( absint( $this->days_due_date ) * 86400 ) ) ) . '</strong>';
+			$html .= '<strong style="display: block; margin-top: 15px; font-size: 0.8em">' . sprintf( __( 'Data de vencimento do Boleto: %s.', 'paghiper-payments' ), date( 'd/m/Y', time() + ( absint( $this->days_due_date ) * 86400 ) ) ) . '</strong>';
 	
 			$html .= '</div>';
 	
@@ -671,7 +678,7 @@ class WC_Paghiper_Base_Gateway {
 		$paghiperTransaction = new WC_PagHiper_Transaction( $order->get_id() );
 
 		$html = '<div class="woo-paghiper-boleto-details" style="text-align: center;">';
-		$html .= '<h2>' . __( 'Pagamento', 'woo-boleto-paghiper' ) . '</h2>';
+		$html .= '<h2>' . __( 'Pagamento', 'paghiper-payments' ) . '</h2>';
 
 		$html .= '<p class="order_details">';
 
@@ -679,14 +686,14 @@ class WC_Paghiper_Base_Gateway {
 
 		if($order_payment_method !== 'paghiper_pix') {
 
-			$message .= sprintf( __( '%sAtenção!%s Você NÃO vai receber o boleto pelos Correios.', 'woo-boleto-paghiper' ), '<strong>', '</strong>' ) . '<br />';
-			$message .= __( 'Se preferir, você pode imprimir e pagar o boleto em qualquer agência bancária ou lotérica.', 'woo-boleto-paghiper' ) . '<br />';
+			$message .= sprintf( __( '%sAtenção!%s Você NÃO vai receber o boleto pelos Correios.', 'paghiper-payments' ), '<strong>', '</strong>' ) . '<br />';
+			$message .= __( 'Se preferir, você pode imprimir e pagar o boleto em qualquer agência bancária ou lotérica.', 'paghiper-payments' ) . '<br />';
 	
 			$html .= apply_filters( 'woo_paghiper_email_instructions', $message );
 	
-			$html .= '<br />' . sprintf( '<a class="button alt" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ), __( 'Veja o boleto completo &rarr;', 'woo-boleto-paghiper' ) ) . '<br />';
+			$html .= '<br />' . sprintf( '<a class="button alt" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ), __( 'Veja o boleto completo &rarr;', 'paghiper-payments' ) ) . '<br />';
 	
-			$html .= '<strong style="font-size: 0.8em">' . sprintf( __( 'Data de Vencimento: %s.', 'woo-boleto-paghiper' ), date( 'd/m/Y', time() + ( absint( $this->days_due_date ) * 86400 ) ) ) . '</strong>';
+			$html .= '<strong style="font-size: 0.8em">' . sprintf( __( 'Data de Vencimento: %s.', 'paghiper-payments' ), date( 'd/m/Y', time() + ( absint( $this->days_due_date ) * 86400 ) ) ) . '</strong>';
 	
 			$html .= '</p>';
 			$html .= '</div>';

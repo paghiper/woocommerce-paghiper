@@ -119,7 +119,7 @@ class WC_PagHiper_Transaction {
 						update_meta_cache( 'shop_order', $this->order_id );
 
 					$this->order_data = $paghiper_data;
-					$this->order->add_order_note( sprintf( __( 'Data de vencimento ajustada para %s', 'woo_paghiper' ), $current_billet_due_date->format('d/m/Y') ) );
+					$this->order->add_order_note( sprintf( __( 'Data de vencimento ajustada para %s', 'paghiper-payments' ), $current_billet_due_date->format('d/m/Y') ) );
 
 					$log_message = 'Pedido #%s: Data de vencimento do boleto não bate com a informada no pedido. Cheque a opção "Vencimento em finais de semana" no <a href="https://www.paghiper.com/painel/prazo-vencimento-boleto/" target="_blank">Painel da PagHiper</a>.';
 					wc_paghiper_add_log( $this->log, sprintf( $log_message, $this->order_id ) );
@@ -128,7 +128,7 @@ class WC_PagHiper_Transaction {
 					$error = __( '<strong>Boleto PagHiper</strong>: 
 					A data de vencimento do boleto foi configurada para um final de semana mas o boleto foi emitido para segunda-feira. 
 					Cheque a opção "Vencimento em finais de semana" no <a href="https://www.paghiper.com/painel/prazo-vencimento-boleto/" target="_blank">Painel da PagHiper</a> ou 
-					ative nas configurações do plugin a correção de datas para que o vencimento não caia em finais de semana', 'woo_paghiper' );
+					ative nas configurações do plugin a correção de datas para que o vencimento não caia em finais de semana', 'paghiper-payments' );
 					set_transient("woo_paghiper_due_date_order_errors_{$this->order_id}", $error, 0);
 
 					$different_due_date = NULL;
@@ -682,7 +682,7 @@ class WC_PagHiper_Transaction {
 
 						if( !$conf || (is_array($conf) && in_array('instructions', $conf)) ) {
 							
-							$html .= __('Pagar com PIX copia e cola - ');
+							$html .= __('Pagar com PIX copia e cola - ', 'paghiper-payments');
 						}
 						
 						$html .= '<button type="button">Clique para copiar</button>';

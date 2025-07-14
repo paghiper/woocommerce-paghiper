@@ -17,5 +17,5 @@ if ( current_user_can( 'install_plugins' ) ) {
 ?>
 
 <div class="error">
-	<p><strong><?php _e( 'WooCommerce PagHiper foi desativado!', 'woocommerce-boleto' ); ?></strong> <?php printf( __( 'Este plugin precisa do %s para funcionar. Instale ou ative para receber pedidos.', 'woocommerce-boleto' ), '<a href="' . esc_url( $url ) . '">' . __( 'WooCommerce', 'woocommerce-boleto' ) . '</a>' ); ?></p>
+	<p><strong><?php _e( 'PagHiper para WooCommerce foi desativado!', 'paghiper-payments' ); ?></strong> <?php printf( __( 'Este plugin precisa do %s para funcionar. Instale ou ative para receber pedidos.', 'paghiper-payments' ), '<a href="' . esc_url( $url ) . '">' . __( 'WooCommerce', 'paghiper-payments' ) . '</a>' ); ?></p>
 </div>

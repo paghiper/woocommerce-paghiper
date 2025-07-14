@@ -61,7 +61,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
         // Se sim, os próximos Status só podem ser Completo, Disputa ou Estornado
         switch ( $return['status'] ) {
             case "completed" :
-                $order->add_order_note( __( 'PagHiper: Pagamento completo. O valor ja se encontra disponível para saque.' , 'woo_paghiper' ) );
+                $order->add_order_note( __( 'PagHiper: Pagamento completo. O valor ja se encontra disponível para saque.', 'paghiper-payments' ) );
 
                 if ( $paghiper_log ) {
                     wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: %s disponível pra saque. Transação ID %s', $order->get_id(), ucfirst($gateway_name), $return['transaction_id']) );
@@ -69,7 +69,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 
                 break;
             case "processing" :
-                $order->update_status( $settings['set_status_when_waiting'], __( 'PagHiper: Pagamento em disputa. Para responder, faça login na sua conta Paghiper e procure pelo número da transação.', 'woo_paghiper' ) );
+                $order->update_status( $settings['set_status_when_waiting'], __( 'PagHiper: Pagamento em disputa. Para responder, faça login na sua conta Paghiper e procure pelo número da transação.', 'paghiper-payments' ) );
                 paghiper_increase_order_stock( $order, $settings );
 
                 if ( $paghiper_log ) {
@@ -90,7 +90,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
                 } else {
                     $order->add_order_note( __( 'PagHiper: Post de notificação recebido. Aguardando compensação do boleto.' , 'woo_paghiper' ) );
                 }*/
-                $order->add_order_note( __( 'PagHiper: Novo '.$gateway_name.' emitido. Aguardando compensação.' , 'woo_paghiper' ) );
+                $order->add_order_note( __( 'PagHiper: Novo '.$gateway_name.' emitido. Aguardando compensação.', 'paghiper-payments' ) );
                 if ( $paghiper_log ) {
                     wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: %s emitido com sucesso.', $order->get_id(), ucfirst($gateway_name)) );
                 }
@@ -98,7 +98,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 
             case "reserved" :
 
-                $order->add_order_note( __( 'PagHiper: Pagamento pré-compensado (reservado). Aguarde confirmação.' , 'woo_paghiper' ) );
+                $order->add_order_note( __( 'PagHiper: Pagamento pré-compensado (reservado). Aguarde confirmação.', 'paghiper-payments' ) );
                 break;
             case "canceled" :
 
@@ -106,7 +106,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 			        $paghiper_data = $order->get_meta( 'wc_paghiper_data' );
 
                     if($return['transaction_id'] !== $paghiper_data['transaction_id']) {
-                        $order->add_order_note( __( 'PagHiper: Um '.$gateway_name.' emitido para este pedido foi cancelado. Como não era o boleto mais atual, o pedido permanece aguardando pagamento.' , 'woo_paghiper' ) );
+                        $order->add_order_note( __( 'PagHiper: Um '.$gateway_name.' emitido para este pedido foi cancelado. Como não era o boleto mais atual, o pedido permanece aguardando pagamento.', 'paghiper-payments' ) );
 
                         if ( $paghiper_log ) {
                             wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: %s cancelado. Status do pedido não foi atualizado por não ser a emissão mais recente para o pedido. Transação ID %s', $order->get_id(), ucfirst($gateway_name), $return['transaction_id']) );
@@ -117,7 +117,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 
                     $cancelled_status = (!empty($settings['set_status_when_cancelled'])) ? $settings['set_status_when_cancelled'] : 'cancelled';
                     
-                    $order->update_status( $cancelled_status, __( 'PagHiper: '.ucfirst($gateway_name).' Cancelado.', 'woo_paghiper' ) );
+                    $order->update_status( $cancelled_status, __( 'PagHiper: '.ucfirst($gateway_name).' Cancelado.', 'paghiper-payments' ) );
                     paghiper_increase_order_stock( $order, $settings );
 
                     if ( $paghiper_log ) {
@@ -143,13 +143,13 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 
                 if(!$order->has_status( $paid_statuses )) {
                     $order->payment_complete();
-                    $order->update_status( $target_status, __( 'PagHiper: '.ucfirst($gateway_name).' pago.', 'woo_paghiper' ) );
+                    $order->update_status( $target_status, __( 'PagHiper: '.ucfirst($gateway_name).' pago.', 'paghiper-payments' ) );
 
                     if ( $paghiper_log ) {
                         wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: %s pago. Atualizando status do pedido. Transação ID %s', $order->get_id(), ucfirst($gateway_name), $return['transaction_id']) );
                     }
                 } else {
-                    $order->add_order_note( __( 'PagHiper: '.ucfirst($gateway_name).' compensado.', 'woo_paghiper' ) );
+                    $order->add_order_note( __( 'PagHiper: '.ucfirst($gateway_name).' compensado.', 'paghiper-payments' ) );
 
                     if ( $paghiper_log ) {
                         wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: %s pago. Não foi necessário atualizar status do pedido. Transação ID %s', $order->get_id(), ucfirst($gateway_name), $return['transaction_id']) );
@@ -158,7 +158,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 
                 break;
             case "refunded" :
-                $order->update_status( 'refunded', __( 'PagHiper: Pagamento estornado. O valor foi ja devolvido ao cliente. Para mais informações, entre em contato com a equipe de atendimento Paghiper.' , 'woo_paghiper' ) );
+                $order->update_status( 'refunded', __( 'PagHiper: Pagamento estornado. O valor foi ja devolvido ao cliente. Para mais informações, entre em contato com a equipe de atendimento Paghiper.', 'paghiper-payments' ) );
                 if ( $paghiper_log ) {
                     wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: %s estornado. Atualizando status do pedido. Transação ID %s', $order->get_id(), ucfirst($gateway_name), $return['transaction_id']) );
                 }
@@ -232,7 +232,7 @@ function woocommerce_paghiper_check_ipn_response() {
                 wc_paghiper_add_log( $paghiper_log, $message, $context, WC_Log_Levels::CRITICAL );
             }
 
-            wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), array( 'response' => 401 ) );
+            wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'paghiper-payments' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'paghiper-payments' ), array( 'response' => 401 ) );
 
         }
 
@@ -252,7 +252,7 @@ function woocommerce_paghiper_check_ipn_response() {
                 wc_paghiper_add_log( $paghiper_log, $message, $context, WC_Log_Levels::CRITICAL );
             }
 
-            wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), array( 'response' => 402 ) );
+            wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'paghiper-payments' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'paghiper-payments' ), array( 'response' => 402 ) );
 
     } catch (RequestException $e) {
         // catches all RequestExceptions
@@ -270,7 +270,7 @@ function woocommerce_paghiper_check_ipn_response() {
                 wc_paghiper_add_log( $paghiper_log, $message, $context, WC_Log_Levels::CRITICAL );
             }
 
-            wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), array( 'response' => 500 ) );
+            wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'paghiper-payments' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'paghiper-payments' ), array( 'response' => 500 ) );
 
     }
 
@@ -285,7 +285,7 @@ function woocommerce_paghiper_get_transaction_status($transaction_type, $setting
     $order_id = (isset($_GET) && array_key_exists('orderId', $_GET)) ? sanitize_text_field($_GET['orderId']) : NULL;
 
     if(!$order_id) {
-        wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo_paghiper' ), array( 'response' => 408 ) );
+        wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'paghiper-payments' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'paghiper-payments' ), array( 'response' => 408 ) );
     }
 }
 

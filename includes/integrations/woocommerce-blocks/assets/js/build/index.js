@@ -42,7 +42,7 @@ const InlineTaxIdField = ({
   const [isEmpty, setIsEmpty] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_2__.useState)(true);
   const [isInvalid, setIsInvalid] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_2__.useState)(false);
   const [isComplete, setIsComplete] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_2__.useState)(false);
-  const [fieldLabel, setFieldLabel] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_2__.useState)((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('CPF do Pagador', 'woo-boleto-paghiper'));
+  const [fieldLabel, setFieldLabel] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_2__.useState)((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('CPF do Pagador', 'paghiper-payments'));
   const [fieldInput, setFieldInput] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_2__.useState)('');
   const {
     options,
@@ -68,24 +68,24 @@ const InlineTaxIdField = ({
   };
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_2__.useEffect)(() => {
     if (fieldInput.replace(/\D/g, '').length > 11) {
-      setFieldLabel((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('CNPJ do Pagador', 'woo-boleto-paghiper'));
+      setFieldLabel((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('CNPJ do Pagador', 'paghiper-payments'));
     } else {
-      setFieldLabel((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('CPF do Pagador', 'woo-boleto-paghiper'));
+      setFieldLabel((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('CPF do Pagador', 'paghiper-payments'));
     }
     if (!isEmpty) {
       if (!isFocus) {
         if (fieldInput.replace(/\D/g, '').length > 11 && fieldInput.replace(/\D/g, '').length < 14) {
-          setError((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('O número do seu CNPJ está incompleto.', 'woo-boleto-paghiper'));
+          setError((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('O número do seu CNPJ está incompleto.', 'paghiper-payments'));
           setIsInvalid(true);
         } else if (fieldInput.replace(/\D/g, '').length < 11) {
-          setError((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('O número do seu CPF está incompleto.', 'woo-boleto-paghiper'));
+          setError((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('O número do seu CPF está incompleto.', 'paghiper-payments'));
           setIsInvalid(true);
         }
       } else {
         if (fieldInput.replace(/\D/g, '').length == 11) {
           // Valida CPF
           if (!(0,validation_br__WEBPACK_IMPORTED_MODULE_4__.isCPF)(fieldInput)) {
-            setError((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('O número do seu CPF está correto.', 'woo-boleto-paghiper'));
+            setError((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('O número do seu CPF está correto.', 'paghiper-payments'));
             setIsInvalid(true);
           } else {
             setIsComplete(true);
@@ -93,7 +93,7 @@ const InlineTaxIdField = ({
         } else if (fieldInput.replace(/\D/g, '').length == 14) {
           // Valida CNPJ
           if (!(0,validation_br__WEBPACK_IMPORTED_MODULE_4__.isCNPJ)(fieldInput)) {
-            setError((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('O número do seu CNPJ não está correto.', 'woo-boleto-paghiper'));
+            setError((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('O número do seu CNPJ não está correto.', 'paghiper-payments'));
             setIsInvalid(true);
           } else {
             setIsComplete(true);
@@ -2095,7 +2095,7 @@ __webpack_require__.r(__webpack_exports__);
 
 // PIX Gateway
 const pixSettings = (0,_woocommerce_settings__WEBPACK_IMPORTED_MODULE_6__.getSetting)('paghiper_pix_data', {});
-const defaultPixLabel = (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('PIX Paghiper', 'woo-boleto-paghiper');
+const defaultPixLabel = (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('PIX Paghiper', 'paghiper-payments');
 const label = (0,_wordpress_html_entities__WEBPACK_IMPORTED_MODULE_5__.decodeEntities)(pixSettings.title) || defaultPixLabel;
 const Content = props => {
   const {
@@ -2177,7 +2177,7 @@ const PaghiperPix = {
 
 // Billet
 const billetSettings = (0,_woocommerce_settings__WEBPACK_IMPORTED_MODULE_6__.getSetting)('paghiper_billet_data', {});
-const defaultBilletLabel = (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Boleto Paghiper', 'woo-boleto-paghiper');
+const defaultBilletLabel = (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Boleto Paghiper', 'paghiper-payments');
 const billetLabel = (0,_wordpress_html_entities__WEBPACK_IMPORTED_MODULE_5__.decodeEntities)(billetSettings.title) || defaultBilletLabel;
 const BilletLabel = props => {
   const {
