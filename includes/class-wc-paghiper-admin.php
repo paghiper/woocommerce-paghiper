@@ -105,6 +105,10 @@ class WC_Paghiper_Admin {
 		if ( in_array($gateway_name, ['paghiper', 'paghiper_pix', 'paghiper_billet']) ) {
 			$paghiper_data = $order->get_meta( 'wc_paghiper_data' ) ;
 
+			if(!is_array($paghiper_data)) {
+				$paghiper_data = [];
+			}
+
 			// Compatibility with pre v2.1 keys
 			if( isset($paghiper_data['order_billet_due_date']) && !isset($paghiper_data['order_transaction_due_date']) ) {
 				$paghiper_data['order_transaction_due_date'] = $paghiper_data['order_billet_due_date'];
@@ -117,7 +121,7 @@ class WC_Paghiper_Admin {
 				$settings = ($gateway_name == 'paghiper_pix') ? get_option( 'woocommerce_paghiper_pix_settings' ) : get_option( 'woocommerce_paghiper_billet_settings' );
 
 				$order_transaction_due_date			= isset( $settings['days_due_date'] ) ? absint( $settings['days_due_date'] ) : 5;
-				$data                   			= array();
+				$data                   			= [];
 				$data['order_transaction_due_date']	= date( 'Y-m-d', time() + ( $order_transaction_due_date * 86400 ) );
 				
 				$order->update_meta_data( 'wc_paghiper_data', $data );
