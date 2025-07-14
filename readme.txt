@@ -19,11 +19,11 @@ O plug-in anexa o boleto, mostra código de barras e linha digitável nos e-mail
 
 Fácil, prático e rápido!
 
-* **Versão mais Recente:** 2.4.3
+* **Versão mais Recente:** 2.5
 * **Requer WooCommerce** versão mínima 4.0.0
 * **Requer Wordpress** preferencialmente atualizado
 * **Requisitos:** PHP >= 7.2, cURL ativado.
-* **Compatibilidade:** Wordpress 6.8.1, Woocommerce 9.8.5, PHP 8.3.0.
+* **Compatibilidade:** Wordpress 6.8.1, Woocommerce 10.0.2, PHP 8.4.10.
 
 
 # Como Instalar
@@ -49,6 +49,11 @@ Para questões relacionadas a integração e plugin, acesse o [forum de suporte 
 Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa [central de atendimento](https://www.paghiper.com/atendimento/).
 
 == Changelog ==
+
+## 2.4.4
+
+- Fixes por questões de compliance
+- Erro fatal no admin dos pedidos, a depender de algumas condições
 
 ## 2.4.3
 
