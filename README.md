@@ -1,4 +1,4 @@
-# WooCommerce Boleto e PIX PagHiper
+# PagHiper Boleto e PIX para WooCommerce
 
 Ofereça a seus clientes pagamento boleto bancário com a PagHiper. Fácil, prático e rapido!
 Emita boletos bancários de maneira descomplicada. A PagHiper cuida de toda a emissão, compensação e registro do boleto.

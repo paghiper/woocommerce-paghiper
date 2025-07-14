@@ -1,4 +1,4 @@
-=== WooCommerce Boleto e PIX PagHiper ===
+=== PagHiper Boleto e PIX para WooCommerce ===
 Contributors: henriqueccruz
 Donate link: https://www.paghiper.com/
 Tags: pix, boleto, paghiper, pagamento, gateway
