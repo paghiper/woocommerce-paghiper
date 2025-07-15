@@ -45,6 +45,22 @@ if ( !empty( $boleto_code ) ) {
 		$dias_vencimento += (!empty($settings['open_after_day_due']) && $settings['open_after_day_due'] >= 5 && $settings['open_after_day_due'] < 31) ? $settings['open_after_day_due'] : '0';
 
 
+		// Checamos se o pedido não é um PIX
+		if($payment_method == 'paghiper_pix') {
+
+			$ico = 'billet-cancelled.png';
+			$title = 'Este pedido não foi feito com boleto!';
+			$message = 'A forma de pagamento deste pedido é PIX. Cheque seu e-mail ou sua área de pedidos para informações sobre como pagar.';
+			echo wc_print_transaction_screen($ico, $title, $message);
+		
+			if ( $log ) {
+				wc_paghiper_add_log( $log, sprintf( 'Pedido #%s: Endpoint de boleto foi acessado mas o método de pagamento é PIX.', $order->get_id() ) );
+			}
+
+			exit();
+
+		}
+
 		// Check if a new billet should be generated
 		if($order->is_paid()) {
 
