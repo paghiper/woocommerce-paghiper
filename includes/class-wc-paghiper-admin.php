@@ -111,7 +111,8 @@ class WC_Paghiper_Admin {
 
 		add_meta_box(
 			'paghiper-boleto',
-			sprintf(__( "Configurações do %s", 'woo-boleto-paghiper' ),$method_title),
+      // translators: %s: method payments name.
+      sprintf(__( "Configurações do %s", 'woo-boleto-paghiper' ),$method_title),
 			array( $this, 'metabox_content' ),
 			$target_screen,
 			'side',
