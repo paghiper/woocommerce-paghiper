@@ -9,7 +9,7 @@
  * Tested up to: 			6.8.1
  * License:              	GPLv3
  * License URI:          	http://www.gnu.org/licenses/gpl-3.0.html
- * Text Domain: 			paghiper-payments
+ * Text Domain: 			woo-boleto-paghiper
  * Domain Path: 			/languages/
  * WC requires at least: 	4.0.0
  * WC tested up to: 		10.0.2
@@ -138,10 +138,11 @@ class WC_Paghiper {
 	 * Load the plugin text domain for translation.
 	 */
 	public function load_plugin_textdomain() {
-		$locale = apply_filters( 'plugin_locale', get_locale(), 'woo-boleto-paghiper' );
+		// For the next plugin version
+		/*$locale = apply_filters( 'plugin_locale', get_locale(), 'woo-boleto-paghiper' );
 
 		load_textdomain( 'woo-boleto-paghiper', trailingslashit( WP_LANG_DIR ) . 'woo_paghiper/woo_paghiper-' . $locale . '.mo' );
-		load_plugin_textdomain( 'woo-boleto-paghiper', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+		load_plugin_textdomain( 'woo-boleto-paghiper', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );*/
 	}
 
 	/**
@@ -278,54 +279,52 @@ class WC_Paghiper {
 	 */
 	public static function check_paghiper_credentials() {
 
-		add_action( 'admin_notices', function() {
+		// Include SDK for our call
+		wc_paghiper_initialize_sdk();
 
-			// Include SDK for our call
-			wc_paghiper_initialize_sdk($this->log);
+		$gateways = ['woocommerce_paghiper_pix_settings', 'woocommerce_paghiper_billet_settings'];
+		foreach($gateways as $gateway) {
+			$gateway_settings = get_option( $gateway );
+
+			$is_pix = ($gateway == 'woocommerce_paghiper_pix_settings') ? true : false;
+
+			$gateway_name = ($is_pix) ? __('PIX PagHiper', 'woo-boleto-paghiper') : __('Boleto PagHiper', 'woo-boleto-paghiper');
+			$gateway_class = ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
+
+			if(!array_key_exists('api_key', $gateway_settings) || empty($gateway_settings['api_key'])) {
+				echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', $gateway_name, __('Você ainda não configurou sua apiKey! Finalize a configuração do seu plug-in aqui:', 'woo-boleto-paghiper'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), __("Configurações de integração {$gateway_name}", 'woo-boleto-paghiper'));
 	
-			$gateways = ['woocommerce_paghiper_pix_settings', 'woocommerce_paghiper_billet_settings'];
+			}
+
+		}
+
+		if(!get_transient( 'woo_paghiper_apikey_valid' )) {
+
+			$valid_gateway_apis = [];
 			foreach($gateways as $gateway) {
 				$gateway_settings = get_option( $gateway );
 				$is_pix = ($gateway == 'woocommerce_paghiper_pix_settings') ? true : false;
-	
-				$gateway_name = ($is_pix) ? 'PIX PagHiper' : 'Boleto PagHiper';
+
+				$gateway_name = ($is_pix) ? __('PIX PagHiper', 'woo-boleto-paghiper') : __('Boleto PagHiper', 'woo-boleto-paghiper');
 				$gateway_class = ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
 	
-				if(!array_key_exists('api_key', $gateway_settings) || empty($gateway_settings['api_key'])) {
-					echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __($gateway_name, 'woo-boleto-paghiper'), __('Você ainda não configurou sua apiKey! Finalize a configuração do seu plug-in aqui:', 'woo-boleto-paghiper'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), __("Configurações de integração {$gateway_name}", 'woo-boleto-paghiper'));
-		
-				}
-	
-			};
+				try {
+					$PagHiperAPI = new PagHiper($gateway_settings['api_key'], $gateway_settings['token']);
+					$response = $PagHiperAPI->transaction()->status('0000000000000000');
+					$valid_gateway_apis[] = $gateway;
 
-			if(!get_transient( 'woo_paghiper_apikey_valid' )) {
-
-				$valid_gateway_apis = [];
-				foreach($gateways as $gateway) {
-					$gateway_settings = get_option( $gateway );
-					$is_pix = ($gateway == 'woocommerce_paghiper_pix_settings') ? true : false;
+				} catch(Exception $e) {
 	
-					$gateway_name = ($is_pix) ? 'PIX PagHiper' : 'Boleto PagHiper';
-					$gateway_class = ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
-		
-					try {
-						$PagHiperAPI = new PagHiper($gateway_settings['api_key'], $gateway_settings['token']);
-						$response = $PagHiperAPI->transaction()->status('0000000000000000');
-						$valid_gateway_apis[] = $gateway;
-					} catch(Exception $e) {
-		
-						if (strpos($e->getMessage(), 'apiKey') !== false) {
-							echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __($gateway_name, 'woo-boleto-paghiper'), __('Sua apiKey é inválida! Confira novamente seus dados aqui:', 'woo-boleto-paghiper'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), __("Configurações de integração {$gateway_name}", 'woo-boleto-paghiper'));
-						}
+					if (strpos($e->getMessage(), 'apiKey') !== false) {
+						echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', $gateway_name, __('Sua apiKey é inválida! Confira novamente seus dados aqui:', 'woo-boleto-paghiper'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), sprintf(__("Configurações de integração %s", 'woo-boleto-paghiper'), $gateway_name));
 					}
-				}
-	
-				if(sizeof($valid_gateway_apis) == sizeof($gateways)) {
-					set_transient( 'woo_paghiper_apikey_valid', 1, 12 * 60 * 60 );
 				}
 			}
 
-		});
+			if(sizeof($valid_gateway_apis) == sizeof($gateways)) {
+				set_transient( 'woo_paghiper_apikey_valid', 1, 12 * 60 * 60 );
+			}
+		}
 
 	}
 
