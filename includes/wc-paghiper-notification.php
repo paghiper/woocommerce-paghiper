@@ -117,6 +117,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 
                     $cancelled_status = (!empty($settings['set_status_when_cancelled'])) ? $settings['set_status_when_cancelled'] : 'cancelled';
                     
+
                     $order->update_status( $cancelled_status, sprintf(__( 'PagHiper: %s Cancelado.', 'woo-boleto-paghiper' ),ucfirst($gateway_name)));
                     paghiper_increase_order_stock( $order, $settings );
 
