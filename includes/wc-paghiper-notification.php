@@ -236,6 +236,23 @@ function woocommerce_paghiper_check_ipn_response() {
 
         }
 
+    } catch (Exception $e) {
+        // catches all Exceptions
+
+            if ( $paghiper_log ) {
+                $message    = sprintf( 'Não foi possível checar o post de retorno da PagHiper.');
+
+                $error      = $e->getMessage();
+                $context    = [
+                    'error'             => $error,
+                    'exception_type'    => 'ClientException',
+                    'received_payload'  => var_export($_POST, TRUE),
+                    'retrieved_payload' => var_export($response, TRUE)
+                ];
+                wc_paghiper_add_log( $paghiper_log, $message, $context, WC_Log_Levels::CRITICAL );
+            }
+
+            wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo-boleto-paghiper' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo-boleto-paghiper' ), array( 'response' => 402 ) );
     } catch (ClientException $e) {
         // catches all ClientExceptions
 
