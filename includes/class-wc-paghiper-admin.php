@@ -44,8 +44,8 @@ class WC_Paghiper_Admin {
 
 		} else {
 
-			$current_page 	= $_GET['page'];
-			$current_action = $_GET['action'];
+			$current_page 	= esc_html($_GET['page']);
+			$current_action = esc_html($_GET['action']);
 
 			if( $current_page == 'wc-orders' && $current_action == 'edit' ) {
 				$order_id = absint( $_GET['id'] );
@@ -79,8 +79,8 @@ class WC_Paghiper_Admin {
 
 		} else {
 
-			$current_page 	= $_GET['page'];
-			$current_action = $_GET['action'];
+			$current_page 	= esc_html($_GET['page']);
+			$current_action = esc_html($_GET['action']);
 
 			if( $current_page == 'wc-orders' && $current_action == 'edit' ) {
 				$order_id = absint( $_GET['id'] );

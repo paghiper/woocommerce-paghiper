@@ -113,9 +113,9 @@ function print_screen($ico, $title, $message) {
 				<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,600" rel="stylesheet"> 
 				<div class="container">
 					<div>
-						<img style="max-width: 200px;" src="'.wc_paghiper_assets_url().'images/'.$ico.'">
-						<h3>'.$title.'</h3>
-						<p>'.$message.'</p>
+						<img style="max-width: 200px;" src="'.wc_paghiper_assets_url().'images/'.esc_attr($ico).'">
+						<h3>'.esc_html($title).'</h3>
+						<p>'.esc_html($message).'</p>
 					</div>
 				</div>
 				<style type="text/css">

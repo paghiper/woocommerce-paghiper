@@ -10,7 +10,7 @@ $reviews_url = '';
 
 ?>
 
-<h3><?php echo $this->method_title; ?></h3>
+<h3><?php echo esc_html($this->method_title); ?></h3>
 
 <?php
 	if ( 'yes' == $this->get_option( 'enabled' ) ) {

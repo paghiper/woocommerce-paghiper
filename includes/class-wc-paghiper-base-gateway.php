@@ -311,7 +311,7 @@ class WC_Paghiper_Base_Gateway {
 		return false;
 	}
 
-	public function has_payer_fields() {
+	public function has_payer_fields($payer_cpf_cnpj) {
 		$order = $this->is_order();
 		if(!is_null($order)) {
 			$has_payer_fields = ($order && (!empty($order->get_billing_first_name()) || !empty($order->get_billing_company()) || !empty($order->{'_'.$order->get_payment_method().'_payer_name'})));
@@ -339,13 +339,13 @@ class WC_Paghiper_Base_Gateway {
 		$has_taxid_fields = $this->has_taxid_fields();
 		if(!$has_taxid_fields && isset($_POST) && array_key_exists('post_data', $_POST)) {
 			parse_str( $_POST['post_data'], $post_data );
-			$has_taxid_fields = (array_key_exists('billing_cpf', $post_data) || array_key_exists('billing_cnpj', $post_data)) ? TRUE : FALSE;
+			$has_taxid_fields = array_key_exists('billing_cpf', $post_data) || array_key_exists('billing_cnpj', $post_data);
 		}
 
 		if(!$has_taxid_fields) {
 			echo '<div class="form-row form-row-wide paghiper-taxid-fieldset">
 				<label>Número de CPF/CNPJ <span class="required">*</span></label>
-				<input id="'.$this->gateway->id.'_cpf_cnpj" name="_'.$this->gateway->id.'_cpf_cnpj" class="paghiper_tax_id" type="text" autocomplete="off">
+				<input id="'.esc_attr($this->gateway->id).'_cpf_cnpj" name="_'.esc_attr($this->gateway->id).'_cpf_cnpj" class="paghiper_tax_id" type="text" autocomplete="off">
 				</div>
 				<div class="clear"></div>';
 		}
@@ -354,7 +354,7 @@ class WC_Paghiper_Base_Gateway {
 		$payer_cpf_cnpj_value = NULL;
 
 		// CNPJ/CNPJ came from our own checkout field
-		if(array_key_exists('_'.$this->gateway->id.'_cpf_cnpj', $_POST)) {
+		if(array_key_exists('_'.$this->gateway->id.'_cpf_cnpj', esc_html($_POST))) {
 			$payer_cpf_cnpj_value = $_POST['_'.$this->gateway->id.'_cpf_cnpj'];
 
 		// Check if we have a TaxID field comes from Brazilian Market on Woocommerce 
@@ -373,7 +373,7 @@ class WC_Paghiper_Base_Gateway {
 
 		$payer_cpf_cnpj = preg_replace('/\D/', '', sanitize_text_field($payer_cpf_cnpj_value));
 
-		$has_payer_fields = $this->has_payer_fields();
+		$has_payer_fields = $this->has_payer_fields($payer_cpf_cnpj);
 		if(!$has_payer_fields) {
 			$has_payer_fields = ((!is_null($payer_cpf_cnpj) && 
 									strlen($payer_cpf_cnpj) > 11 && 
@@ -450,8 +450,8 @@ class WC_Paghiper_Base_Gateway {
 				$taxid_payer 		= null;
 				foreach($taxid_payer_keys as $taxid_payer_key) {
 					// TODO: Check if item key exists in order meta too
-					if( (array_key_exists($taxid_payer_key, $_POST) && !empty($_POST[$taxid_payer_key])) ) {
-						$taxid_payer = sanitize_text_field($_POST[$taxid_payer_key]);
+					if( (array_key_exists($taxid_payer_key, esc_html($_POST)) && !empty($_POST[$taxid_payer_key])) ) {
+						$taxid_payer = sanitize_text_field(esc_html($_POST[$taxid_payer_key]));
 					}
 				}
 
@@ -495,7 +495,7 @@ class WC_Paghiper_Base_Gateway {
 		foreach($taxid_keys as $taxid_key) {
 			if(isset($_POST[$taxid_key]) && !empty($_POST[$taxid_key])) {
 
-				$taxid_value = sanitize_text_field($_POST[$taxid_key]);
+				$taxid_value = sanitize_text_field(esc_html($_POST[$taxid_key]));
 				$order->update_meta_data( $taxid_key, $taxid_value );
 				$order->save();
 			}

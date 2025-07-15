@@ -55,7 +55,7 @@ function wc_paghiper_initialize_log( $debug_settings ) {
 /**
  * Adds an item do log, if enabled from config
  *
- * @return object
+ * @return bool
  */
 function wc_paghiper_add_log( $logger, $message, $context = [], $level = WC_Log_Levels::INFO ) {
 
