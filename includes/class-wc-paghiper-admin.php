@@ -202,7 +202,7 @@ class WC_Paghiper_Admin {
 
 
 		} else {
-			$html = '<p>' . __( 'Este pedido não foi efetuado ou pago com boleto.', 'woo-boleto-paghiper' ) . '</p>';
+			$html = '<p>' . __( 'Este pedido não foi efetuado nem pago com PIX ou boleto da Paghiper.', 'woo-boleto-paghiper' ) . '</p>';
 			$html .= '<style>#woo_paghiper.postbox {display: none;}</style>';
 		}
 
