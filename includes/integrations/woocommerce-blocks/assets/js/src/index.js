@@ -8,7 +8,7 @@ import { InlineTaxIdField } from './elements';
 
 // PIX Gateway
 const pixSettings 		= getSetting( 'paghiper_pix_data', {} );
-const defaultPixLabel 	= __( 'PIX Paghiper', 'paghiper-payments' )
+const defaultPixLabel 	= __( 'PIX Paghiper', 'woo-boleto-paghiper' )
 const label 			= decodeEntities( pixSettings.title ) || defaultPixLabel
 
 const Content = ( props ) => {
@@ -98,7 +98,7 @@ registerPaymentMethod( PaghiperPix );
 
 // Billet
 const billetSettings 		= getSetting( 'paghiper_billet_data', {} )
-const defaultBilletLabel 	= __( 'Boleto Paghiper', 'paghiper-payments' )
+const defaultBilletLabel 	= __( 'Boleto Paghiper', 'woo-boleto-paghiper' )
 const billetLabel 			= decodeEntities( billetSettings.title ) || defaultBilletLabel
 
 const BilletLabel = ( props ) => {

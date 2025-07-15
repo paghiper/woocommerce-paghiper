@@ -20,7 +20,7 @@ export const InlineTaxIdField = ( {
 	const [ isEmpty, setIsEmpty ] = useState( true );
 	const [ isInvalid, setIsInvalid ] = useState( false );
     const [ isComplete, setIsComplete ] = useState( false );
-	const [ fieldLabel, setFieldLabel ] = useState(__('CPF do Pagador', 'paghiper-payments'));
+	const [ fieldLabel, setFieldLabel ] = useState(__('CPF do Pagador', 'woo-boleto-paghiper'));
     const [ fieldInput, setFieldInput ] = useState('');
 	const { options, isActive, isFocus, onActive, error, setError } = useElementOptions( {
 		hideIcon: true,
@@ -42,26 +42,26 @@ export const InlineTaxIdField = ( {
     useEffect(() => {
 
         if(fieldInput.replace(/\D/g, '').length > 11) {
-            setFieldLabel(__('CNPJ do Pagador', 'paghiper-payments'));
+            setFieldLabel(__('CNPJ do Pagador', 'woo-boleto-paghiper'));
         } else {
-            setFieldLabel(__('CPF do Pagador', 'paghiper-payments'));
+            setFieldLabel(__('CPF do Pagador', 'woo-boleto-paghiper'));
         }
 
         if(!isEmpty) {
             if(!isFocus) {
 
                 if(fieldInput.replace(/\D/g, '').length > 11 && fieldInput.replace(/\D/g, '').length < 14) {
-                    setError(__('O número do seu CNPJ está incompleto.', 'paghiper-payments'));
+                    setError(__('O número do seu CNPJ está incompleto.', 'woo-boleto-paghiper'));
                     setIsInvalid(true);
                 } else if (fieldInput.replace(/\D/g, '').length < 11) {
-                    setError(__('O número do seu CPF está incompleto.', 'paghiper-payments'));
+                    setError(__('O número do seu CPF está incompleto.', 'woo-boleto-paghiper'));
                     setIsInvalid(true);
                 }
             } else {
                 if(fieldInput.replace(/\D/g, '').length == 11) {
                     // Valida CPF
                     if(!isCPF(fieldInput)) {
-                        setError(__('O número do seu CPF está correto.', 'paghiper-payments'));
+                        setError(__('O número do seu CPF está correto.', 'woo-boleto-paghiper'));
                         setIsInvalid(true);
                     } else {
                         setIsComplete(true);
@@ -69,7 +69,7 @@ export const InlineTaxIdField = ( {
                 } else if(fieldInput.replace(/\D/g, '').length == 14) {
                     // Valida CNPJ
                     if(!isCNPJ(fieldInput)) {
-                        setError(__('O número do seu CNPJ não está correto.', 'paghiper-payments'));
+                        setError(__('O número do seu CNPJ não está correto.', 'woo-boleto-paghiper'));
                         setIsInvalid(true);
                     } else {
                         setIsComplete(true);

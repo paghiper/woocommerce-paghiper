@@ -16,10 +16,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<a data-action="set" data-notice-key="review_ignore" href="%s" class="ajax-action button"><span class="dashicons dashicons-dismiss"></span> %s</a>
 		</p>
 	</div>', 
-__('Queremos saber sua opinião!', 'paghiper-payments'),
-__('Você tem recebido seus pagamentos com a Paghiper a alguns dias. Conte pra nós como tem sido usar o plugin da Paghiper! Leva só 2 minutinhos.', 'paghiper-payments'), 
-'https://wordpress.org/support/plugin/woo-boleto-paghiper/reviews/#new-post', __('Claro, agora!', 'paghiper-payments'),
-'#', __('Ja fiz isso', 'paghiper-payments'),
-'#', __('Talvez depois', 'paghiper-payments'),
-'#', __('Deixa pra lá', 'paghiper-payments')
+__('Queremos saber sua opinião!', 'woo-boleto-paghiper'),
+__('Você tem recebido seus pagamentos com a Paghiper a alguns dias. Conte pra nós como tem sido usar o plugin da Paghiper! Leva só 2 minutinhos.', 'woo-boleto-paghiper'), 
+'https://wordpress.org/support/plugin/woo-boleto-paghiper/reviews/#new-post', __('Claro, agora!', 'woo-boleto-paghiper'),
+'#', __('Ja fiz isso', 'woo-boleto-paghiper'),
+'#', __('Talvez depois', 'woo-boleto-paghiper'),
+'#', __('Deixa pra lá', 'woo-boleto-paghiper')
 ) ?>

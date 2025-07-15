@@ -78,7 +78,7 @@ class WC_Paghiper_Admin {
 
 		add_meta_box(
 			'paghiper-boleto',
-			__( "Configurações do {$method_title}", 'paghiper-payments' ),
+			__( "Configurações do {$method_title}", 'woo-boleto-paghiper' ),
 			array( $this, 'metabox_content' ),
 			$target_screen,
 			'side',
@@ -139,18 +139,18 @@ class WC_Paghiper_Admin {
 			$html = $paghiperTransaction->printBarCode(false, true, ['code', 'digitable']);
 
 			$order_transaction_due_date = DateTime::createFromFormat('Y-m-d', $paghiper_data['order_transaction_due_date'], $this->timezone);
-			$formatted_due_date = ($order_transaction_due_date) ? $order_transaction_due_date->format('d/m/Y') : sprintf(__("%s indisponível", 'paghiper-payments'), (($gateway_name == 'paghiper_pix') ? __("PIX", 'paghiper-payments') : __("Boleto", 'paghiper-payments')));
+			$formatted_due_date = ($order_transaction_due_date) ? $order_transaction_due_date->format('d/m/Y') : sprintf(__("%s indisponível", 'woo-boleto-paghiper'), (($gateway_name == 'paghiper_pix') ? __("PIX", 'woo-boleto-paghiper') : __("Boleto", 'woo-boleto-paghiper')));
 
-			$html .= '<p><strong>' . __( 'Data de Vencimento:', 'paghiper-payments' ) . '</strong> ' . $formatted_due_date . '</p>';
+			$html .= '<p><strong>' . __( 'Data de Vencimento:', 'woo-boleto-paghiper' ) . '</strong> ' . $formatted_due_date . '</p>';
 
 			if($gateway_name !== 'paghiper_pix')
-			$html .= '<p><strong>' . __( 'URL:', 'paghiper-payments' ) . '</strong> <a target="_blank" href="' . esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ) . '">' . __( 'Visualizar boleto', 'paghiper-payments' ) . '</a></p>';
+			$html .= '<p><strong>' . __( 'URL:', 'woo-boleto-paghiper' ) . '</strong> <a target="_blank" href="' . esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ) . '">' . __( 'Visualizar boleto', 'woo-boleto-paghiper' ) . '</a></p>';
 
 			$html .= '<p style="border-top: 1px solid #ccc;"></p>';
 
-			$html .= '<label for="woo_paghiper_expiration_date">' . __( 'Digite uma nova data de vencimento:', 'paghiper-payments' ) . '</label><br />';
+			$html .= '<label for="woo_paghiper_expiration_date">' . __( 'Digite uma nova data de vencimento:', 'woo-boleto-paghiper' ) . '</label><br />';
 			$html .= '<input type="text" id="woo_paghiper_expiration_date" name="woo_paghiper_expiration_date" class="date" style="width: 100%;" />';
-			$html .= '<span class="description">' . sprintf(__( 'Ao configurar uma nova data de vencimento, o %s é re-enviado ao cliente por e-mail.', 'paghiper-payments' ), (($gateway_name !== 'paghiper_pix') ? __('boleto', 'paghiper-payments') : __('PIX', 'paghiper-payments') )) . '</span>';
+			$html .= '<span class="description">' . sprintf(__( 'Ao configurar uma nova data de vencimento, o %s é re-enviado ao cliente por e-mail.', 'woo-boleto-paghiper' ), (($gateway_name !== 'paghiper_pix') ? __('boleto', 'woo-boleto-paghiper') : __('PIX', 'woo-boleto-paghiper') )) . '</span>';
 
 			// Show errors related to user input (invalid or past inputted dates)
 			if ( $error = get_transient( "woo_paghiper_save_order_errors_{$order->get_id()}" ) ) {
@@ -170,7 +170,7 @@ class WC_Paghiper_Admin {
 
 
 		} else {
-			$html = '<p>' . __( 'Este pedido não foi efetuado ou pago com boleto.', 'paghiper-payments' ) . '</p>';
+			$html = '<p>' . __( 'Este pedido não foi efetuado ou pago com boleto.', 'woo-boleto-paghiper' ) . '</p>';
 			$html .= '<style>#woo_paghiper.postbox {display: none;}</style>';
 		}
 
@@ -215,14 +215,14 @@ class WC_Paghiper_Admin {
 
 			if(!$new_due_date || $formatted_date !== $input_date) {
 
-				$error = __( '<strong>Boleto PagHiper</strong>: Data de vencimento inválida!', 'paghiper-payments' );
+				$error = __( '<strong>Boleto PagHiper</strong>: Data de vencimento inválida!', 'woo-boleto-paghiper' );
 				set_transient("woo_paghiper_save_order_errors_{$post_id}", $error, 45);
 
 				return $post_id;
 
 			} elseif($new_due_date && $today_date->diff($new_due_date)->format("%r%a") < 0) {
 
-				$error = __( '<strong>Boleto PagHiper</strong>: A data de vencimento não pode ser anterior a data de hoje!', 'paghiper-payments' );
+				$error = __( '<strong>Boleto PagHiper</strong>: A data de vencimento não pode ser anterior a data de hoje!', 'woo-boleto-paghiper' );
 				set_transient("woo_paghiper_save_order_errors_{$post_id}", $error, 45);
 
 				return $post_id;
@@ -241,7 +241,7 @@ class WC_Paghiper_Admin {
 			delete_transient("woo_paghiper_due_date_order_errors_{$post_id}");
 
 			// Add order note.
-			$order->add_order_note( sprintf( __( 'Data de vencimento alterada para %s', 'paghiper-payments' ), $formatted_date ) );
+			$order->add_order_note( sprintf( __( 'Data de vencimento alterada para %s', 'woo-boleto-paghiper' ), $formatted_date ) );
 
 			// Send email notification.
 			$this->email_notification( $order, $new_due_date->format('d/m/Y') );
@@ -273,12 +273,12 @@ class WC_Paghiper_Admin {
 
 		
 		if($gateway_id == 'paghiper_pix') {
-			$gateway_name = __('boleto', 'paghiper-payments');
+			$gateway_name = __('boleto', 'woo-boleto-paghiper');
 		} else {
-			$gateway_name = __('PIX', 'paghiper-payments');
+			$gateway_name = __('PIX', 'woo-boleto-paghiper');
 		}
 
-		$subject = sprintf( __( 'O %s do seu pedido foi atualizado (%s)', 'paghiper-payments' ), $gateway_name, $order->get_order_number() );
+		$subject = sprintf( __( 'O %s do seu pedido foi atualizado (%s)', 'woo-boleto-paghiper' ), $gateway_name, $order->get_order_number() );
 
 		// Mail headers.
 		$headers = array();
@@ -290,12 +290,12 @@ class WC_Paghiper_Admin {
 		$paghiperTransaction = new WC_PagHiper_Transaction( $order->get_id() );
 
 		// Body message.
-		$main_message = '<p>' . sprintf( __( 'A data de vencimento do seu %s foi atualizada para: %s', 'paghiper-payments' ), $gateway_name, '<code>' . $expiration_date . '</code>' ) . '</p>';
+		$main_message = '<p>' . sprintf( __( 'A data de vencimento do seu %s foi atualizada para: %s', 'woo-boleto-paghiper' ), $gateway_name, '<code>' . $expiration_date . '</code>' ) . '</p>';
 		$main_message .= $paghiperTransaction->printBarCode();
-		$main_message .= '<p>' . sprintf( '<a class="button" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ), __( 'Pagar o boleto &rarr;', 'paghiper-payments' ) ) . '</p>';
+		$main_message .= '<p>' . sprintf( '<a class="button" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ), __( 'Pagar o boleto &rarr;', 'woo-boleto-paghiper' ) ) . '</p>';
 
 		// Sets message template.
-		$message = $mailer->wrap_message( sprintf(__( 'Nova data de vencimento para o seu %s', 'paghiper-payments' ), $gateway_name, $main_message ) );
+		$message = $mailer->wrap_message( sprintf(__( 'Nova data de vencimento para o seu %s', 'woo-boleto-paghiper' ), $gateway_name, $main_message ) );
 
 		// Send email.
 		$mailer->send( $billing_email, $subject, $message, $headers, '' );
