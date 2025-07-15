@@ -736,7 +736,18 @@ class WC_PagHiper_Transaction {
 	}
 
 	public function _get_digitable_line() {
-		return ($this->gateway_id == 'paghiper_pix') ? $this->order_data['emv'] : $this->order_data['digitable_line'];
+
+		if($this->gateway_id == 'paghiper_pix') {
+			if(array_key_exists('emv', $this->order_data)) {
+				return $this->order_data['emv'];
+			}
+		} else {
+			if(array_key_exists('digitable_line', $this->order_data)) {
+				return $this->order_data['digitable_line'];
+			}
+		}
+
+		return false;
 	}
 
 	public function _get_barcode() {
