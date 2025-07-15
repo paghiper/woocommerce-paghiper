@@ -4,6 +4,11 @@ class WC_Paghiper_Base_Gateway {
 
 	private $log;
 	private $timezone;
+	private $gateway;
+	private $order;
+	private $days_due_date;
+	private $skip_non_workdays;
+	private $set_status_when_waiting;
 
 	public function __construct($gateway) {
 
