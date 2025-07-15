@@ -34,10 +34,42 @@ class WC_Paghiper_Admin {
 		add_action( 'admin_enqueue_scripts', array( $this, 'load_plugin_assets' ) );
 	}
 
+	private function is_target_screen() {
+
+		global $post;
+		if($post && $post->post_type == 'shop_order') {
+
+			$order = wc_get_order( $post->ID );
+
+		} else {
+
+			$current_page 	= $_GET['page'];
+			$current_action = $_GET['action'];
+
+			if( $current_page == 'wc-orders' && $current_action == 'edit' ) {
+				$order_id = absint( $_GET['id'] );
+				$order = wc_get_order( $order_id );
+
+			} else {
+				return false;
+			}
+
+		}
+		
+		if(!$order) {
+			return false;
+		}
+
+		return true;
+	}
+
 	/**
 	 * Register paghiper metabox.
 	 */
 	public function register_metabox() {
+
+		if( !$this->is_target_screen() )
+			return;
 
 		global $post;
 		if($post && $post->post_type == 'shop_order') {
