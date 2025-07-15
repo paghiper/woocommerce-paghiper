@@ -50,20 +50,11 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 == Changelog ==
 
-## 2.4.4
+## 2.5
 
-- Fixes por questões de compliance
+- Mudança sutil no nome do plugin por questões de compliance
 - Erro fatal no admin dos pedidos, a depender de algumas condições
-
-## 2.4.3
-
-- Melhoria: Otimizações e refatoração de código em diversas rotas e jornadas
-- Melhoria: Mais informações de log
-- Fix: Mudanças de status duplicadas
-- Fix: Remoção de diversos warnings
-- Fix: Metabox não aparece para pedidos com HPOS ativado em algumas circunstâncias
-- FIx: Erros ocasionais nas áreas de admin, a depender da combinação de plug-ins utilizada
-
+- Múltiplos bugfixes e melhorias
 
 # Licença
 
