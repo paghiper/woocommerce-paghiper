@@ -44,11 +44,15 @@ class WC_Paghiper_Admin {
 
 		} else {
 
-			$current_page 	= $_GET['page'];
-			$current_action = $_GET['action'];
+			// In case any of the variables are missing, bail out
+			if(!array_key_exists('page', $_GET) || !array_key_exists('action', $_GET) || !array_key_exists('id', $_GET))
+				return false;
+
+			$current_page 	= sanitize_key( wp_unslash($_GET['page']) );
+			$current_action = sanitize_key( wp_unslash($_GET['action']) );
 
 			if( $current_page == 'wc-orders' && $current_action == 'edit' ) {
-				$order_id = absint( $_GET['id'] );
+				$order_id = (int) $_GET['id'];
 				$order = wc_get_order( $order_id );
 
 			} else {
@@ -194,9 +198,15 @@ class WC_Paghiper_Admin {
 	 * @param int $post_id Current post type ID.
 	 */
 	public function save( $post_id ) {
+
+		// Sanitize nonce field before processing any form data
+		$wc_paghiper_metabox_nonce = '';
+		if ( array_key_exists( 'woo_paghiper_metabox_nonce', $_POST ) ) {
+			$wc_paghiper_metabox_nonce = sanitize_text_field( wp_unslash( $_POST['woo_paghiper_metabox_nonce'] ) );
+		}
 		
 		// Verify nonce.
-		if ( ! isset( $_POST['woo_paghiper_metabox_nonce'] ) || ! wp_verify_nonce( $_POST['woo_paghiper_metabox_nonce'], basename( __FILE__ ) ) ) {
+		if ( empty( $wc_paghiper_metabox_nonce ) || !wp_verify_nonce( $wc_paghiper_metabox_nonce, basename( __FILE__ ) ) ) {
 			return $post_id;
 		}
 
@@ -210,21 +220,24 @@ class WC_Paghiper_Admin {
 			return $post_id;
 		}
 
-		if ( isset( $_POST['woo_paghiper_expiration_date'] ) && ! empty( $_POST['woo_paghiper_expiration_date'] ) ) {
+		// Sanitize expiration date
+		$wc_paghiper_expiration_date = '';
+		if ( array_key_exists( 'woo_paghiper_expiration_date', $_POST ) ) {
+			$wc_paghiper_expiration_date = sanitize_text_field( wp_unslash( $_POST['woo_paghiper_expiration_date'] ) );
+		}
 
-			// Store our input on a var for later use
-			$input_date = sanitize_text_field( trim($_POST['woo_paghiper_expiration_date']) );
+		if ( !empty( $wc_paghiper_expiration_date ) ) {
 
 			$today_date = new \DateTime();
 			$today_date->setTimezone($this->timezone);
 
 			$order = wc_get_order( $post_id );
 			$paghiper_data = $order->get_meta( 'wc_paghiper_data' ) ;
-			$new_due_date = DateTime::createFromFormat('d/m/Y', $input_date, $this->timezone);
+			$new_due_date = DateTime::createFromFormat('d/m/Y', $wc_paghiper_expiration_date, $this->timezone);
 
 			$formatted_date = ($new_due_date) ? $new_due_date->format('d/m/Y') : NULL ;
 
-			if(!$new_due_date || $formatted_date !== $input_date) {
+			if(!$new_due_date || $formatted_date !== $wc_paghiper_expiration_date) {
 
 				$error = __( '<strong>Boleto PagHiper</strong>: Data de vencimento inválida!', 'woo-boleto-paghiper' );
 				set_transient("woo_paghiper_save_order_errors_{$post_id}", $error, 45);
