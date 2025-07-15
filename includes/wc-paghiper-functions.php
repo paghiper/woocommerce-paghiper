@@ -8,8 +8,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return string
  */
-function wc_paghiper_assets_url() {
-	return plugin_dir_url( dirname( __FILE__ ) ) . 'assets/';
+function wc_paghiper_assets_url( $path = '') {
+	return plugin_dir_url( dirname( __FILE__ ) ) . 'assets/' . $path;
 }
 
 /**
