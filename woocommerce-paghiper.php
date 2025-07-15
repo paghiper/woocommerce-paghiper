@@ -838,7 +838,7 @@ class WC_Paghiper {
 				}
 
 				if(is_file($test_filename)) {
-					@unlink($test_filename);
+					wp_delete_file( $test_filename );
 				}
 			} else {
 				include_once 'includes/views/notices/html-notice-paghiper-folder-not-writable.php';
