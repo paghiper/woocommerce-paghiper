@@ -4,7 +4,7 @@ Donate link: https://www.paghiper.com/
 Tags: pix, boleto, paghiper, pagamento, gateway
 Requires at least: 6.0
 Tested up to: 6.8.1
-Stable tag: trunk
+Stable tag: 2.5
 Requires PHP: 7.2
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
