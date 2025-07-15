@@ -1,0 +1,640 @@
+# Copyright (C) 2025 PagHiper Pagamentos
+# This file is distributed under the GPLv3.
+msgid ""
+msgstr ""
+"Project-Id-Version: PagHiper Boleto e PIX para WooCommerce 2.5\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/woo-boleto-"
+"paghiper\n"
+"POT-Creation-Date: 2025-07-15T00:48:35+00:00\n"
+"PO-Revision-Date: 2025-07-14 21:49-0300\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.6\n"
+"X-Domain: paghiper-payments\n"
+
+#. Plugin Name of the plugin
+#: woocommerce-paghiper.php
+msgid "PagHiper Boleto e PIX para WooCommerce"
+msgstr "PagHiper Boleto e PIX para WooCommerce"
+
+#. Plugin URI of the plugin
+#: woocommerce-paghiper.php
+msgid "https://github.com/paghiper/woocommerce-paghiper/"
+msgstr "https://github.com/paghiper/woocommerce-paghiper/"
+
+#. Description of the plugin
+#: woocommerce-paghiper.php
+msgid ""
+"Ofereça a seus clientes pagamento por PIX e boleto bancário com a PagHiper. "
+"Fácil, prático e rapido!"
+msgstr ""
+"Ofereça a seus clientes pagamento por PIX e boleto bancário com a PagHiper. "
+"Fácil, prático e rapido!"
+
+#. Author of the plugin
+#: woocommerce-paghiper.php
+msgid "PagHiper Pagamentos"
+msgstr "PagHiper Pagamentos"
+
+#. Author URI of the plugin
+#: woocommerce-paghiper.php
+msgid "https://www.paghiper.com"
+msgstr "https://www.paghiper.com"
+
+#: includes/class-wc-paghiper-admin.php:142
+#, php-format
+msgid "%s indisponível"
+msgstr ""
+
+#: includes/class-wc-paghiper-admin.php:142
+#: includes/class-wc-paghiper-admin.php:153
+#: includes/class-wc-paghiper-admin.php:278
+#: includes/class-wc-paghiper-base-gateway.php:148
+#: includes/class-wc-paghiper-base-gateway.php:151
+#: includes/class-wc-paghiper-base-gateway.php:175
+#: includes/class-wc-paghiper-base-gateway.php:531
+msgid "PIX"
+msgstr ""
+
+#: includes/class-wc-paghiper-admin.php:142
+#: includes/class-wc-paghiper-base-gateway.php:531
+msgid "Boleto"
+msgstr ""
+
+#: includes/class-wc-paghiper-admin.php:144
+msgid "Data de Vencimento:"
+msgstr ""
+
+#: includes/class-wc-paghiper-admin.php:147
+msgid "URL:"
+msgstr ""
+
+#: includes/class-wc-paghiper-admin.php:147
+msgid "Visualizar boleto"
+msgstr ""
+
+#: includes/class-wc-paghiper-admin.php:151
+msgid "Digite uma nova data de vencimento:"
+msgstr ""
+
+#: includes/class-wc-paghiper-admin.php:153
+#, php-format
+msgid ""
+"Ao configurar uma nova data de vencimento, o %s é re-enviado ao cliente por "
+"e-mail."
+msgstr ""
+
+#: includes/class-wc-paghiper-admin.php:153
+#: includes/class-wc-paghiper-admin.php:276
+#: includes/class-wc-paghiper-base-gateway.php:151
+msgid "boleto"
+msgstr ""
+
+#: includes/class-wc-paghiper-admin.php:173
+msgid "Este pedido não foi efetuado ou pago com boleto."
+msgstr ""
+
+#: includes/class-wc-paghiper-admin.php:218
+msgid "<strong>Boleto PagHiper</strong>: Data de vencimento inválida!"
+msgstr ""
+
+#: includes/class-wc-paghiper-admin.php:225
+msgid ""
+"<strong>Boleto PagHiper</strong>: A data de vencimento não pode ser anterior "
+"a data de hoje!"
+msgstr ""
+
+#: includes/class-wc-paghiper-admin.php:244
+#, php-format
+msgid "Data de vencimento alterada para %s"
+msgstr ""
+
+#: includes/class-wc-paghiper-admin.php:281
+#, php-format
+msgid "O %s do seu pedido foi atualizado (%s)"
+msgstr ""
+
+#: includes/class-wc-paghiper-admin.php:293
+#, php-format
+msgid "A data de vencimento do seu %s foi atualizada para: %s"
+msgstr ""
+
+#: includes/class-wc-paghiper-admin.php:295
+msgid "Pagar o boleto &rarr;"
+msgstr ""
+
+#: includes/class-wc-paghiper-admin.php:298
+#, php-format
+msgid "Nova data de vencimento para o seu %s"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:51
+#: includes/integrations/woocommerce-blocks/assets/js/build/index.js:2098
+#: includes/integrations/woocommerce-blocks/assets/js/src/index.js:11
+#: includes/integrations/woocommerce-blocks/assets/js/build/index.js:1860
+msgid "PIX Paghiper"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:53
+#: includes/integrations/woocommerce-blocks/assets/js/build/index.js:2180
+#: includes/integrations/woocommerce-blocks/assets/js/src/index.js:101
+#: includes/integrations/woocommerce-blocks/assets/js/build/index.js:1950
+msgid "Boleto Paghiper"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:55
+msgid ""
+"A moeda-padrão do seu Woocommerce não é o R$. Ajuste suas configurações aqui:"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:55
+msgid "Configurações de moeda"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:136
+msgid "System Status &gt; Logs"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:147
+msgid "Ativar PIX PagHiper"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:147
+msgid "Ativar Boleto PagHiper"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:148
+msgid "Boleto Bancário"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:149
+msgid "Pague de maneira rápida e segura com PIX"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:149
+msgid "Pagar com Boleto Bancário"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:157
+#: includes/class-wc-paghiper-base-gateway.php:206
+#: includes/class-wc-paghiper-base-gateway.php:227
+msgid "Ativar/Desativar"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:161
+msgid "Título"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:163
+msgid ""
+"Esse campo controla o título da seção que o usuário vê durante o checkout."
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:168
+msgid "Descrição"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:170
+msgid ""
+"Esse campo controla o texto da seção que o usuário vê durante o checkout."
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:175
+#, php-format
+msgid "Configurações do PagHiper %s"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:175
+msgid "Boleto bancário"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:179
+msgid "API Key"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:182
+msgid "Chave de API para integração com a PagHiper"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:185
+msgid "Token PagHiper"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:187
+msgid ""
+"Extremamente importante, você pode gerar seu token em nossa pagina: Painel > "
+"Ferramentas > Token."
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:190
+msgid "Dias corridos para o vencimento"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:192
+msgid "Número de dias para calcular a data de vencimento do "
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:199
+msgid "Ao configurar este item, será possível pagar o "
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:204
+msgid "Ajustar data de vencimento dos "
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:207
+msgid "Ative esta opção para evitar "
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:215
+msgid "Configurações extra"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:219
+msgid "Restituir estoque, caso o pedido seja cancelado?"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:221
+msgid ""
+"O plug-in subtrai os itens comprados no pedido por padrão. Essa opção os "
+"incrementa de volta, caso o pedido seja cancelado. Ativar/Desativar"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:225
+msgid "Exibir frase customizada no "
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:231
+msgid "Mudar status após emissão do "
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:238
+msgid "Mudar status após pagamento do "
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:245
+msgid "Mudar status após cancelamento do "
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:252
+msgid "Log de depuração"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:254
+msgid "Ativa o log de erros"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:256
+#, php-format
+msgid ""
+"Armazena eventos e erros, como chamadas API e exibições, dentro do arquivo "
+"%s Ative caso enfrente problemas."
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:531
+#, php-format
+msgid "PagHiper: %s gerado e enviado por e-mail."
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:538
+msgid ""
+"Atenção! Total da transação excede R$ 9.000. Caso ainda não o tenha feito, "
+"entre em contato com nossa equipe comercial para liberação através do e-mail "
+"<a href=\"comercial@paghiper.com\" target=\"_blank\">comercial@paghiper.com</"
+"a>"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:643
+msgid "Pagar o Boleto"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:645
+#: includes/class-wc-paghiper-base-gateway.php:689
+#, php-format
+msgid "%sAtenção!%s Você NÃO vai receber o boleto pelos Correios."
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:646
+msgid ""
+"Clique no link abaixo e pague o boleto pelo seu aplicativo de Internet "
+"Banking ."
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:647
+#: includes/class-wc-paghiper-base-gateway.php:690
+msgid ""
+"Se preferir, você pode imprimir e pagar o boleto em qualquer agência "
+"bancária ou lotérica."
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:651
+#, php-format
+msgid "Data de vencimento do Boleto: %s."
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:681
+#, fuzzy
+#| msgid "PagHiper Pagamentos"
+msgid "Pagamento"
+msgstr "PagHiper Pagamentos"
+
+#: includes/class-wc-paghiper-base-gateway.php:694
+msgid "Veja o boleto completo &rarr;"
+msgstr ""
+
+#: includes/class-wc-paghiper-base-gateway.php:696
+#, php-format
+msgid "Data de Vencimento: %s."
+msgstr ""
+
+#: includes/class-wc-paghiper-billet-gateway.php:28
+#, fuzzy
+#| msgid "PagHiper Pagamentos"
+msgid "PagHiper Boleto"
+msgstr "PagHiper Pagamentos"
+
+#: includes/class-wc-paghiper-billet-gateway.php:29
+msgid "Ativa a emissão e recebimento de boletos via PagHiper."
+msgstr ""
+
+#: includes/class-wc-paghiper-pix-gateway.php:28
+#, fuzzy
+#| msgid "PagHiper Pagamentos"
+msgid "PagHiper PIX"
+msgstr "PagHiper Pagamentos"
+
+#: includes/class-wc-paghiper-pix-gateway.php:29
+msgid "Receba pagamentos por PIX usando PagHiper."
+msgstr ""
+
+#: includes/class-wc-paghiper-transaction.php:122
+#: includes/wc-paghiper-functions.php:94
+#, php-format
+msgid "Data de vencimento ajustada para %s"
+msgstr ""
+
+#: includes/class-wc-paghiper-transaction.php:128
+msgid ""
+"<strong>Boleto PagHiper</strong>: \n"
+"\t\t\t\t\tA data de vencimento do boleto foi configurada para um final de "
+"semana mas o boleto foi emitido para segunda-feira. \n"
+"\t\t\t\t\tCheque a opção \"Vencimento em finais de semana\" no <a "
+"href=\"https://www.paghiper.com/painel/prazo-vencimento-boleto/\" "
+"target=\"_blank\">Painel da PagHiper</a> ou \n"
+"\t\t\t\t\tative nas configurações do plugin a correção de datas para que o "
+"vencimento não caia em finais de semana"
+msgstr ""
+
+#: includes/class-wc-paghiper-transaction.php:685
+msgid "Pagar com PIX copia e cola - "
+msgstr ""
+
+#: includes/integrations/automate-woo.php:27
+msgid "Displays the PIX digitable for a Paghiper transaction"
+msgstr ""
+
+#: includes/integrations/automate-woo.php:55
+msgid "Displays the scanable code for a Paghiper transaction"
+msgstr ""
+
+#: includes/integrations/automate-woo.php:83
+msgid "Displays the due date for a Paghiper transaction"
+msgstr ""
+
+#: includes/views/notices/html-nag-review.php:19
+msgid "Queremos saber sua opinião!"
+msgstr ""
+
+#: includes/views/notices/html-nag-review.php:20
+msgid ""
+"Você tem recebido seus pagamentos com a Paghiper a alguns dias. Conte pra "
+"nós como tem sido usar o plugin da Paghiper! Leva só 2 minutinhos."
+msgstr ""
+
+#: includes/views/notices/html-nag-review.php:21
+msgid "Claro, agora!"
+msgstr ""
+
+#: includes/views/notices/html-nag-review.php:22
+msgid "Ja fiz isso"
+msgstr ""
+
+#: includes/views/notices/html-nag-review.php:23
+msgid "Talvez depois"
+msgstr ""
+
+#: includes/views/notices/html-nag-review.php:24
+msgid "Deixa pra lá"
+msgstr ""
+
+#: includes/views/notices/html-notice-currency-not-supported.php:13
+#: includes/views/notices/html-notice-gd-missing.php:11
+#: includes/views/notices/html-notice-json-missing.php:11
+#: includes/views/notices/html-notice-min-php-version.php:11
+#: includes/views/notices/html-notice-paghiper-folder-not-writable.php:11
+msgid "Temos um problema!"
+msgstr ""
+
+#: includes/views/notices/html-notice-currency-not-supported.php:13
+#, php-format
+msgid ""
+"O Paghiper não dá suporte a moeda <code>%s</code>. Só é possível receber em "
+"Real Brasileiro (R$)."
+msgstr ""
+
+#: includes/views/notices/html-notice-gd-missing.php:11
+msgid ""
+"O Paghiper precisa que seu PHP tenha a extensão GD disponível, caso "
+"contrário, não será possível exibir códigos de barras dos seus boletos nos e-"
+"mails. <br>Entre em contato com seu provedor de hospedagem, informando o "
+"problema."
+msgstr ""
+
+#: includes/views/notices/html-notice-json-missing.php:11
+msgid ""
+"Este plugin precisa que seu PHP esteja compilado com suporte a JSON! Entre "
+"em contato com seu provedor de hospedagem, informando o problema."
+msgstr ""
+
+#: includes/views/notices/html-notice-min-php-version.php:11
+msgid ""
+"Sua versão do PHP é anterior a v5.6. Atualize para que o plugin da Paghiper "
+"funcione corretamente."
+msgstr ""
+
+#: includes/views/notices/html-notice-multiple-instances.php:18
+msgid "WooCommerce PagHiper foi desativado!"
+msgstr ""
+
+#: includes/views/notices/html-notice-multiple-instances.php:18
+#, php-format
+msgid ""
+"Existem vários %s da Paghiper instalados. Um ou mais deles foram "
+"desativados. Remova-os para deixar de ver este aviso."
+msgstr ""
+
+#: includes/views/notices/html-notice-multiple-instances.php:18
+msgid "plug-ins"
+msgstr ""
+
+#: includes/views/notices/html-notice-paghiper-folder-not-writable.php:11
+msgid ""
+"O plug-in Paghiper precisa salvar arquivos para envio de boletos anexos. "
+"<br>Verifique com seu provedor se a pasta <strong>/wp-content/uploads/"
+"paghiper</strong> tem permissões de escrita e leitura."
+msgstr ""
+
+#: includes/views/notices/html-notice-woocommerce-missing.php:20
+msgid "PagHiper para WooCommerce foi desativado!"
+msgstr "PagHiper para WooCommerce foi desativado!"
+
+#: includes/views/notices/html-notice-woocommerce-missing.php:20
+#, php-format
+msgid ""
+"Este plugin precisa do %s para funcionar. Instale ou ative para receber "
+"pedidos."
+msgstr ""
+
+#: includes/views/notices/html-notice-woocommerce-missing.php:20
+msgid "WooCommerce"
+msgstr ""
+
+#: includes/wc-paghiper-notification.php:64
+msgid ""
+"PagHiper: Pagamento completo. O valor ja se encontra disponível para saque."
+msgstr ""
+
+#: includes/wc-paghiper-notification.php:72
+msgid ""
+"PagHiper: Pagamento em disputa. Para responder, faça login na sua conta "
+"Paghiper e procure pelo número da transação."
+msgstr ""
+
+#: includes/wc-paghiper-notification.php:93
+msgid "PagHiper: Novo "
+msgstr ""
+
+#: includes/wc-paghiper-notification.php:101
+msgid "PagHiper: Pagamento pré-compensado (reservado). Aguarde confirmação."
+msgstr ""
+
+#: includes/wc-paghiper-notification.php:109
+#, fuzzy
+#| msgid "PagHiper Pagamentos"
+msgid "PagHiper: Um "
+msgstr "PagHiper Pagamentos"
+
+#: includes/wc-paghiper-notification.php:120
+#: includes/wc-paghiper-notification.php:146
+#: includes/wc-paghiper-notification.php:152
+#, fuzzy
+#| msgid "PagHiper Pagamentos"
+msgid "PagHiper: "
+msgstr "PagHiper Pagamentos"
+
+#: includes/wc-paghiper-notification.php:161
+msgid ""
+"PagHiper: Pagamento estornado. O valor foi ja devolvido ao cliente. Para "
+"mais informações, entre em contato com a equipe de atendimento Paghiper."
+msgstr ""
+
+#: includes/wc-paghiper-notification.php:235
+#: includes/wc-paghiper-notification.php:255
+#: includes/wc-paghiper-notification.php:273
+#: includes/wc-paghiper-notification.php:288
+msgid "Solicitação PagHiper Não Autorizada"
+msgstr ""
+
+#: woocommerce-paghiper.php:291 woocommerce-paghiper.php:308
+#: woocommerce-paghiper.php:343
+msgid "PIX PagHiper"
+msgstr ""
+
+#: woocommerce-paghiper.php:291 woocommerce-paghiper.php:308
+msgid "Boleto PagHiper"
+msgstr ""
+
+#: woocommerce-paghiper.php:295
+msgid ""
+"Você ainda não configurou sua apiKey! Finalize a configuração do seu plug-in "
+"aqui:"
+msgstr ""
+
+#: woocommerce-paghiper.php:318
+msgid "Sua apiKey é inválida! Confira novamente seus dados aqui:"
+msgstr ""
+
+#: woocommerce-paghiper.php:318
+#, php-format
+msgid "Configurações de integração %s"
+msgstr ""
+
+#: woocommerce-paghiper.php:343
+msgid "Você ja pode receber pagamentos por PIX! Configure aqui:"
+msgstr ""
+
+#: woocommerce-paghiper.php:343
+msgid "Configurações do PIX PagHiper"
+msgstr ""
+
+#: woocommerce-paghiper.php:362
+msgid ""
+"O status após a emissão deve ser \"Aguardando\" ou equivalente. Caso "
+"contrário, o Woocommerce pode cancelar os pedidos antes do pagamento! "
+"<br>Finalize a configuração do seu plug-in aqui:"
+msgstr ""
+
+#: woocommerce-paghiper.php:715
+msgid "Pagar boleto"
+msgstr ""
+
+#: woocommerce-paghiper.php:780
+msgid "Opções de Boleto"
+msgstr ""
+
+#: woocommerce-paghiper.php:781
+msgid "Opções de PIX"
+msgstr ""
+
+#: includes/integrations/woocommerce-blocks/assets/js/build/index.js:45
+#: includes/integrations/woocommerce-blocks/assets/js/build/index.js:73
+#: includes/integrations/woocommerce-blocks/assets/js/src/elements.js:23
+#: includes/integrations/woocommerce-blocks/assets/js/src/elements.js:47
+#: includes/integrations/woocommerce-blocks/assets/js/build/index.js:23
+#: includes/integrations/woocommerce-blocks/assets/js/build/index.js:47
+msgid "CPF do Pagador"
+msgstr ""
+
+#: includes/integrations/woocommerce-blocks/assets/js/build/index.js:71
+#: includes/integrations/woocommerce-blocks/assets/js/src/elements.js:45
+#: includes/integrations/woocommerce-blocks/assets/js/build/index.js:45
+msgid "CNPJ do Pagador"
+msgstr ""
+
+#: includes/integrations/woocommerce-blocks/assets/js/build/index.js:78
+#: includes/integrations/woocommerce-blocks/assets/js/src/elements.js:54
+#: includes/integrations/woocommerce-blocks/assets/js/build/index.js:54
+msgid "O número do seu CNPJ está incompleto."
+msgstr ""
+
+#: includes/integrations/woocommerce-blocks/assets/js/build/index.js:81
+#: includes/integrations/woocommerce-blocks/assets/js/src/elements.js:57
+#: includes/integrations/woocommerce-blocks/assets/js/build/index.js:57
+msgid "O número do seu CPF está incompleto."
+msgstr ""
+
+#: includes/integrations/woocommerce-blocks/assets/js/build/index.js:88
+#: includes/integrations/woocommerce-blocks/assets/js/src/elements.js:64
+#: includes/integrations/woocommerce-blocks/assets/js/build/index.js:64
+msgid "O número do seu CPF está correto."
+msgstr ""
+
+#: includes/integrations/woocommerce-blocks/assets/js/build/index.js:96
+#: includes/integrations/woocommerce-blocks/assets/js/src/elements.js:72
+#: includes/integrations/woocommerce-blocks/assets/js/build/index.js:72
+msgid "O número do seu CNPJ não está correto."
+msgstr ""
