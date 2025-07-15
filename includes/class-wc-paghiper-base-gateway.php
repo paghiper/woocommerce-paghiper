@@ -152,7 +152,7 @@ class WC_Paghiper_Base_Gateway {
 
 		$first = array(
 			'enabled' => array(
-				'title'   => sprintf(__('%s' , 'woo-boleto-paghiper' ),$default_label),
+				'title'   => $default_label,
 				'type'    => 'checkbox',
 				'label'   => __( 'Ativar/Desativar', 'woo-boleto-paghiper' ),
 				'default' => 'yes'
@@ -162,14 +162,14 @@ class WC_Paghiper_Base_Gateway {
 				'type'        => 'text',
 				'description' => __( 'Esse campo controla o título da seção que o usuário vê durante o checkout.', 'woo-boleto-paghiper' ),
 				'desc_tip'    => true,
-				'default'     => sprintf(__('%s', 'woo-boleto-paghiper' ),$default_title)
+				'default'     => $default_title
 			),
 			'description' => array(
 				'title'       => __( 'Descrição', 'woo-boleto-paghiper' ),
 				'type'        => 'textarea',
 				'description' => __( 'Esse campo controla o texto da seção que o usuário vê durante o checkout.', 'woo-boleto-paghiper' ),
 				'desc_tip'    => true,
-				'default'     => sprintf(__('%s', 'woo-boleto-paghiper' ),$default_description)
+				'default'     => $default_description
 			),
 			'paghiper_details' => array(
 				'title' => sprintf(__( 'Configurações do PagHiper %s', 'woo-boleto-paghiper' ), (($this->gateway->id == 'paghiper_pix') ? __('PIX', 'woo-boleto-paghiper') : __('Boleto bancário', 'woo-boleto-paghiper')) ),
