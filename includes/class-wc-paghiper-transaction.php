@@ -482,6 +482,14 @@ class WC_PagHiper_Transaction {
 			$order_data = (is_array($this->order_data)) ? $this->order_data : array();
 			$data = array_merge($this->order_data, $current_billet);
 
+			// Update order status if needed
+			$order_status = (strpos($this->order->get_status(), 'wc-') === false) ? 'wc-'.$this->order->get_status() : $this->order->get_status();
+			$waiting_status = (!empty($this->gateway_settings['set_status_when_waiting'])) ? $this->gateway_settings['set_status_when_waiting'] : 'on-hold';
+			
+			if(str_contains('wc-pending', $order_status)) {
+				$this->order->update_status( $waiting_status, sprintf(__( 'PagHiper: %s gerado e enviado por e-mail.', 'woo-boleto-paghiper' ), (($this->gateway_id == 'paghiper_pix') ? __('PIX', 'woo-boleto-paghiper') : __('Boleto', 'woo-boleto-paghiper')) ) );
+			}
+
 			$this->order->update_meta_data( 'wc_paghiper_data', $data );
 			$this->order->save();
 
