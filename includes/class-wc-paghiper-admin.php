@@ -111,7 +111,7 @@ class WC_Paghiper_Admin {
 
 		add_meta_box(
 			'paghiper-boleto',
-			__( "Configurações do {$method_title}", 'woo-boleto-paghiper' ),
+			sprintf(__( "Configurações do %s", 'woo-boleto-paghiper' ),$method_title),
 			array( $this, 'metabox_content' ),
 			$target_screen,
 			'side',
