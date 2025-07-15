@@ -23,6 +23,7 @@ class WC_Paghiper_Admin {
 
 		// Save Metabox.
 		add_action( 'save_post', array( $this, 'save' ) );
+		add_action( 'woocommerce_update_order', array( $this, 'save' ) );
 
 		// Update.
 		//add_action( 'admin_init', array( $this, 'update' ), 5 );
@@ -216,6 +217,7 @@ class WC_Paghiper_Admin {
 	 * @param int $post_id Current post type ID.
 	 */
 	public function save( $post_id ) {
+		
 		// Verify nonce.
 		if ( ! isset( $_POST['woo_paghiper_metabox_nonce'] ) || ! wp_verify_nonce( $_POST['woo_paghiper_metabox_nonce'], basename( __FILE__ ) ) ) {
 			return $post_id;
@@ -264,7 +266,6 @@ class WC_Paghiper_Admin {
 			// Update ticket data.
 			$paghiper_data['order_transaction_due_date'] = $new_due_date->format('Y-m-d');
 			$order->update_meta_data( 'wc_paghiper_data', $paghiper_data );
-			$order->save();
 
 			if(function_exists('update_meta_cache'))
 				update_meta_cache( 'shop_order', $post_id );
@@ -273,7 +274,10 @@ class WC_Paghiper_Admin {
 			delete_transient("woo_paghiper_due_date_order_errors_{$post_id}");
 
 			// Add order note.
-			$order->add_order_note( sprintf( __( 'Data de vencimento alterada para %s', 'woo-boleto-paghiper' ), $formatted_date ) );
+			
+			$order->add_order_note( sprintf( __( 'PagHiper: Data de vencimento alterada para %s', 'woo-boleto-paghiper' ), $formatted_date ) );
+			remove_action( 'woocommerce_update_order', array( $this, 'save' ) ); // Prevent infinite loop.
+			$order->save(); // Save order data.
 
 			// Send email notification.
 			$this->email_notification( $order, $new_due_date->format('d/m/Y') );
@@ -305,9 +309,9 @@ class WC_Paghiper_Admin {
 
 		
 		if($gateway_id == 'paghiper_pix') {
-			$gateway_name = __('boleto', 'woo-boleto-paghiper');
-		} else {
 			$gateway_name = __('PIX', 'woo-boleto-paghiper');
+		} else {
+			$gateway_name = __('boleto', 'woo-boleto-paghiper');
 		}
 
 		$subject = sprintf( __( 'O %s do seu pedido foi atualizado (%s)', 'woo-boleto-paghiper' ), $gateway_name, $order->get_order_number() );
@@ -326,11 +330,19 @@ class WC_Paghiper_Admin {
 		$main_message .= $paghiperTransaction->printBarCode();
 		$main_message .= '<p>' . sprintf( '<a class="button" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ), __( 'Pagar o boleto &rarr;', 'woo-boleto-paghiper' ) ) . '</p>';
 
-		// Sets message template.
-		$message = $mailer->wrap_message( sprintf(__( 'Nova data de vencimento para o seu %s', 'woo-boleto-paghiper' ), $gateway_name, $main_message ) );
+		try {
+			// Sets message template.
+			$message = $mailer->wrap_message( sprintf(__( 'Nova data de vencimento para o seu %s', 'woo-boleto-paghiper' ), $gateway_name ), $main_message );
 
-		// Send email.
-		$mailer->send( $billing_email, $subject, $message, $headers, '' );
+			// Send email.
+			$mailer->send( $billing_email, $subject, $message, $headers, '' );
+			$order->add_order_note( __( 'PagHiper: E-mail de data de vencimento alterada enviada ao cliente', 'woo-boleto-paghiper' ) );
+			$order->save();
+
+		} catch (Exception $e) {
+			// If the email fails to send, we can log the error or handle it accordingly.
+			error_log( sprintf( 'Failed to send PagHiper expiration date email for order %d: %s', $order->get_id(), $e->getMessage() ) );
+		}
 	}
 
 	/**
