@@ -292,8 +292,7 @@ class WC_Paghiper {
 			$gateway_class = ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
 
 			if(!array_key_exists('api_key', $gateway_settings) || empty($gateway_settings['api_key'])) {
-				echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', $gateway_name, __('Você ainda não configurou sua apiKey! Finalize a configuração do seu plug-in aqui:', 'woo-boleto-paghiper'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), __("Configurações de integração {$gateway_name}", 'woo-boleto-paghiper'));
-	
+				echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', $gateway_name, __('Você ainda não configurou sua apiKey! Finalize a configuração do seu plug-in aqui:', 'woo-boleto-paghiper'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), sprintf(__("Configurações de integração %a", 'woo-boleto-paghiper'),$gateway_name));
 			}
 
 		}
