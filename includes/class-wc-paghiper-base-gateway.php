@@ -316,7 +316,7 @@ class WC_Paghiper_Base_Gateway {
 		return false;
 	}
 
-	public function has_payer_fields() {
+	public function has_payer_fields($payer_cpf_cnpj) {
 		$order = $this->is_order();
 		if(!is_null($order)) {
 			$has_payer_fields = ($order && (!empty($order->get_billing_first_name()) || !empty($order->get_billing_company()) || !empty($order->{'_'.$order->get_payment_method().'_payer_name'})));
@@ -343,17 +343,17 @@ class WC_Paghiper_Base_Gateway {
 		// Print fields only if there are no fields for the same purpose on the checkout
 		$has_taxid_fields = $this->has_taxid_fields();
 		if(!$has_taxid_fields && isset($_POST) && array_key_exists('post_data', $_POST)) {
-
-
-			$sanitized_post_data = array_map('sanitize_text_field', wp_unslash($_POST['post_data']) );
+      
+      $sanitized_post_data = array_map('sanitize_text_field', wp_unslash($_POST['post_data']) );
 			parse_str( wp_unslash($sanitized_post_data), $post_data );
 			$has_taxid_fields = (array_key_exists('billing_cpf', $post_data) || array_key_exists('billing_cnpj', $post_data)) ? TRUE : FALSE;
+      
 		}
 
 		if(!$has_taxid_fields) {
 			echo '<div class="form-row form-row-wide paghiper-taxid-fieldset">
 				<label>Número de CPF/CNPJ <span class="required">*</span></label>
-				<input id="'.$this->gateway->id.'_cpf_cnpj" name="_'.$this->gateway->id.'_cpf_cnpj" class="paghiper_tax_id" type="text" autocomplete="off">
+				<input id="'.esc_attr($this->gateway->id).'_cpf_cnpj" name="_'.esc_attr($this->gateway->id).'_cpf_cnpj" class="paghiper_tax_id" type="text" autocomplete="off">
 				</div>
 				<div class="clear"></div>';
 		}
@@ -381,7 +381,7 @@ class WC_Paghiper_Base_Gateway {
 
 		$payer_cpf_cnpj = preg_replace('/\D/', '', $payer_cpf_cnpj_value);
 
-		$has_payer_fields = $this->has_payer_fields();
+		$has_payer_fields = $this->has_payer_fields($payer_cpf_cnpj);
 		if(!$has_payer_fields) {
 			$has_payer_fields = ((!is_null($payer_cpf_cnpj) && 
 									strlen($payer_cpf_cnpj) > 11 && 
@@ -502,10 +502,11 @@ class WC_Paghiper_Base_Gateway {
 
 		foreach($taxid_keys as $taxid_key) {
 			if(array_key_exists($taxid_key, $_POST) && !empty($_POST[$taxid_key])) {
-
+        
 				$taxid_value = sanitize_text_field( wp_unslash($_POST[$taxid_key]) );
 				$order->update_meta_data( $taxid_key, $taxid_value );
 				$order->save();
+        
 			}
 		}
 

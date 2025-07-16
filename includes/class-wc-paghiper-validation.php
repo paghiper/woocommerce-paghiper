@@ -23,8 +23,6 @@ class WC_PagHiper_Validation {
 		} else {
 			return $this->is_valid_cpf($taxid_value);
 		}
-
-		return false;
 	}
 
 	/**

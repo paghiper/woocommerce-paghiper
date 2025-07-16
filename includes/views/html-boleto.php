@@ -184,4 +184,4 @@ if ( $log ) {
 	wc_paghiper_add_log( $log, 'Erro geral: cliente redirecionado para a homepage.' );
 }
 wp_redirect( home_url() );
-exit;
+exit();

@@ -106,7 +106,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 			        $paghiper_data = $order->get_meta( 'wc_paghiper_data' );
 
                     if($return['transaction_id'] !== $paghiper_data['transaction_id']) {
-                        $order->add_order_note( sprintf(__( 'PagHiper: Um %s emitido para este pedido foi cancelado. Como não era o boleto mais atual, o pedido permanece aguardando pagamento.', 'woo-boleto-paghiper' ),$gateway_name) );
+                        $order->add_order_note( sprintf(__( 'PagHiper: Um %s emitido para este pedido foi cancelado. Como não era o boleto mais atual, o pedido permanece aguardando pagamento.', 'woo-boleto-paghiper' ),$gateway_name));
 
                         if ( $paghiper_log ) {
                             wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: %s cancelado. Status do pedido não foi atualizado por não ser a emissão mais recente para o pedido. Transação ID %s', $order->get_id(), ucfirst($gateway_name), $return['transaction_id']) );
@@ -117,7 +117,8 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 
                     $cancelled_status = (!empty($settings['set_status_when_cancelled'])) ? $settings['set_status_when_cancelled'] : 'cancelled';
                     
-                    $order->update_status( $cancelled_status, sprintf(__( 'PagHiper: %s Cancelado.', 'woo-boleto-paghiper' ),ucfirst($gateway_name)) );
+
+                    $order->update_status( $cancelled_status, sprintf(__( 'PagHiper: %s Cancelado.', 'woo-boleto-paghiper' ),ucfirst($gateway_name)));
                     paghiper_increase_order_stock( $order, $settings );
 
                     if ( $paghiper_log ) {
@@ -149,7 +150,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
                         wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: %s pago. Atualizando status do pedido. Transação ID %s', $order->get_id(), ucfirst($gateway_name), $return['transaction_id']) );
                     }
                 } else {
-                    $order->add_order_note( sprintf(__( 'PagHiper: %s compensado.', 'woo-boleto-paghiper' ),ucfirst($gateway_name)) );
+                    $order->add_order_note( sprintf(__( 'PagHiper: %s compensado.', 'woo-boleto-paghiper' ),ucfirst($gateway_name)));
 
                     if ( $paghiper_log ) {
                         wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: %s pago. Não foi necessário atualizar status do pedido. Transação ID %s', $order->get_id(), ucfirst($gateway_name), $return['transaction_id']) );

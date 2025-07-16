@@ -487,8 +487,8 @@ class WC_PagHiper_Transaction {
 			// Update order status if needed
 			$order_status = (strpos($this->order->get_status(), 'wc-') === false) ? 'wc-'.$this->order->get_status() : $this->order->get_status();
 			$waiting_status = (!empty($this->gateway_settings['set_status_when_waiting'])) ? $this->gateway_settings['set_status_when_waiting'] : 'on-hold';
-			
-			if(str_contains('wc-pending', $order_status)) {
+
+			if(strpos($order_status, 'wc-pending') !== false) { ## adaptacao para versões do php 7.4
 				$this->order->update_status( $waiting_status, sprintf(__( 'PagHiper: %s gerado e enviado por e-mail.', 'woo-boleto-paghiper' ), (($this->gateway_id == 'paghiper_pix') ? __('PIX', 'woo-boleto-paghiper') : __('Boleto', 'woo-boleto-paghiper')) ) );
 			}
 
