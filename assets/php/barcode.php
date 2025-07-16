@@ -68,7 +68,7 @@ function pintarbarras($mapaI25, $altura, $espmin) {
 // Recupera o código e cria a imagem jpeg
 if(array_key_exists('codigo', $_GET)) {
 	// Sanitiza o código recebido
-	$codigo = (int) $_GET['codigo'];
+	$codigo = preg_replace('/[^0-9]/', '', $_GET['codigo']);
 } else {
 	die('Código inválido.');
 }
