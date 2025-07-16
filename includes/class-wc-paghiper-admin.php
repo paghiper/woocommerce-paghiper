@@ -133,12 +133,22 @@ class WC_Paghiper_Admin {
 			// Save the ticket data if don't have.
 			if ( !isset($paghiper_data['order_transaction_due_date']) ) {
 
+				$data = [];
+
 				// Pega a configuração atual do plug-in.
 				$settings = ($gateway_name == 'paghiper_pix') ? get_option( 'woocommerce_paghiper_pix_settings' ) : get_option( 'woocommerce_paghiper_billet_settings' );
 
-				$order_transaction_due_date			= isset( $settings['days_due_date'] ) ? absint( $settings['days_due_date'] ) : 5;
-				$data                   			= [];
-				$data['order_transaction_due_date']	= date( 'Y-m-d', time() + ( $order_transaction_due_date * 86400 ) );
+				// Define o número de dias para a data de vencimento da transação
+				$order_transaction_due_date	= isset( $settings['days_due_date'] ) ? absint( $settings['days_due_date'] ) : 5;
+
+				// Cria um objeto DateTime para o momento atual
+				$transaction_due_date = new DateTime('now', $this->timezone);
+
+				// Adiciona o número de dias de forma segura e legível
+				$transaction_due_date->modify("+$order_transaction_due_date days");
+
+				// Formata a data resultante no formato desejado
+				$data['order_transaction_due_date']	= $transaction_due_date->format('Y-m-d');
 				
 				$order->update_meta_data( 'wc_paghiper_data', $data );
 				$order->save();
@@ -354,14 +364,17 @@ class WC_Paghiper_Admin {
         wp_register_style( 'paghiper-backend-css', wc_paghiper_assets_url() . 'css/backend.min.css', false, '1.0.0' );
 
 		if(is_admin()) {
+
+			if( array_key_exists( 'action', $_REQUEST ) ) {
+				$req_action = sanitize_key( wp_unslash( $_REQUEST['action'] ) );
 			
-			global $current_screen;
-			$req_action = empty( $_REQUEST[ 'action' ] ) ? false : $_REQUEST[ 'action' ];
-			if ($current_screen->post_type =='shop_order' && $req_action == 'edit') {
-	
-				wp_enqueue_script(  'jquery-mask' );
-				wp_enqueue_script( 'paghiper-backend-js' );
-	
+				global $current_screen;
+				if ($current_screen->post_type =='shop_order' && $req_action == 'edit') {
+		
+					wp_enqueue_script(  'jquery-mask' );
+					wp_enqueue_script( 'paghiper-backend-js' );
+		
+				}
 			}
 			
 			wp_enqueue_style( 'paghiper-backend-css' );
