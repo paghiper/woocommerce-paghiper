@@ -65,7 +65,7 @@ class WC_Paghiper_Admin {
 			return false;
 		}
 
-		return true;
+		return $order;
 	}
 
 	/**
@@ -73,7 +73,9 @@ class WC_Paghiper_Admin {
 	 */
 	public function register_metabox() {
 
-		if( !$this->is_target_screen() )
+		$order = $this->is_target_screen();
+
+		if( !$order )
 			return;
 
 		$payment_method = $order->get_payment_method();
