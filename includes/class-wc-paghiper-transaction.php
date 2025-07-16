@@ -8,14 +8,16 @@ use PagHiper\PagHiper;
 class WC_PagHiper_Transaction {
 
 	private $order;
+	private $order_status;
 	private $order_id;
 	private $order_data;
 	private $gateway_id;
 	private $gateway_name;
 	private $gateway_settings;
+	private $log;
 	private $invalid_reason;
 	private $past_due_days;
-	private $log;
+	private $base_url;
 	private $timezone;
 
 	public function __construct($order_id) {
