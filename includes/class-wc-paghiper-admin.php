@@ -165,17 +165,20 @@ class WC_Paghiper_Admin {
 			$html = $paghiperTransaction->printBarCode(false, true, ['code', 'digitable']);
 
 			$order_transaction_due_date = DateTime::createFromFormat('Y-m-d', $paghiper_data['order_transaction_due_date'], $this->timezone);
+			/* translators: %s: Transaction type. May be PIX or billet, for an example. */
 			$formatted_due_date = ($order_transaction_due_date) ? $order_transaction_due_date->format('d/m/Y') : sprintf(__("%s indisponível", 'woo-boleto-paghiper'), (($gateway_name == 'paghiper_pix') ? __("PIX", 'woo-boleto-paghiper') : __("Boleto", 'woo-boleto-paghiper')));
 
 			$html .= '<p><strong>' . __( 'Data de Vencimento:', 'woo-boleto-paghiper' ) . '</strong> ' . $formatted_due_date . '</p>';
 
 			if($gateway_name !== 'paghiper_pix')
+			/* translators: Description for display right before billet URL on admin panel. */
 			$html .= '<p><strong>' . __( 'URL:', 'woo-boleto-paghiper' ) . '</strong> <a target="_blank" href="' . esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ) . '">' . __( 'Visualizar boleto', 'woo-boleto-paghiper' ) . '</a></p>';
 
 			$html .= '<p style="border-top: 1px solid #ccc;"></p>';
 
 			$html .= '<label for="woo_paghiper_expiration_date">' . __( 'Digite uma nova data de vencimento:', 'woo-boleto-paghiper' ) . '</label><br />';
 			$html .= '<input type="text" id="woo_paghiper_expiration_date" name="woo_paghiper_expiration_date" class="date" style="width: 100%;" />';
+			/* translators: %s: Transaction type. May be PIX or billet, for an example. */
 			$html .= '<span class="description">' . sprintf(__( 'Ao configurar uma nova data de vencimento, o %s é re-enviado ao cliente por e-mail.', 'woo-boleto-paghiper' ), (($gateway_name !== 'paghiper_pix') ? __('boleto', 'woo-boleto-paghiper') : __('PIX', 'woo-boleto-paghiper') )) . '</span>';
 
 			// Show errors related to user input (invalid or past inputted dates)
@@ -277,6 +280,7 @@ class WC_Paghiper_Admin {
 
 			// Add order note.
 			
+			/* translators: %s: Transaction due date. */
 			$order->add_order_note( sprintf( __( 'PagHiper: Data de vencimento alterada para %s', 'woo-boleto-paghiper' ), $formatted_date ) );
 			remove_action( 'woocommerce_update_order', array( $this, 'save' ) ); // Prevent infinite loop.
 			$order->save(); // Save order data.
@@ -309,14 +313,14 @@ class WC_Paghiper_Admin {
 		if(!$billing_email)
 			return;
 
-		
 		if($gateway_id == 'paghiper_pix') {
 			$gateway_name = __('PIX', 'woo-boleto-paghiper');
 		} else {
 			$gateway_name = __('boleto', 'woo-boleto-paghiper');
 		}
 
-		$subject = sprintf( __( 'O %s do seu pedido foi atualizado (%s)', 'woo-boleto-paghiper' ), $gateway_name, $order->get_order_number() );
+		/* translators: %1$s: Transaction type. %2$s: Order number. */
+		$subject = sprintf( __( 'O %1$s do seu pedido foi atualizado (Pedido #%2$s)', 'woo-boleto-paghiper' ), $gateway_name, $order->get_order_number() );
 
 		// Mail headers.
 		$headers = array();
@@ -328,12 +332,15 @@ class WC_Paghiper_Admin {
 		$paghiperTransaction = new WC_PagHiper_Transaction( $order->get_id() );
 
 		// Body message.
-		$main_message = '<p>' . sprintf( __( 'A data de vencimento do seu %s foi atualizada para: %s', 'woo-boleto-paghiper' ), $gateway_name, '<code>' . $expiration_date . '</code>' ) . '</p>';
+		/* translators: %1$s: Transaction type. %2$s: Newly defined transaction due date. */
+		$main_message = '<p>' . sprintf( __( 'A data de vencimento do seu %1$s foi atualizada para: %2$s', 'woo-boleto-paghiper' ), $gateway_name, '<code>' . $expiration_date . '</code>' ) . '</p>';
 		$main_message .= $paghiperTransaction->printBarCode();
-		$main_message .= '<p>' . sprintf( '<a class="button" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ), __( 'Pagar o boleto &rarr;', 'woo-boleto-paghiper' ) ) . '</p>';
+		/* translators: %1$s: Billet URL. %2$s: Pay billet button text. */
+		$main_message .= '<p>' . sprintf( '<a class="button" href="%1$s" target="_blank">%2$s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ), __( 'Pagar o boleto &rarr;', 'woo-boleto-paghiper' ) ) . '</p>';
 
 		try {
 			// Sets message template.
+			/* translators: %s: Transaction due date. */
 			$message = $mailer->wrap_message( sprintf(__( 'Nova data de vencimento para o seu %s', 'woo-boleto-paghiper' ), $gateway_name ), $main_message );
 
 			// Send email.

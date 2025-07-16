@@ -315,6 +315,7 @@ class WC_Paghiper {
 				} catch(Exception $e) {
 	
 					if (strpos($e->getMessage(), 'apiKey') !== false) {
+						/* translators: %s: Gateway name */
 						echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', $gateway_name, __('Sua apiKey é inválida! Confira novamente seus dados aqui:', 'woo-boleto-paghiper'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), sprintf(__("Configurações de integração %s", 'woo-boleto-paghiper'), $gateway_name));
 					}
 				}
@@ -353,11 +354,17 @@ class WC_Paghiper {
 
 					$is_pix = ($gateway == 'woocommerce_paghiper_pix_settings') ? true : false;
 		
-					$gateway_name = ($is_pix) ? 'PIX PagHiper' : 'Boleto PagHiper';
-					$gateway_class = ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
+					$gateway_name 	= ($is_pix) ? __('PIX PagHiper', 'woo-boleto-paghiper') : __('Boleto PagHiper', 'woo-boleto-paghiper');
+					$gateway_class 	= ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
 	
 					if(!apply_filters('hide_waiting_status_warning', false, $gateway_class)) {
-						echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __($gateway_name, 'woo-boleto-paghiper'), __('O status após a emissão deve ser "Aguardando" ou equivalente. Caso contrário, o Woocommerce pode cancelar os pedidos antes do pagamento! <br>Finalize a configuração do seu plug-in aqui:', 'woo-boleto-paghiper'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), __("Configurações de integração {$gateway_name}", 'woo-boleto-paghiper'));
+						/* translators: %s: Gateway name */
+						echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', 
+							$gateway_name,
+							__('O status após a emissão deve ser "Aguardando" ou equivalente. Caso contrário, o Woocommerce pode cancelar os pedidos antes do pagamento! <br>Finalize a configuração do seu plug-in aqui:', 'woo-boleto-paghiper'), 
+							admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), 
+							/* translators: %s: Gateway name */
+							sprintf(__("Configurações de integração do %s", 'woo-boleto-paghiper')), $gateway_name);
 					}
 				}
 			}

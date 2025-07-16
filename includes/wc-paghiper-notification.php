@@ -18,7 +18,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
     $order          = wc_get_order($order_no);
     $order_status   = $order->get_status();
     $gateway_id     = $order->get_payment_method();
-    $gateway_name   = ($gateway_id !== 'paghiper_pix') ? __('boleto') : __('PIX');
+    $gateway_name   = ($gateway_id !== 'paghiper_pix') ? __('boleto', 'woo-boleto-paghiper') : __('PIX', 'woo-boleto-paghiper');
 
     // Trata os retornos
 
@@ -90,6 +90,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
                 } else {
                     $order->add_order_note( __( 'PagHiper: Post de notificação recebido. Aguardando compensação do boleto.' , 'woo_paghiper' ) );
                 }*/
+			    /* translators: %s: Transaction type. May be PIX or billet. For use in order notes */
                 $order->add_order_note( sprintf(__( 'PagHiper: Novo %s emitido. Aguardando compensação.', 'woo-boleto-paghiper' ),$gateway_name) );
                 if ( $paghiper_log ) {
                     wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: %s emitido com sucesso.', $order->get_id(), ucfirst($gateway_name)) );
@@ -106,6 +107,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 			        $paghiper_data = $order->get_meta( 'wc_paghiper_data' );
 
                     if($return['transaction_id'] !== $paghiper_data['transaction_id']) {
+                        /* translators: %s: Transaction type. May be PIX or billet. For use in order notes */
                         $order->add_order_note( sprintf(__( 'PagHiper: Um %s emitido para este pedido foi cancelado. Como não era o boleto mais atual, o pedido permanece aguardando pagamento.', 'woo-boleto-paghiper' ),$gateway_name));
 
                         if ( $paghiper_log ) {
@@ -118,6 +120,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
                     $cancelled_status = (!empty($settings['set_status_when_cancelled'])) ? $settings['set_status_when_cancelled'] : 'cancelled';
                     
 
+			        /* translators: %s: Transaction type. May be PIX or billet. For use in order notes */
                     $order->update_status( $cancelled_status, sprintf(__( 'PagHiper: %s Cancelado.', 'woo-boleto-paghiper' ),ucfirst($gateway_name)));
                     paghiper_increase_order_stock( $order, $settings );
 
@@ -144,12 +147,14 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 
                 if(!$order->has_status( $paid_statuses )) {
                     $order->payment_complete();
+                    /* translators: %s: Transaction type. May be PIX or billet. For use in order notes */
                     $order->update_status( $target_status, sprintf(__( 'PagHiper: %s pago.', 'woo-boleto-paghiper' ),ucfirst($gateway_name)));
 
                     if ( $paghiper_log ) {
                         wc_paghiper_add_log( $paghiper_log, sprintf('Pedido #%s: %s pago. Atualizando status do pedido. Transação ID %s', $order->get_id(), ucfirst($gateway_name), $return['transaction_id']) );
                     }
                 } else {
+                    /* translators: %s: Transaction type. May be PIX or billet. For use in order notes */
                     $order->add_order_note( sprintf(__( 'PagHiper: %s compensado.', 'woo-boleto-paghiper' ),ucfirst($gateway_name)));
 
                     if ( $paghiper_log ) {

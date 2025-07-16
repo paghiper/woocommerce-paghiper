@@ -91,6 +91,7 @@ function wc_paghiper_add_workdays( $due_date, $order, $format, $workday_settings
 			$paghiper_data['order_transaction_due_date'] = $due_date->format( 'Y-m-d' );
 
 			$order->update_meta_data( 'wc_paghiper_data', $paghiper_data );
+			/* translators: %s: Newly defined transaction due date. May be PIX or billet. For use in order notes */
 			$order->add_order_note( sprintf( __( 'Data de vencimento ajustada para %s', 'woo-boleto-paghiper' ), $due_date->format('d/m/Y') ) );
 			$order->save();
 			

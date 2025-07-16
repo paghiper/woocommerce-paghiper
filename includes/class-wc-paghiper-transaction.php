@@ -121,6 +121,7 @@ class WC_PagHiper_Transaction {
 						update_meta_cache( 'shop_order', $this->order_id );
 
 					$this->order_data = $paghiper_data;
+					/* translators: %s: Mewly defined transaction due date. Used in order notes */
 					$this->order->add_order_note( sprintf( __( 'Data de vencimento ajustada para %s', 'woo-boleto-paghiper' ), $current_billet_due_date->format('d/m/Y') ) );
 
 					$log_message = 'Pedido #%s: Data de vencimento do boleto não bate com a informada no pedido. Cheque a opção "Vencimento em finais de semana" no <a href="https://www.paghiper.com/painel/prazo-vencimento-boleto/" target="_blank">Painel da PagHiper</a>.';
@@ -489,6 +490,7 @@ class WC_PagHiper_Transaction {
 			$waiting_status = (!empty($this->gateway_settings['set_status_when_waiting'])) ? $this->gateway_settings['set_status_when_waiting'] : 'on-hold';
 
 			if(strpos($order_status, 'wc-pending') !== false) { ## adaptacao para versões do php 7.4
+				/* translators: %s: Transaction type. For use in order notes */
 				$this->order->update_status( $waiting_status, sprintf(__( 'PagHiper: %s gerado e enviado por e-mail.', 'woo-boleto-paghiper' ), (($this->gateway_id == 'paghiper_pix') ? __('PIX', 'woo-boleto-paghiper') : __('Boleto', 'woo-boleto-paghiper')) ) );
 			}
 
