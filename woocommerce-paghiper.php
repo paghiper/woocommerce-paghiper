@@ -396,7 +396,7 @@ class WC_Paghiper {
 	public static function dismiss_notices() {
 		if(isset($_POST) && array_key_exists('notice', $_POST)) {
 
-			$notice_name = str_replace('notice_', '', sanitize_text_field($_POST['notice']));
+			$notice_name = str_replace('notice_', '', sanitize_text_field( wp_unslash($_POST['notice'])));
 			$dismissal = delete_transient("woo_paghiper_notice_{$notice_name}");
 
 			if(!$dismissal) {
@@ -416,8 +416,8 @@ class WC_Paghiper {
 
 			$allowed_actions = ['set', 'delete'];
 
-			$notice_name = str_replace('notice_', '', sanitize_text_field($_POST['noticeId']));
-			$notice_action = sanitize_text_field($_POST['userAction']);
+			$notice_name = str_replace('notice_', '', sanitize_text_field( wp_unslash($_POST['noticeId']) ));
+			$notice_action = sanitize_text_field( wp_unslash($_POST['userAction']) );
 			$dismissal = delete_transient("woo_paghiper_notice_{$notice_name}");
 
 			if(!in_array($notice_action, $allowed_actions)) {

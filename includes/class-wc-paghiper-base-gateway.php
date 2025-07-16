@@ -343,7 +343,10 @@ class WC_Paghiper_Base_Gateway {
 		// Print fields only if there are no fields for the same purpose on the checkout
 		$has_taxid_fields = $this->has_taxid_fields();
 		if(!$has_taxid_fields && isset($_POST) && array_key_exists('post_data', $_POST)) {
-			parse_str( $_POST['post_data'], $post_data );
+
+
+			$sanitized_post_data = array_map('sanitize_text_field', wp_unslash($_POST['post_data']) );
+			parse_str( wp_unslash($sanitized_post_data), $post_data );
 			$has_taxid_fields = (array_key_exists('billing_cpf', $post_data) || array_key_exists('billing_cnpj', $post_data)) ? TRUE : FALSE;
 		}
 
@@ -360,23 +363,23 @@ class WC_Paghiper_Base_Gateway {
 
 		// CNPJ/CNPJ came from our own checkout field
 		if(array_key_exists('_'.$this->gateway->id.'_cpf_cnpj', $_POST)) {
-			$payer_cpf_cnpj_value = $_POST['_'.$this->gateway->id.'_cpf_cnpj'];
+			$payer_cpf_cnpj_value = sanitize_text_field( wp_unslash($_POST['_'.$this->gateway->id.'_cpf_cnpj']) );
 
 		// Check if we have a TaxID field comes from Brazilian Market on Woocommerce 
 		} elseif(isset($post_data) && is_array($post_data)) {
 
 			// CPF validation
 			if(array_key_exists('billing_cpf', $post_data)) {
-				$payer_cpf_cnpj_value = $post_data['billing_cpf'];
+				$payer_cpf_cnpj_value = sanitize_text_field($post_data['billing_cpf']);
 
 			// CNPJ validation
 			} elseif(array_key_exists('billing_cnpj', $post_data)) {
-				$payer_cpf_cnpj_value = $post_data['billing_cnpj'];
+				$payer_cpf_cnpj_value = sanitize_text_field($post_data['billing_cnpj']);
 			}
 
 		}
 
-		$payer_cpf_cnpj = preg_replace('/\D/', '', sanitize_text_field($payer_cpf_cnpj_value));
+		$payer_cpf_cnpj = preg_replace('/\D/', '', $payer_cpf_cnpj_value);
 
 		$has_payer_fields = $this->has_payer_fields();
 		if(!$has_payer_fields) {
@@ -424,7 +427,7 @@ class WC_Paghiper_Base_Gateway {
 				if( (array_key_exists($taxid_post_key, $_POST) && !empty($_POST[$taxid_post_key])) ) {
 					$not_empty_keys[] = $taxid_post_key;
 	
-					$maybe_valid_taxid = preg_replace('/\D/', '', sanitize_text_field($_POST[$taxid_post_key]));
+					$maybe_valid_taxid = preg_replace('/\D/', '', sanitize_text_field( wp_unslash($_POST[$taxid_post_key]) ));
 					
 					// TODO: Check if item key exists in order meta too
 					if($validateAPI->validate_taxid($maybe_valid_taxid)) {
@@ -456,7 +459,7 @@ class WC_Paghiper_Base_Gateway {
 				foreach($taxid_payer_keys as $taxid_payer_key) {
 					// TODO: Check if item key exists in order meta too
 					if( (array_key_exists($taxid_payer_key, $_POST) && !empty($_POST[$taxid_payer_key])) ) {
-						$taxid_payer = sanitize_text_field($_POST[$taxid_payer_key]);
+						$taxid_payer = sanitize_text_field( wp_unslash($_POST[$taxid_payer_key]) );
 					}
 				}
 
@@ -498,9 +501,9 @@ class WC_Paghiper_Base_Gateway {
 		$taxid_keys = ["_{$this->gateway->id}_cpf_cnpj", "_{$this->gateway->id}_payer_name"];
 
 		foreach($taxid_keys as $taxid_key) {
-			if(isset($_POST[$taxid_key]) && !empty($_POST[$taxid_key])) {
+			if(array_key_exists($taxid_key, $_POST) && !empty($_POST[$taxid_key])) {
 
-				$taxid_value = sanitize_text_field($_POST[$taxid_key]);
+				$taxid_value = sanitize_text_field( wp_unslash($_POST[$taxid_key]) );
 				$order->update_meta_data( $taxid_key, $taxid_value );
 				$order->save();
 			}
