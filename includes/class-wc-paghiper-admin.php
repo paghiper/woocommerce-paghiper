@@ -44,11 +44,15 @@ class WC_Paghiper_Admin {
 
 		} else {
 
-			$current_page 	= esc_html($_GET['page']);
-			$current_action = esc_html($_GET['action']);
+			// In case any of the variables are missing, bail out
+			if(!array_key_exists('page', $_GET) || !array_key_exists('action', $_GET) || !array_key_exists('id', $_GET))
+				return false;
+
+			$current_page 	= sanitize_key( wp_unslash($_GET['page']) );
+			$current_action = sanitize_key( wp_unslash($_GET['action']) );
 
 			if( $current_page == 'wc-orders' && $current_action == 'edit' ) {
-				$order_id = absint( $_GET['id'] );
+				$order_id = (int) $_GET['id'];
 				$order = wc_get_order( $order_id );
 
 			} else {
@@ -61,7 +65,7 @@ class WC_Paghiper_Admin {
 			return false;
 		}
 
-		return true;
+		return $order;
 	}
 
 	/**
@@ -69,32 +73,10 @@ class WC_Paghiper_Admin {
 	 */
 	public function register_metabox() {
 
-		if( !$this->is_target_screen() )
+		$order = $this->is_target_screen();
+
+		if( !$order )
 			return;
-
-		global $post;
-		if($post && $post->post_type == 'shop_order') {
-
-			$order = wc_get_order( $post->ID );
-
-		} else {
-
-			$current_page 	= esc_html($_GET['page']);
-			$current_action = esc_html($_GET['action']);
-
-			if( $current_page == 'wc-orders' && $current_action == 'edit' ) {
-				$order_id = absint( $_GET['id'] );
-				$order = wc_get_order( $order_id );
-
-			} else {
-				return;
-			}
-
-		}
-		
-		if(!$order) {
-			return;
-		}
 
 		$payment_method = $order->get_payment_method();
 		
@@ -151,12 +133,22 @@ class WC_Paghiper_Admin {
 			// Save the ticket data if don't have.
 			if ( !isset($paghiper_data['order_transaction_due_date']) ) {
 
+				$data = [];
+
 				// Pega a configuração atual do plug-in.
 				$settings = ($gateway_name == 'paghiper_pix') ? get_option( 'woocommerce_paghiper_pix_settings' ) : get_option( 'woocommerce_paghiper_billet_settings' );
 
-				$order_transaction_due_date			= isset( $settings['days_due_date'] ) ? absint( $settings['days_due_date'] ) : 5;
-				$data                   			= [];
-				$data['order_transaction_due_date']	= date( 'Y-m-d', time() + ( $order_transaction_due_date * 86400 ) );
+				// Define o número de dias para a data de vencimento da transação
+				$order_transaction_due_date	= isset( $settings['days_due_date'] ) ? absint( $settings['days_due_date'] ) : 5;
+
+				// Cria um objeto DateTime para o momento atual
+				$transaction_due_date = new DateTime('now', $this->timezone);
+
+				// Adiciona o número de dias de forma segura e legível
+				$transaction_due_date->modify("+$order_transaction_due_date days");
+
+				// Formata a data resultante no formato desejado
+				$data['order_transaction_due_date']	= $transaction_due_date->format('Y-m-d');
 				
 				$order->update_meta_data( 'wc_paghiper_data', $data );
 				$order->save();
@@ -218,9 +210,15 @@ class WC_Paghiper_Admin {
 	 * @param int $post_id Current post type ID.
 	 */
 	public function save( $post_id ) {
+
+		// Sanitize nonce field before processing any form data
+		$wc_paghiper_metabox_nonce = '';
+		if ( array_key_exists( 'woo_paghiper_metabox_nonce', $_POST ) ) {
+			$wc_paghiper_metabox_nonce = sanitize_text_field( wp_unslash( $_POST['woo_paghiper_metabox_nonce'] ) );
+		}
 		
 		// Verify nonce.
-		if ( ! isset( $_POST['woo_paghiper_metabox_nonce'] ) || ! wp_verify_nonce( $_POST['woo_paghiper_metabox_nonce'], basename( __FILE__ ) ) ) {
+		if ( empty( $wc_paghiper_metabox_nonce ) || !wp_verify_nonce( $wc_paghiper_metabox_nonce, basename( __FILE__ ) ) ) {
 			return $post_id;
 		}
 
@@ -234,21 +232,24 @@ class WC_Paghiper_Admin {
 			return $post_id;
 		}
 
-		if ( isset( $_POST['woo_paghiper_expiration_date'] ) && ! empty( $_POST['woo_paghiper_expiration_date'] ) ) {
+		// Sanitize expiration date
+		$wc_paghiper_expiration_date = '';
+		if ( array_key_exists( 'woo_paghiper_expiration_date', $_POST ) ) {
+			$wc_paghiper_expiration_date = sanitize_text_field( wp_unslash( $_POST['woo_paghiper_expiration_date'] ) );
+		}
 
-			// Store our input on a var for later use
-			$input_date = sanitize_text_field( trim($_POST['woo_paghiper_expiration_date']) );
+		if ( !empty( $wc_paghiper_expiration_date ) ) {
 
 			$today_date = new \DateTime();
 			$today_date->setTimezone($this->timezone);
 
 			$order = wc_get_order( $post_id );
 			$paghiper_data = $order->get_meta( 'wc_paghiper_data' ) ;
-			$new_due_date = DateTime::createFromFormat('d/m/Y', $input_date, $this->timezone);
+			$new_due_date = DateTime::createFromFormat('d/m/Y', $wc_paghiper_expiration_date, $this->timezone);
 
 			$formatted_date = ($new_due_date) ? $new_due_date->format('d/m/Y') : NULL ;
 
-			if(!$new_due_date || $formatted_date !== $input_date) {
+			if(!$new_due_date || $formatted_date !== $wc_paghiper_expiration_date) {
 
 				$error = __( '<strong>Boleto PagHiper</strong>: Data de vencimento inválida!', 'woo-boleto-paghiper' );
 				set_transient("woo_paghiper_save_order_errors_{$post_id}", $error, 45);
@@ -363,14 +364,17 @@ class WC_Paghiper_Admin {
         wp_register_style( 'paghiper-backend-css', wc_paghiper_assets_url() . 'css/backend.min.css', false, '1.0.0' );
 
 		if(is_admin()) {
+
+			if( array_key_exists( 'action', $_REQUEST ) ) {
+				$req_action = sanitize_key( wp_unslash( $_REQUEST['action'] ) );
 			
-			global $current_screen;
-			$req_action = empty( $_REQUEST[ 'action' ] ) ? false : $_REQUEST[ 'action' ];
-			if ($current_screen->post_type =='shop_order' && $req_action == 'edit') {
-	
-				wp_enqueue_script(  'jquery-mask' );
-				wp_enqueue_script( 'paghiper-backend-js' );
-	
+				global $current_screen;
+				if ($current_screen->post_type =='shop_order' && $req_action == 'edit') {
+		
+					wp_enqueue_script(  'jquery-mask' );
+					wp_enqueue_script( 'paghiper-backend-js' );
+		
+				}
 			}
 			
 			wp_enqueue_style( 'paghiper-backend-css' );

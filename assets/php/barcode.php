@@ -66,6 +66,12 @@ function pintarbarras($mapaI25, $altura, $espmin) {
 }
 
 // Recupera o código e cria a imagem jpeg
-$codigo = $_GET['codigo'];	
+if(array_key_exists('codigo', $_GET)) {
+	// Sanitiza o código recebido
+	$codigo = preg_replace('/[^0-9]/', '', $_GET['codigo']);
+} else {
+	die('Código inválido.');
+}
+
 header("Content-Type: image/png");
 pintarbarras(codificar($codigo), 250, 1);

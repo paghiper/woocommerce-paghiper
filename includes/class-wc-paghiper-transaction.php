@@ -8,14 +8,16 @@ use PagHiper\PagHiper;
 class WC_PagHiper_Transaction {
 
 	private $order;
+	private $order_status;
 	private $order_id;
 	private $order_data;
 	private $gateway_id;
 	private $gateway_name;
 	private $gateway_settings;
+	private $log;
 	private $invalid_reason;
 	private $past_due_days;
-	private $log;
+	private $base_url;
 	private $timezone;
 
 	public function __construct($order_id) {
@@ -561,14 +563,8 @@ class WC_PagHiper_Transaction {
 	public function print_transaction_html() {
 
 		// Checamos se o pedido não é um PIX
-		if($this->order_data['transaction_type'] == 'pix') {
-
-			$ico = 'billet-cancelled.png';
-			$title = 'Este pedido não foi feito com boleto!';
-			$message = 'A forma de pagamento deste pedido é PIX. Cheque seu e-mail ou sua área de pedidos para informações sobre como pagar.';
-			echo print_screen($ico, $title, $message);
-
-		}
+		if($this->order_data['transaction_type'] == 'pix')
+			return false;
 		
 		// Temos um boleto ja emitido com data de vencimento válida, só pegamos uma cópia
 		$response = wp_remote_get($this->order_data['url_slip']);

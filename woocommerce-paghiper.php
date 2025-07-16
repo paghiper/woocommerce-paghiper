@@ -6,7 +6,7 @@
  * Author: 					PagHiper Pagamentos
  * Author URI: 				https://www.paghiper.com
  * Version: 				2.5
- * Tested up to: 			6.8.1
+ * Tested up to: 			6.8
  * License:              	GPLv3
  * License URI:          	http://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain: 			woo-boleto-paghiper
@@ -396,7 +396,7 @@ class WC_Paghiper {
 	public static function dismiss_notices() {
 		if(isset($_POST) && array_key_exists('notice', $_POST)) {
 
-			$notice_name = str_replace('notice_', '', sanitize_text_field($_POST['notice']));
+			$notice_name = str_replace('notice_', '', sanitize_text_field( wp_unslash($_POST['notice'])));
 			$dismissal = delete_transient("woo_paghiper_notice_{$notice_name}");
 
 			if(!$dismissal) {
@@ -416,8 +416,8 @@ class WC_Paghiper {
 
 			$allowed_actions = ['set', 'delete'];
 
-			$notice_name = str_replace('notice_', '', sanitize_text_field($_POST['noticeId']));
-			$notice_action = sanitize_text_field($_POST['userAction']);
+			$notice_name = str_replace('notice_', '', sanitize_text_field( wp_unslash($_POST['noticeId']) ));
+			$notice_action = sanitize_text_field( wp_unslash($_POST['userAction']) );
 			$dismissal = delete_transient("woo_paghiper_notice_{$notice_name}");
 
 			if(!in_array($notice_action, $allowed_actions)) {
@@ -443,6 +443,13 @@ class WC_Paghiper {
 	 */
 	public static function activate() {
 
+		// Initialize WP_Filesystem API before anything
+		global $wp_filesystem;
+		if (empty($wp_filesystem)) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+			WP_Filesystem();
+		}
+
 		// Add our API endpoint for notifications and transactions
 		self::add_paghiper_endpoint();
 		flush_rewrite_rules();
@@ -452,8 +459,8 @@ class WC_Paghiper {
 		$upload_dir = $uploads['basedir'];
 		$paghiper_dir = $upload_dir . '/paghiper';
 
-		if (!is_dir($paghiper_dir)) {
-			mkdir( $paghiper_dir, 0700 );
+		if (!$wp_filesystem->is_dir($paghiper_dir)) {
+			$wp_filesystem->mkdir( $paghiper_dir );
 		}
 	}
 
@@ -825,22 +832,34 @@ class WC_Paghiper {
 		$upload_dir = $uploads['basedir'];
 		$upload_dir = $upload_dir . '/paghiper';
 
-		if (!is_dir($upload_dir) || !is_writable($upload_dir)) {
+		global $wp_filesystem;
+		if (empty($wp_filesystem)) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+			WP_Filesystem();
+		}
+
+		if (!$wp_filesystem->is_dir($upload_dir) || !$wp_filesystem->is_writable($upload_dir)) {
 
 			include_once 'includes/views/notices/html-notice-paghiper-folder-not-writable.php';
 			
 		} else {
 
+			// Create a test file to check if the paghiper directory is writable
+			// We use the current time as a unique filename
 			$test_filename = $upload_dir.'/'.time();
-			if (touch($test_filename)) {
-				if (!chmod($test_filename, 0666)) {
-					include_once 'includes/views/notices/html-notice-paghiper-folder-not-writable.php';
-				}
+			// Try to write a file to the paghiper directory
+			$file_insert = $wp_filesystem->put_contents(
+				$test_filename,
+				'Operação realizada com sucesso.',
+				\FS_CHMOD_FILE // Give our file default permissions according to WP_FILESYSTEM_CHMOD_FILE
+			);
 
-				if(is_file($test_filename)) {
-					@unlink($test_filename);
-				}
+			// If the file was successfully written, we delete it
+			if ($file_insert) {
+				wp_delete_file( $test_filename );
+
 			} else {
+				// If the file was not successfully written, we include the notice
 				include_once 'includes/views/notices/html-notice-paghiper-folder-not-writable.php';
 			}
 		}

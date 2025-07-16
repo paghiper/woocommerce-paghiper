@@ -13,6 +13,7 @@ class WC_Paghiper_Billet_Gateway extends WC_Payment_Gateway {
 
 	private $log;
 	private $timezone;
+	private $paghiper_gateway;
 
 	/**
 	 * Construtor do gateway. Inicializamos via __construct()

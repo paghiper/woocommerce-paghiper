@@ -18,7 +18,7 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
     $order          = wc_get_order($order_no);
     $order_status   = $order->get_status();
     $gateway_id     = $order->get_payment_method();
-    $gateway_name  = ($gateway_id !== 'paghiper_pix') ? 'boleto' : 'PIX';
+    $gateway_name   = ($gateway_id !== 'paghiper_pix') ? __('boleto') : __('PIX');
 
     // Trata os retornos
 
@@ -172,7 +172,7 @@ function woocommerce_paghiper_check_ipn_response() {
 
     global $paghiper_log;
 
-    $transaction_type = (isset($_GET) && array_key_exists('gateway', $_GET)) ? sanitize_text_field($_GET['gateway']) : 'billet';
+    $transaction_type = (isset($_GET) && array_key_exists('gateway', $_GET)) ? sanitize_text_field( wp_unslash($_GET['gateway']) ) : 'billet';
     if (defined('DOING_AJAX') && DOING_AJAX) { 
         $transaction_type = 'pix'; 
     }
@@ -186,9 +186,18 @@ function woocommerce_paghiper_check_ipn_response() {
     $token 			= $settings['token'];
     $api_key 		= $settings['api_key'];
 
-    if(empty($_POST)) {
+    if(empty($_POST) || !array_key_exists( 'notification_id', $_POST ) || !array_key_exists( 'transaction_id', $_POST )) {
         if ( $paghiper_log ) {
             wc_paghiper_add_log( $paghiper_log, 'Post de retorno da PagHiper veio sem conteúdo. Cheque nos logs se serviços de filtragem de tráfego, como mod_security, cPGuard, Imunify360 e similares para mais informações. Caso precise de mais ajuda, entre em contato com o nosso suporte.' );
+        }
+        return woocommerce_paghiper_get_transaction_status($transaction_type, $settings, $paghiper_log, $token, $api_key);
+    }
+
+    $notification_id    = sanitize_text_field( wp_unslash($_POST['notification_id']) );
+    $transaction_id     = sanitize_text_field( wp_unslash($_POST['transaction_id']) );
+    if(empty($notification_id) || empty($transaction_id)) {
+        if ( $paghiper_log ) {
+            wc_paghiper_add_log( $paghiper_log, 'Post de retorno da PagHiper veio sem os parâmetros para processamento necessários. Cheque nos logs se serviços de filtragem de tráfego, como mod_security, cPGuard, Imunify360 e similares para mais informações. Caso precise de mais ajuda, entre em contato com o nosso suporte.' );
         }
         return woocommerce_paghiper_get_transaction_status($transaction_type, $settings, $paghiper_log, $token, $api_key);
     }
@@ -199,7 +208,7 @@ function woocommerce_paghiper_check_ipn_response() {
         wc_paghiper_initialize_sdk($paghiper_log);
 
         $PagHiperAPI 	= new PagHiper($api_key, $token);
-        $response 		= $PagHiperAPI->transaction()->process_ipn_notification($_POST['notification_id'], $_POST['transaction_id'], $transaction_type);
+        $response 		= $PagHiperAPI->transaction()->process_ipn_notification($notification_id, $transaction_id, $transaction_type);
 
         if($response['result'] == 'success') {
 
@@ -299,8 +308,7 @@ function woocommerce_paghiper_check_ipn_response() {
  * Search for transactions on Paghiper.
  */
 function woocommerce_paghiper_get_transaction_status($transaction_type, $settings, $paghiper_log, $token, $api_key) {
-    
-    $order_id = (isset($_GET) && array_key_exists('orderId', $_GET)) ? sanitize_text_field($_GET['orderId']) : NULL;
+    $order_id = (isset($_GET) && array_key_exists('orderId', $_GET)) ? (int) $_GET['orderId'] : NULL;
 
     if(!$order_id) {
         wp_die( esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo-boleto-paghiper' ), esc_html__( 'Solicitação PagHiper Não Autorizada', 'woo-boleto-paghiper' ), array( 'response' => 408 ) );
