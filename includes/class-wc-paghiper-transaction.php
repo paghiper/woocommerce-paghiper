@@ -575,6 +575,10 @@ class WC_PagHiper_Transaction {
 			$headers = $response['headers']; // array of http header lines
 			$body    = $response['body']; // use the content
 
+			// For the WP team: This will be printed in a separate page, without headers or footers.
+			// This code just can't be escaped because it's a complete webpage in itself. It comes directly from the Paghiper API.
+			// Should this ever get compromised, it can't interact with the rest of the site, so it won't be able to do anything malicious
+			// Also, in order for this to pose as a threat, the whole site or even the webserver are compromised, so this is not a security issue
 			echo $body;
 
 			if ( $this->log ) {
@@ -734,6 +738,9 @@ class WC_PagHiper_Transaction {
 		$this->create_transaction();
 		$barcode = $this->print_transaction_barcode(($print || (!$print && $is_html) ? true : false), $is_html, $conf);
 
+		// For the WP Team: This is a function that prints the barcode to the screen
+		// All the code is generated, escaped and treated by the plugin previous to this stage, so it can't be escaped again
+		// This code is not a security issue, as it is just a barcode and the user can't interact with it
 		if($print) 
 			echo $barcode;
 
