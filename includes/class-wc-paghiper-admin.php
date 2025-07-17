@@ -131,7 +131,7 @@ class WC_Paghiper_Admin {
 			}
 
 			// Save the ticket data if don't have.
-			if ( !isset($paghiper_data['order_transaction_due_date']) ) {
+			if( !array_key_exists('order_transaction_due_date', $paghiper_data) || empty($paghiper_data['order_transaction_due_date']) ) {
 
 				$data = [];
 
@@ -162,29 +162,42 @@ class WC_Paghiper_Admin {
 			require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
 
 			$paghiperTransaction = new WC_PagHiper_Transaction( $order->get_id() );
-			$html = $paghiperTransaction->printBarCode(false, true, ['code', 'digitable']);
 
 			$order_transaction_due_date = DateTime::createFromFormat('Y-m-d', $paghiper_data['order_transaction_due_date'], $this->timezone);
 			/* translators: %s: Transaction type. May be PIX or billet, for an example. */
 			$formatted_due_date = ($order_transaction_due_date) ? $order_transaction_due_date->format('d/m/Y') : sprintf(__("%s indisponível", 'woo-boleto-paghiper'), (($gateway_name == 'paghiper_pix') ? __("PIX", 'woo-boleto-paghiper') : __("Boleto", 'woo-boleto-paghiper')));
 
-			$html .= '<p><strong>' . __( 'Data de Vencimento:', 'woo-boleto-paghiper' ) . '</strong> ' . $formatted_due_date . '</p>';
+			?>
 
-			if($gateway_name !== 'paghiper_pix')
-			/* translators: Description for display right before billet URL on admin panel. */
-			$html .= '<p><strong>' . __( 'URL:', 'woo-boleto-paghiper' ) . '</strong> <a target="_blank" href="' . esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ) . '">' . __( 'Visualizar boleto', 'woo-boleto-paghiper' ) . '</a></p>';
+			<?php $paghiperTransaction->printBarCode(true, true, ['code', 'digitable']); ?>
 
-			$html .= '<p style="border-top: 1px solid #ccc;"></p>';
+			<p><strong><?php esc_html_e( 'Data de Vencimento:', 'woo-boleto-paghiper' ); ?></strong> <?php echo esc_html ($formatted_due_date); ?></p>
 
-			$html .= '<label for="woo_paghiper_expiration_date">' . __( 'Digite uma nova data de vencimento:', 'woo-boleto-paghiper' ) . '</label><br />';
-			$html .= '<input type="text" id="woo_paghiper_expiration_date" name="woo_paghiper_expiration_date" class="date" style="width: 100%;" />';
-			/* translators: %s: Transaction type. May be PIX or billet, for an example. */
-			$html .= '<span class="description">' . sprintf(__( 'Ao configurar uma nova data de vencimento, o %s é re-enviado ao cliente por e-mail.', 'woo-boleto-paghiper' ), (($gateway_name !== 'paghiper_pix') ? __('boleto', 'woo-boleto-paghiper') : __('PIX', 'woo-boleto-paghiper') )) . '</span>';
+			<?php if($gateway_name !== 'paghiper_pix') { ?>
+				<?php /* translators: Description for display right before billet URL on admin panel. */ ?>
+			<p>
+				<strong><?php esc_html_e( 'URL:', 'woo-boleto-paghiper' ); ?></strong>
+				<a target="_blank" href="<?php echo esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ); ?>">
+					<?php esc_html_e( 'Visualizar boleto', 'woo-boleto-paghiper' ); ?>
+				</a>
+			</p>
+			<?php } ?>
 
-			// Show errors related to user input (invalid or past inputted dates)
+			<p style="border-top: 1px solid #ccc;"></p>
+
+			<label for="woo_paghiper_expiration_date"><?php esc_html_e( 'Digite uma nova data de vencimento:', 'woo-boleto-paghiper' ); ?></label><br />
+			<input type="text" id="woo_paghiper_expiration_date" name="woo_paghiper_expiration_date" class="date" style="width: 100%;" />
+			<span class="description">
+				<?php printf(
+					// translators: %s: Transaction type. May be PIX or billet, for an example.
+					esc_html__( 'Ao configurar uma nova data de vencimento, o %s é re-enviado ao cliente por e-mail.', 'woo-boleto-paghiper' ),
+					(($gateway_name !== 'paghiper_pix') ? esc_html__('boleto', 'woo-boleto-paghiper') : esc_html__('PIX', 'woo-boleto-paghiper') )); ?>
+			</span>
+
+			<?php // Show errors related to user input (invalid or past inputted dates)
 			if ( $error = get_transient( "woo_paghiper_save_order_errors_{$order->get_id()}" ) ) {
 
-				$html .= sprintf('<div class="error"><p>%s</p></div>', $error); 
+				printf('<div class="error"><p>%s</p></div>', esc_html($error)); 
 				delete_transient("woo_paghiper_save_order_errors_{$order->get_id()}");
 
 			}
@@ -193,17 +206,14 @@ class WC_Paghiper_Admin {
 			// Show due date errors (set on weekend, skipped to monday)
 			if ( $error = get_transient( "woo_paghiper_due_date_order_errors_{$order->get_id()}" ) ) {
 
-				$html .= sprintf('<div class="error"><p>%s</p></div>', $error); 
+				printf('<div class="error"><p>%s</p></div>', esc_html($error)); 
 
 			}
 
 
-		} else {
-			$html = '<p>' . __( 'Este pedido não foi efetuado nem pago com PIX ou boleto da Paghiper.', 'woo-boleto-paghiper' ) . '</p>';
-			$html .= '<style>#woo_paghiper.postbox {display: none;}</style>';
-		}
-
-		echo $html;
+		} else { ?>
+			<p><?php esc_html_e( 'Este pedido não foi efetuado nem pago com PIX ou boleto da Paghiper.', 'woo-boleto-paghiper' ); ?></p>
+		<?php }
 
 	}
 

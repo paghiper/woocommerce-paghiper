@@ -292,7 +292,17 @@ class WC_Paghiper {
 			$gateway_class = ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
 
 			if(!array_key_exists('api_key', $gateway_settings) || empty($gateway_settings['api_key'])) {
-				echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', $gateway_name, __('Você ainda não configurou sua apiKey! Finalize a configuração do seu plug-in aqui:', 'woo-boleto-paghiper'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), sprintf(__("Configurações de integração %a", 'woo-boleto-paghiper'),$gateway_name));
+				echo sprintf(
+					'<div class="error notice"><p><strong>%1$s: </strong>%2$s <a href="%3$s">%4$s</a></p></div>', 
+					esc_html($gateway_name), 
+					esc_html__('Você ainda não configurou sua apiKey! Finalize a configuração do seu plug-in aqui:', 'woo-boleto-paghiper'), 
+					esc_url( admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}") ), 
+					sprintf(
+						// translators: %s: Gateway name
+						esc_html__("Configurações de integração %s", 'woo-boleto-paghiper'),
+						esc_html($gateway_name)
+					)
+				);
 			}
 
 		}
@@ -304,7 +314,7 @@ class WC_Paghiper {
 				$gateway_settings = get_option( $gateway );
 				$is_pix = ($gateway == 'woocommerce_paghiper_pix_settings') ? true : false;
 
-				$gateway_name = ($is_pix) ? __('PIX PagHiper', 'woo-boleto-paghiper') : __('Boleto PagHiper', 'woo-boleto-paghiper');
+				$gateway_name = ($is_pix) ? esc_html__('PIX PagHiper', 'woo-boleto-paghiper') : esc_html__('Boleto PagHiper', 'woo-boleto-paghiper');
 				$gateway_class = ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
 	
 				try {
@@ -315,8 +325,18 @@ class WC_Paghiper {
 				} catch(Exception $e) {
 	
 					if (strpos($e->getMessage(), 'apiKey') !== false) {
-						/* translators: %s: Gateway name */
-						echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', $gateway_name, __('Sua apiKey é inválida! Confira novamente seus dados aqui:', 'woo-boleto-paghiper'), admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), sprintf(__("Configurações de integração %s", 'woo-boleto-paghiper'), $gateway_name));
+						echo sprintf(
+							/* translators: %s: Gateway name */
+							'<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', 
+							esc_html($gateway_name), 
+							esc_html__('Sua apiKey é inválida! Confira novamente seus dados aqui:', 'woo-boleto-paghiper'), 
+							esc_url(admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}")), 
+							sprintf(
+								// translators: %s: Gateway name
+								esc_html__("Configurações de integração %s", 'woo-boleto-paghiper'), 
+								esc_html($gateway_name)
+							)
+						);
 					}
 				}
 			}
@@ -339,7 +359,12 @@ class WC_Paghiper {
 
 			// Print notices
 			add_action( 'admin_notices', function() {
-				echo sprintf('<div class="error notice paghiper-dismiss-notice is-dismissible" data-notice-id="notice_2_1"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', __('PIX PagHiper', 'woo-boleto-paghiper'), __('Você ja pode receber pagamentos por PIX! Configure aqui:', 'woo-boleto-paghiper'), admin_url('admin.php?page=wc-settings&tab=checkout&section=wc_paghiper_pix_gateway'), __('Configurações do PIX PagHiper', 'woo-boleto-paghiper'));
+				echo sprintf(
+					'<div class="error notice paghiper-dismiss-notice is-dismissible" data-notice-id="notice_2_1"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', 
+					esc_html__('PIX PagHiper', 'woo-boleto-paghiper'), 
+					esc_html__('Você ja pode receber pagamentos por PIX! Configure aqui:', 'woo-boleto-paghiper'), 
+					esc_url(admin_url('admin.php?page=wc-settings&tab=checkout&section=wc_paghiper_pix_gateway')), 
+					esc_html__('Configurações do PIX PagHiper', 'woo-boleto-paghiper'));
 			});
 			
 		}
@@ -358,13 +383,16 @@ class WC_Paghiper {
 					$gateway_class 	= ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
 	
 					if(!apply_filters('hide_waiting_status_warning', false, $gateway_class)) {
-						/* translators: %s: Gateway name */
-						echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', 
-							$gateway_name,
-							__('O status após a emissão deve ser "Aguardando" ou equivalente. Caso contrário, o Woocommerce pode cancelar os pedidos antes do pagamento! <br>Finalize a configuração do seu plug-in aqui:', 'woo-boleto-paghiper'), 
-							admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}"), 
-							/* translators: %s: Gateway name */
-							sprintf(__("Configurações de integração do %s", 'woo-boleto-paghiper')), $gateway_name);
+						echo sprintf(
+							'<div class="error notice"><p><strong>%1$s: </strong>%2$s <a href="%3$s">%4$s</a></p></div>', 
+							esc_html($gateway_name),
+							esc_html__('O status após a emissão deve ser "Aguardando" ou equivalente. Caso contrário, o Woocommerce pode cancelar os pedidos antes do pagamento! <br>Finalize a configuração do seu plug-in aqui:', 'woo-boleto-paghiper'), 
+							esc_url(admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}")), 
+							sprintf(
+								/* translators: %s: Gateway name */
+								esc_html__("Configurações de integração do %s", 'woo-boleto-paghiper')),
+								esc_html($gateway_name)
+							);
 					}
 				}
 			}

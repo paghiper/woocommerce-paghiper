@@ -51,7 +51,7 @@ if ( !empty( $boleto_code ) ) {
 			$ico = 'billet-cancelled.png';
 			$title = 'Este pedido não foi feito com boleto!';
 			$message = 'A forma de pagamento deste pedido é PIX. Cheque seu e-mail ou sua área de pedidos para informações sobre como pagar.';
-			echo wc_print_transaction_screen($ico, $title, $message);
+			wc_print_transaction_screen($ico, $title, $message);
 		
 			if ( $log ) {
 				wc_paghiper_add_log( $log, sprintf( 'Pedido #%s: Endpoint de boleto foi acessado mas o método de pagamento é PIX.', $order->get_id() ) );

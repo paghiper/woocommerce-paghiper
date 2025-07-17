@@ -57,7 +57,12 @@ class WC_Paghiper_Base_Gateway {
 		} else {
 			$gateway_name = __('Boleto Paghiper', 'woo-boleto-paghiper');
 		}
-		echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', $gateway_name, __('A moeda-padrão do seu Woocommerce não é o R$. Ajuste suas configurações aqui:', 'woo-boleto-paghiper'), admin_url('admin.php?page=wc-settings&tab=general'), __('Configurações de moeda', 'woo-boleto-paghiper'));
+		echo sprintf('<div class="error notice"><p><strong>%s: </strong>%s <a href="%s">%s</a></p></div>', 
+			esc_html($gateway_name),
+			esc_html( __('A moeda-padrão do seu Woocommerce não é o R$. Ajuste suas configurações aqui:', 'woo-boleto-paghiper') ), 
+			esc_url( admin_url('admin.php?page=wc-settings&tab=general') ),
+			esc_html( __('Configurações de moeda', 'woo-boleto-paghiper') )
+		);
 	}
 
 	/**
@@ -344,7 +349,7 @@ class WC_Paghiper_Base_Gateway {
 
 	public function payment_fields() {
 
-		echo wpautop( wp_kses_post( $this->gateway->description ) );
+		echo wp_kses_post( wpautop( $this->gateway->description ) );
 	 
 		echo '<fieldset id="wc-' . esc_attr( $this->gateway->id ) . '-form" class="wc-paghiper-form wc-payment-form" style="background:transparent;">';
 	 
@@ -412,7 +417,7 @@ class WC_Paghiper_Base_Gateway {
 				
 			echo '<div class="form-row form-row-wide paghiper-payername-fieldset">
 				<label>Nome do pagador <span class="required">*</span></label>
-				<input id="'.$this->gateway->id.'_payer_name" name="_'.$this->gateway->id.'_payer_name" type="text" autocomplete="off">
+				<input id="'. esc_attr($this->gateway->id) .'_payer_name" name="_'. esc_attr($this->gateway->id) .'_payer_name" type="text" autocomplete="off">
 				</div>
 				<div class="clear"></div>';
 		}
@@ -680,7 +685,7 @@ class WC_Paghiper_Base_Gateway {
 	
 			$html .= '</div>';
 	
-			echo $html;
+			echo wp_kses_post($html);
 
 		}
 	}
@@ -733,6 +738,6 @@ class WC_Paghiper_Base_Gateway {
 			$html .= apply_filters( 'woo_paghiper_email_instructions', $message );
 		}
 
-		echo $html;
+		echo wp_kses_post($html);
 	}
 }

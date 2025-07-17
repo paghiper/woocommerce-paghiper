@@ -10,7 +10,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 
 <div class="error">
-	<?php /* translators: %s: Currency code */ ?>
-	<p><strong><?php _e( 'Temos um problema!', 'woo-boleto-paghiper' ); ?></strong> <?php printf( __( 'O Paghiper não dá suporte a moeda <code>%s</code>. Só é possível receber em Real Brasileiro (R$).', 'woo-boleto-paghiper' ), get_woocommerce_currency() ); ?>
+	<p>
+		<strong>
+			<?php esc_html_e( 'Temos um problema!', 'woo-boleto-paghiper' ); ?>
+		</strong>
+		<?php 
+		printf( 
+			wp_kses(
+				// translators: %s: Currency code
+				esc_html__( 'O Paghiper não dá suporte a moeda <code>%s</code>. Só é possível receber em Real Brasileiro (R$).', 'woo-boleto-paghiper' ), 
+				['code'=>[]]
+			), 
+			esc_html(get_woocommerce_currency()) ); ?>
 	</p>
 </div>
