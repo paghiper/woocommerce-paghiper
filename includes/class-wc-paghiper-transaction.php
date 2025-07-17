@@ -78,50 +78,66 @@ class WC_PagHiper_Transaction {
 		$different_due_date = FALSE;
 
 		// Novo request caso o método de pagamento tenha mudado
-		if( isset($this->order_data['transaction_type']) && ($this->order_data['transaction_type'] == 'pix' && $this->gateway_id !== 'paghiper_pix') ) {
+		if( array_key_exists('transaction_type', $this->order_data) && ($this->gateway_id !== $this->order->get_payment_method()) ) {
 
 			$new_request = TRUE;
 
 			if ( $this->log ) {
-				wc_paghiper_add_log( $this->log, sprintf( 'Pedido #%s: Método de pagamento é PIX mas a transação gerada não é.', $this->order_id ) );
+				wc_paghiper_add_log( 
+					$this->log, 
+					sprintf( 
+						'Pedido #%s: Método de pagamento é %s mas a transação gerada não é.', 
+						$this->order_id, 
+						(($this->gateway->id == 'paghiper_pix') ? __('PIX', 'woo-boleto-paghiper') : __('boleto', 'woo-boleto-paghiper')), 
+					)
+				);
 			}
 		}
 
 		// Define data de vencimento, caso exista
-		if(empty($this->order_data['order_transaction_due_date']) || empty($this->order_data['current_transaction_due_date'])) {
+		if( !array_key_exists('current_transaction_due_date', $this->order_data) ||  !array_key_exists('order_transaction_due_date', $this->order_data)) {
 
 			$new_request = TRUE;
 
-			if ( $this->log ) {
-				if( empty( $this->order->get_meta( 'wc_paghiper_data' ) ) ) {
+			if( is_array( $this->order->get_meta( 'wc_paghiper_data' ) ) &&
+							!array_key_exists('current_transaction_due_date', $this->order_data) ) {
+
+				$this->invalid_reason = 'nonexistent_transaction';
+
+				if ( $this->log ) {
 					wc_paghiper_add_log( $this->log, sprintf( 'Pedido #%s: Gerando transação para o pedido pela primeira vez.', $this->order_id ) );
-				} else {
-					wc_paghiper_add_log( $this->log, sprintf( 'Pedido #%s: Data de vencimento não presente no banco.', $this->order_id ) );
+				}
+			} else {	
+				$this->invalid_reason = 'nonexistent_order_data';
+				if ( $this->log ) {
+					wc_paghiper_add_log( $this->log, sprintf( 'Pedido #%s: Data de vencimento não presente no banco.', $this->order_id ) );			
 				}
 			}
 
 		} else {
-
-			$original_due_date = DateTime::createFromFormat('Y-m-d', $this->order_data['order_transaction_due_date'], $this->timezone);
-			$current_billet_due_date = DateTime::createFromFormat('Y-m-d', $this->order_data['current_transaction_due_date'], $this->timezone);
-
+			
+			// Checamos se o total do pedido bate com o total da transação Paghiper
 			$different_total = ( $this->order->get_total() == $this->order_data['value_cents'] ? NULL : TRUE );
+
+			// Checamos se a data de vencimento é válida
+			$original_due_date = DateTime::createFromFormat('Y-m-d', $this->order_data['order_transaction_due_date'], $this->timezone);
+			$current_transaction_due_date = DateTime::createFromFormat('Y-m-d', $this->order_data['current_transaction_due_date'], $this->timezone);
 			$different_due_date = ( $this->order_data['order_transaction_due_date'] == $this->order_data['current_transaction_due_date'] ? NULL : TRUE );
 
+			// Armazenamos a quantidade de dias passados do vencimento para uso interno
 			$today_date = new DateTime;
 			$today_date->setTimezone($this->timezone);
-
-			$this->past_due_days = ($original_due_date && $current_billet_due_date) ? (int) $today_date->diff($original_due_date)->format("%r%a") : NULL ;
+			$this->past_due_days = ($original_due_date && $current_transaction_due_date) ? (int) $today_date->diff($original_due_date)->format("%r%a") : NULL ;
 
 			if($different_due_date) {
 
 				// Check if date is different
-				$due_date_weekday = $current_billet_due_date->format('N');
+				$due_date_weekday = $current_transaction_due_date->format('N');
 
-				if ($current_billet_due_date->format('N') == 1 && $original_due_date->format('N') > 5) {
+				if ($current_transaction_due_date->format('N') == 1 && $original_due_date->format('N') > 5) {
 					
 					$paghiper_data = $this->order->get_meta( 'wc_paghiper_data' ) ;
-					$paghiper_data['order_transaction_due_date'] = $current_billet_due_date->format( 'Y-m-d' );
+					$paghiper_data['order_transaction_due_date'] = $current_transaction_due_date->format( 'Y-m-d' );
 
 					$this->order->update_meta_data( 'wc_paghiper_data', $paghiper_data );
 					$this->order->save();
@@ -131,7 +147,7 @@ class WC_PagHiper_Transaction {
 
 					$this->order_data = $paghiper_data;
 					/* translators: %s: Mewly defined transaction due date. Used in order notes */
-					$this->order->add_order_note( sprintf( __( 'Data de vencimento ajustada para %s', 'woo-boleto-paghiper' ), $current_billet_due_date->format('d/m/Y') ) );
+					$this->order->add_order_note( sprintf( __( 'Data de vencimento ajustada para %s', 'woo-boleto-paghiper' ), $current_transaction_due_date->format('d/m/Y') ) );
 
 					$log_message = 'Pedido #%s: Data de vencimento do boleto não bate com a informada no pedido. Cheque a opção "Vencimento em finais de semana" no <a href="https://www.paghiper.com/painel/prazo-vencimento-boleto/" target="_blank">Painel da PagHiper</a>.';
 					wc_paghiper_add_log( $this->log, sprintf( $log_message, $this->order_id ) );
@@ -439,7 +455,8 @@ class WC_PagHiper_Transaction {
 			$PagHiperAPI 	= new PagHiper($api_key, $token);
 			$response 		= $PagHiperAPI->transaction()->create($transaction_data);
 
-			$billet_data = $this->order->get_meta( 'wc_paghiper_data' );
+			// Get meta data from the order again, no matter what.
+			$this->order_data = $this->order->get_meta( 'wc_paghiper_data' );
 
 			$transaction_base_data = [
 				'transaction_id'				=> $response['transaction_id'],
@@ -489,15 +506,15 @@ class WC_PagHiper_Transaction {
 
 			}
 
-			$current_billet = array_merge($transaction_base_data, $transaction);
+			$current_transaction = array_merge($transaction_base_data, $transaction);
 
 			// Define a due date for storing on the order, for future reference
 			if(!array_key_exists('order_transaction_due_date', $this->order_data)) {
-				$current_billet['order_transaction_due_date'] = $response['due_date'];
+				$current_transaction['order_transaction_due_date'] = $response['due_date'];
 			}
 
 			$order_data = (is_array($this->order_data)) ? $this->order_data : array();
-			$data = array_merge($this->order_data, $current_billet);
+			$data = array_merge($this->order_data, $current_transaction);
 
 			// Update order status if needed
 			$order_status = (strpos($this->order->get_status(), 'wc-') === false) ? 'wc-'.$this->order->get_status() : $this->order->get_status();
