@@ -679,9 +679,13 @@ class WC_Paghiper_Base_Gateway {
 			$message .= __( 'Se preferir, você pode imprimir e pagar o boleto em qualquer agência bancária ou lotérica.', 'woo-boleto-paghiper' ) . '<br />';
 	
 			$html .= apply_filters( 'woo_paghiper_thankyou_page_message', $message );
+
+			$transaction_due_date = new DateTime;
+			$transaction_due_date->setTimezone($this->timezone);
+			$transaction_due_date->modify( "+{$this->days_due_date} days" );
 	
 			/* translators: %s: Billet due date. */
-			$html .= '<strong style="display: block; margin-top: 15px; font-size: 0.8em">' . sprintf( __( 'Data de vencimento do Boleto: %s.', 'woo-boleto-paghiper' ), date( 'd/m/Y', time() + ( absint( $this->days_due_date ) * 86400 ) ) ) . '</strong>';
+			$html .= '<strong style="display: block; margin-top: 15px; font-size: 0.8em">' . sprintf( __( 'Data de vencimento do Boleto: %s.', 'woo-boleto-paghiper' ), $transaction_due_date->format('Y-m-d') ) . '</strong>';
 	
 			$html .= '</div>';
 	
@@ -719,6 +723,10 @@ class WC_Paghiper_Base_Gateway {
 
 		if($order_payment_method !== 'paghiper_pix') {
 
+			$transaction_due_date = new DateTime;
+			$transaction_due_date->setTimezone($this->timezone);
+			$transaction_due_date->modify( "+{$this->days_due_date} days" );
+
 			/* translators: %1$s: HTML opening tag, %2$s: HTML closing tag. */
 			$message .= sprintf( __( '%1$sAtenção!%2$s Você NÃO vai receber o boleto pelos Correios.', 'woo-boleto-paghiper' ), '<strong>', '</strong>' ) . '<br />';
 			$message .= __( 'Se preferir, você pode imprimir e pagar o boleto em qualquer agência bancária ou lotérica.', 'woo-boleto-paghiper' ) . '<br />';
@@ -729,7 +737,7 @@ class WC_Paghiper_Base_Gateway {
 			$html .= '<br />' . sprintf( '<a class="button alt" href="%s" target="_blank">%s</a>', esc_url( wc_paghiper_get_paghiper_url( $order->get_order_key() ) ), __( 'Veja o boleto completo &rarr;', 'woo-boleto-paghiper' ) ) . '<br />';
 	
 			/* translators: %s: Billet due date. */
-			$html .= '<strong style="font-size: 0.8em">' . sprintf( __( 'Data de Vencimento: %s.', 'woo-boleto-paghiper' ), date( 'd/m/Y', time() + ( absint( $this->days_due_date ) * 86400 ) ) ) . '</strong>';
+			$html .= '<strong style="font-size: 0.8em">' . sprintf( __( 'Data de Vencimento: %s.', 'woo-boleto-paghiper' ), $transaction_due_date->format('Y-m-d') ) . '</strong>';
 	
 			$html .= '</p>';
 			$html .= '</div>';
