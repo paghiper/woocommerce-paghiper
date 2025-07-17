@@ -19,6 +19,7 @@ use Automattic\WooCommerce\Utilities\OrderUtil;
 class WC_Paghiper_Admin {
 
 	private $timezone;
+	private $log;
 
 	/**
 	 * Initialize the admin.
@@ -119,6 +120,7 @@ class WC_Paghiper_Admin {
 	 * @return string       Metabox HTML.
 	 */
 	public function metabox_content( $post_or_order_object ) {
+
 		// Get order data.
 		$order = ( $post_or_order_object instanceof WP_Post ) ? wc_get_order( $post_or_order_object->ID ) : $post_or_order_object;
 
@@ -146,6 +148,11 @@ class WC_Paghiper_Admin {
 				// Pega a configuração atual do plug-in.
 				$settings = ($gateway_name == 'paghiper_pix') ? get_option( 'woocommerce_paghiper_pix_settings' ) : get_option( 'woocommerce_paghiper_billet_settings' );
 
+				// Inicializa logs, caso ativados
+				if(!$this->log) {
+					$this->log = wc_paghiper_initialize_log( $settings[ 'debug' ] );
+				}
+
 				// Define o número de dias para a data de vencimento da transação
 				$order_transaction_due_date	= isset( $settings['days_due_date'] ) ? absint( $settings['days_due_date'] ) : 5;
 
@@ -160,6 +167,11 @@ class WC_Paghiper_Admin {
 				
 				$order->update_meta_data( 'wc_paghiper_data', $data );
 				$order->save();
+
+				// TODO: Re-send order mail with payment info on this case, if it ever happens.
+				if ( $this->log ) {
+					wc_paghiper_add_log( $this->log, sprintf( 'Pedido #%s: Dados da PagHiper indisponíveis para esse pedido. Nova transação foi gerada.', esc_html($order->get_id()) ), [], WC_Log_Levels::ALERT );
+				}
 				
 				if(function_exists('update_meta_cache'))
 					update_meta_cache( 'shop_order', $order->get_id() );
