@@ -353,9 +353,9 @@ class WC_Paghiper_Base_Gateway {
 	 
 		// Print fields only if there are no fields for the same purpose on the checkout
 		$has_taxid_fields = $this->has_taxid_fields();
-		if(!$has_taxid_fields && isset($_POST) && array_key_exists('post_data', $_POST)) {
+		if(!$has_taxid_fields && isset($_POST) && array_key_exists('post_data', $_POST) && is_array($_POST['post_data'])) {
       
-      $sanitized_post_data = array_map('sanitize_text_field', wp_unslash($_POST['post_data']) );
+      		$sanitized_post_data = array_map('sanitize_text_field', wp_unslash($_POST['post_data']) );
 			parse_str( wp_unslash($sanitized_post_data), $post_data );
 			$has_taxid_fields = (array_key_exists('billing_cpf', $post_data) || array_key_exists('billing_cnpj', $post_data)) ? TRUE : FALSE;
       
