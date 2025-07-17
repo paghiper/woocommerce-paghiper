@@ -174,14 +174,14 @@ class WC_PagHiper_Transaction {
 	}
 
 	public function determine_due_date() {
-		$order_due_date 	= $this->order_data['order_transaction_due_date'];
+		$order_due_date 		= $this->order_data['order_transaction_due_date'];
 		$transaction_days_due	= (!empty($this->gateway_settings['days_due_date'])) ? $this->gateway_settings['days_due_date'] : 5;
 
 		$today = new DateTime;
 		$today->setTimezone($this->timezone);
 		$today_date = DateTime::createFromFormat('Y-m-d', $today->format('Y-m-d'), $this->timezone);
 
-		// TODO: Implement better logic here
+		// Se a data de vencimento já foi definida, usamos ela
 		if(!empty($order_due_date)) {
 
 			// Calcular dias de diferença entre a data de vencimento e a data atual
@@ -190,6 +190,7 @@ class WC_PagHiper_Transaction {
 
 			$transaction_due_date = $original_due_date;
 
+		// Se a data de vencimento não foi definida, usamos a data atual + dias de vencimento
 		} else {
 
 			$order_data = $this->order->get_meta( 'wc_paghiper_data' ) ;
@@ -197,10 +198,12 @@ class WC_PagHiper_Transaction {
 
 			// Calcular dias entre a data do pedido e os dias para vencimento na configuração
 			$transaction_due_date = $today_date;
-			$transaction_due_date->modify( "+{$billet_days_due} days" );
+			$transaction_due_date->modify( "+{$transaction_days_due} days" );
 
-			$transaction_due_days = (int) $billet_due_date->format('%a');
+			// Armazenamos a quantidade de dias a partir do dia atual, para o vencimento da transação
+			$transaction_due_days = (int) $transaction_due_date->format('%a');
 
+			// Guardamos o valor da data de vencimento no pedido
 			$order_data['order_transaction_due_date'] = $transaction_due_date->format( 'Y-m-d' );		
 			$this->order_data = $order_data;
 
@@ -213,9 +216,11 @@ class WC_PagHiper_Transaction {
 
 		}
 
+		// Checamos se a data de vencimento cai em um final de semana
 		$maybe_add_workdays = ($this->gateway_id == 'paghiper_pix') ? null : $this->gateway_settings['skip_non_workdays'];
 		$transaction_due_days = wc_paghiper_add_workdays($transaction_due_date, $this->order, 'days', $maybe_add_workdays);
 
+		// Retorna a quantidade de dias para vencimento da transação a ser gerada
 		return $transaction_due_days;
 	}
 
