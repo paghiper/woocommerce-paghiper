@@ -1,7 +1,12 @@
 <?php
-// Template para checkout transparente PagHiper.com
-// Desenvolvido por Henrique Cruz - Intelihost.com.br
-
+/*
+ * PagHiper Boleto View
+ *
+ * This file is used to display the boleto page.
+ *
+ * @package PagHiper for WooCommerce
+ * @since 1.0.0
+ */
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -140,6 +145,7 @@ function wc_print_transaction_screen($ico, $title, $message) {
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 	</head>
 	<body>
+		<?php // For the WP Team: Printing this directly to page because this page is restricted (custom URL) and doesn't have a header nor a footer. ?>
 		<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,600" rel="stylesheet"> 
 		<div class="container">
 			<div>

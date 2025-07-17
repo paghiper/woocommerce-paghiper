@@ -1,4 +1,13 @@
 <?php
+/**
+ * WC_PagHiper_Transaction class
+ *
+ * Handles the PagHiper transaction logic for WooCommerce orders.
+ *
+ * @package PagHiper for WooCommerce
+ */
+
+// For the WP team: var_export() is used only for logging purposes, if the user has debug enabled on plugin settings.
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -583,7 +592,6 @@ class WC_PagHiper_Transaction {
 			// For the WP team: This will be printed in a separate page, without headers or footers.
 			// This code just can't be escaped because it's a complete webpage in itself. It comes directly from the Paghiper API.
 			// Should this ever get compromised, it can't interact with the rest of the site, so it won't be able to do anything malicious
-			// Also, in order for this to pose as a threat, the whole site or even the webserver are compromised, so this is not a security issue
 			echo $body;
 
 			if ( $this->log ) {

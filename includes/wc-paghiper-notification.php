@@ -1,4 +1,7 @@
 <?php
+// For the WP Team: No nonce can be generated for this.
+// This is for IPN notifications handling and we double check the info before processing it.
+// var_export() is used only for logging purposes, if the user has debug enabled.
 
 use PagHiper\PagHiper;
 

@@ -1,4 +1,11 @@
 <?php
+/* * PagHiper Admin Class
+ *
+ * @package PagHiper for WooCommerce
+ */
+
+// For the WP team: error_log() is used only on emergency type of errors.
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -45,6 +52,7 @@ class WC_Paghiper_Admin {
 		} else {
 
 			// In case any of the variables are missing, bail out
+			// For the WP team: We don't check for nonce because this is not a form submission, only a check for the GET request to the admin page.
 			if(!array_key_exists('page', $_GET) || !array_key_exists('action', $_GET) || !array_key_exists('id', $_GET))
 				return false;
 
@@ -382,6 +390,7 @@ class WC_Paghiper_Admin {
 
 		if(is_admin()) {
 
+			// For the WP Team: We don't check for nonce because this is not a form submission, only a check for the GET request to the admin page.
 			if( array_key_exists( 'action', $_REQUEST ) ) {
 				$req_action = sanitize_key( wp_unslash( $_REQUEST['action'] ) );
 			

@@ -1,4 +1,16 @@
 <?php
+/**
+ * PagHiper Base Gateway Class
+ *
+ * @package PagHiper for WooCommerce
+ */
+
+// For the WP team: var_export() is used only for logging purposes, if the user has debug enabled on plugin settings.
+// Nonce can't be used here because data being used comes directly from checkout, which isn't necessarily authenticated.
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
 
 class WC_Paghiper_Base_Gateway {
 
