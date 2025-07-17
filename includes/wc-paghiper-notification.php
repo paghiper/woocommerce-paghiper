@@ -86,9 +86,9 @@ function woocommerce_paghiper_valid_ipn_request($return, $order_no, $settings) {
 
                 /*if($order_status == $settings['set_status_when_cancelled']) {
                     $waiting_status = (!empty($settings['set_status_when_waiting'])) ? $settings['set_status_when_waiting'] : 'on-hold';
-                    $order->update_status( $waiting_status, __( 'Boleto PagHiper: Novo boleto gerado. Aguardando compensação.', 'woo_paghiper' ) );
+                    $order->update_status( $waiting_status, __( 'Boleto PagHiper: Novo boleto gerado. Aguardando compensação.', 'woo-boleto-paghiper' ) );
                 } else {
-                    $order->add_order_note( __( 'PagHiper: Post de notificação recebido. Aguardando compensação do boleto.' , 'woo_paghiper' ) );
+                    $order->add_order_note( __( 'PagHiper: Post de notificação recebido. Aguardando compensação do boleto.' , 'woo-boleto-paghiper' ) );
                 }*/
 			    /* translators: %s: Transaction type. May be PIX or billet. For use in order notes */
                 $order->add_order_note( sprintf(__( 'PagHiper: Novo %s emitido. Aguardando compensação.', 'woo-boleto-paghiper' ),$gateway_name) );
