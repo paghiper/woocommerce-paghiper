@@ -44,6 +44,12 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 * Envio de e-mails de lembrete automatizados pelo Woocommerce, com comunicação da loja para maior conversão
 * Implementação de funcionalidade de boleto parcelado
 
+## 2.5
+
+- Mudança sutil no nome do plugin por questões de compliance
+- Erro fatal no admin dos pedidos, a depender de algumas condições
+- Múltiplos bugfixes e melhorias
+
 ## 2.4.3
 
 - Melhoria: Otimizações e refatoração de código em diversas rotas e jornadas
