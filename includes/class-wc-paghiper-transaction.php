@@ -588,6 +588,21 @@ class WC_PagHiper_Transaction {
 
 			$this->order_data = $data;
 
+			if ( $this->log ) {
+				wc_paghiper_add_log( 
+					$this->log, 
+					sprintf( 
+						'Pedido #%s: Transação %s criada com sucesso.', 
+						$this->order_id, 
+						(($this->gateway_id == 'paghiper_pix') ? __('PIX', 'woo-boleto-paghiper') : __('boleto', 'woo-boleto-paghiper')), 
+					),
+					[
+						'metadata' => $this->order_data,
+						'api_response' => $response
+					]
+				);
+			}
+
 			// Don't try downloading PDF files for PIX transacitons
 			if(in_array($this->gateway_id, ['paghiper_billet', 'paghiper'])) {
 
