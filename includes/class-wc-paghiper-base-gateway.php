@@ -571,6 +571,14 @@ class WC_Paghiper_Base_Gateway {
 			/* translators: %s: Transaction type. May be PIX or billet, for an example. */
 			$order->update_status( $waiting_status, sprintf(__( 'PagHiper: %s gerado e enviado por e-mail.', 'woo-boleto-paghiper' ), (($this->gateway->id == 'paghiper_pix') ? __('PIX', 'woo-boleto-paghiper') : __('Boleto', 'woo-boleto-paghiper')) ) );
 
+
+			if ( $this->log ) {
+				wc_paghiper_add_log( 
+					$this->log, 
+					sprintf( 'Pedido #%s: Redirecionando usuário para a tela com os dados para pagamento.', $order_id) 
+				);
+			}
+
 			// Reattach email instructions to the order e-mails from now on
 			add_action( 'woocommerce_email_after_order_table', array( $this, 'email_instructions' ), 10, 2 );
 
