@@ -574,6 +574,11 @@ class WC_Paghiper_Base_Gateway {
 			// Reattach email instructions to the order e-mails from now on
 			add_action( 'woocommerce_email_after_order_table', array( $this, 'email_instructions' ), 10, 2 );
 
+			// Return thankyou redirect.
+			return [
+				'result'   => 'success',
+				'redirect' => $url
+			];
 
 		} else {
 
@@ -594,21 +599,20 @@ class WC_Paghiper_Base_Gateway {
 					) 
 				);
 			}
+
 			wc_add_notice(
 				sprintf( 
 					/* translators: %s: Transaction type. May be PIX or billet, for an example. */
 					__('Não foi possível gerar o seu %s.', 'woo-boleto-paghiper'), 
 					(($this->gateway->id == 'paghiper_pix') ? __('PIX', 'woo-boleto-paghiper') : __('boleto', 'woo-boleto-paghiper')) 
 			), 'error' );
-			return;
+
+			return [
+				'result'   => 'fail',
+				'redirect' => '',
+			];
 
 		}
-
-		// Return thankyou redirect.
-		return array(
-			'result'   => 'success',
-			'redirect' => $url
-		);
 	}
 
 	/**
