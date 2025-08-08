@@ -105,12 +105,20 @@ class WC_PagHiper_Transaction {
 				$this->invalid_reason = 'nonexistent_transaction';
 
 				if ( $this->log ) {
-					wc_paghiper_add_log( $this->log, sprintf( 'Pedido #%s: Gerando transação para o pedido pela primeira vez.', $this->order_id ) );
+					wc_paghiper_add_log( 
+						$this->log, 
+						sprintf( 'Pedido #%s: Gerando transação para o pedido pela primeira vez.', $this->order_id ),
+						['metadata' => $this->order_data]
+					);
 				}
 			} else {	
 				$this->invalid_reason = 'nonexistent_order_data';
 				if ( $this->log ) {
-					wc_paghiper_add_log( $this->log, sprintf( 'Pedido #%s: Data de vencimento não presente no banco.', $this->order_id ) );			
+					wc_paghiper_add_log(
+						$this->log,
+						sprintf( 'Pedido #%s: Data de vencimento não presente no banco.', $this->order_id ),
+						['metadata' => $this->order_data]
+					);			
 				}
 			}
 
@@ -150,7 +158,11 @@ class WC_PagHiper_Transaction {
 					$this->order->add_order_note( sprintf( __( 'Data de vencimento ajustada para %s', 'woo-boleto-paghiper' ), $current_transaction_due_date->format('d/m/Y') ) );
 
 					$log_message = 'Pedido #%s: Data de vencimento do boleto não bate com a informada no pedido. Cheque a opção "Vencimento em finais de semana" no <a href="https://www.paghiper.com/painel/prazo-vencimento-boleto/" target="_blank">Painel da PagHiper</a>.';
-					wc_paghiper_add_log( $this->log, sprintf( $log_message, $this->order_id ) );
+					wc_paghiper_add_log(
+						$this->log,
+						sprintf( $log_message, $this->order_id ),
+						['metadata' => $this->order_data]
+					);
 
 
 					$error = __( '<strong>Boleto PagHiper</strong>: 
@@ -168,7 +180,17 @@ class WC_PagHiper_Transaction {
 					if ( $this->log ) {
 						$log_message = 'Pedido #%s: Data de vencimento da transação não bate com a informada no pedido. Uma novo %s será gerada.'.PHP_EOL;
 						$log_message .= 'Data de vencimento esperada é %s, data de vencimento recebida: %s';
-						wc_paghiper_add_log( $this->log, sprintf( $log_message, $this->order_id, $this->gateway_name, $this->order_data['order_transaction_due_date'],  $this->order_data['current_transaction_due_date']) );
+						wc_paghiper_add_log(
+							$this->log, 
+							sprintf(
+								$log_message,
+								$this->order_id,
+								$this->gateway_name,
+								$this->order_data['order_transaction_due_date'], 
+								$this->order_data['current_transaction_due_date']
+								),
+							['metadata' => $this->order_data]
+						);
 					}
 				}
 
@@ -183,7 +205,17 @@ class WC_PagHiper_Transaction {
 				if ( $this->log ) {
 					$log_message = 'Pedido #%s: Valor total não bate com o informada no boleto gerado. Um novo %s será gerado.'.PHP_EOL;
 					$log_message .= 'Valor da transação esperada é %s, valor recebido: %s';
-					wc_paghiper_add_log( $this->log, sprintf( $log_message, $this->order_id, $this->gateway_name, $this->order->get_total(), $this->order_data['value_cents'] ) );
+					wc_paghiper_add_log( 
+						$this->log,
+						sprintf( 
+							$log_message,
+							$this->order_id,
+							$this->gateway_name,
+							$this->order->get_total(),
+							$this->order_data['value_cents']
+							),
+						['metadata' => $this->order_data]
+					);
 				}
 			}
 
@@ -423,13 +455,28 @@ class WC_PagHiper_Transaction {
 		$data = apply_filters( 'paghiper_transaction_data', $data, $this->order_id );
 
 		if ( $this->log ) {
-			wc_paghiper_add_log( $this->log, sprintf( 'Dados preparados para envio: %s', var_export($data, true) ) );
+			wc_paghiper_add_log(
+				$this->log,
+				sprintf( 
+					'Pedido #%s: Dados preparados para envio.',
+					$this->order_id
+					),
+				['data' => $data]
+			);
 		}
 
 		return $data;
 	}
 
 	public function create_transaction() {
+
+		if ( $this->log ) {
+			wc_paghiper_add_log(
+				$this->log,
+				sprintf( 'Pedido #%s: Função create_transaction invocada', $this->order_id ),
+				['metadata' => $this->order_data]
+			);
+		}
 
 		if($this->has_issued_valid_transaction()) {
 			return false;
@@ -471,7 +518,11 @@ class WC_PagHiper_Transaction {
 
 				if(!array_key_exists('pix_code', $response)) {
 					if ( $this->log ) {
-						wc_paghiper_add_log( $this->log, sprintf( 'Erro: %s', 'Não foi possível emitir seu PIX' ) );
+						wc_paghiper_add_log(
+							$this->log,
+							sprintf( 'Erro: %s', 'Não foi possível emitir seu PIX' ),
+							['metadata' => $this->order_data, 'api_response' => $response]
+						);
 					}
 
 					throw new \Exception('Resposta da API não tem o dado pix_code e esse dado é fundamental. Cheque suas credenciais. Caso o erro persista, entre em contato com o suporte.');
@@ -490,7 +541,11 @@ class WC_PagHiper_Transaction {
 
 				if(!array_key_exists('bank_slip', $response)) {
 					if ( $this->log ) {
-						wc_paghiper_add_log( $this->log, sprintf( 'Erro: %s', 'Não foi possível emitir seu boleto' ) );
+						wc_paghiper_add_log(
+							$this->log,
+							sprintf( 'Erro: %s', 'Não foi possível emitir seu boleto' ),
+							['metadata' => $this->order_data, 'api_response' => $response]
+						);
 					}
 
 					throw new \Exception('Resposta da API não tem o dado bank_slip e esse dado é fundamental. Cheque suas credenciais. Caso o erro persista, entre em contato com o suporte.');
@@ -584,8 +639,14 @@ class WC_PagHiper_Transaction {
 			
 		} catch (\Exception $e) {
 			if ( $this->log ) {
-				wc_paghiper_add_log( $this->log, sprintf( 'Erro: %s', $e->getMessage() ) );
-				wc_paghiper_add_log( $this->log, sprintf( 'Dados enviados: %s', var_export( $transaction_data, TRUE ) ) );
+				wc_paghiper_add_log( 
+					$this->log,
+					sprintf( 'Erro: %s', $e->getMessage() ),
+					[
+						'metadata' => $this->order_data,
+						'api_response' => isset($response) ? $response : null
+					]
+				);
 			}
 		}
 

@@ -642,11 +642,11 @@ class WC_Paghiper_Base_Gateway {
 		if ( $this->log ) {
 			wc_paghiper_add_log( 
 				$this->log, 
-				sprintf( 'Pedido #%s: Dados iniciais para o %s preparados. Detalhes: %s', 
+				sprintf( 'Pedido #%s: Dados iniciais para o %s preparados.', 
 					$order->get_id(), 
 					(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto'), 
-					var_export($data, true) 
-				) 
+				),
+				['transaction_data' => $data]
 			);
 		}
 
