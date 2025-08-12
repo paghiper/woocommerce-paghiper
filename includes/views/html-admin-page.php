@@ -10,7 +10,7 @@ $reviews_url = '';
 
 ?>
 
-<h3><?php echo $this->method_title; ?></h3>
+<h3><?php echo esc_html($this->method_title); ?></h3>
 
 <?php
 	if ( 'yes' == $this->get_option( 'enabled' ) ) {
@@ -20,7 +20,7 @@ $reviews_url = '';
 	}
 ?>
 
-<?php echo wpautop( $this->method_description ); ?>
+<?php echo wp_kses_post( wpautop( $this->method_description ) ); ?>
 
 <table class="form-table">
 	<?php $this->generate_settings_html(); ?>
