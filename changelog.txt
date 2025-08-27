@@ -1,5 +1,13 @@
 == Changelog ==
 
+## 2.5.2
+
+- Bufgix: Multiplas notificações de novo pedido enviadas
+
+## 2.5.1
+
+- Bufgix: Múltiplos PIXes gerados ao criar pedido
+
 ## 2.5
 
 - Mudança sutil no nome do plugin por questões de compliance

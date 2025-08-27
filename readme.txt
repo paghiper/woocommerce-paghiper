@@ -4,7 +4,7 @@ Donate link: https://www.paghiper.com/
 Tags: pix, boleto, paghiper, pagamento, gateway
 Requires at least: 6.0
 Tested up to: 6.8
-Stable tag: 2.5
+Stable tag: 2.5.2
 Requires PHP: 7.2
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -19,7 +19,7 @@ O plug-in anexa o boleto, mostra código de barras e linha digitável nos e-mail
 
 Fácil, prático e rápido!
 
-* **Versão mais Recente:** 2.5.1
+* **Versão mais Recente:** 2.5.2
 * **Requer WooCommerce** versão mínima 4.0.0
 * **Requer Wordpress** preferencialmente atualizado
 * **Requisitos:** PHP >= 7.2, cURL ativado.
@@ -50,9 +50,13 @@ Para dúvidas comerciais e/ou sobre o funcionamento do serviço, visite a nossa 
 
 == Changelog ==
 
+## 2.5.2
+
+- Bufgix: Multiplas notificações de novo pedido enviadas
+
 ## 2.5.1
 
-- Múltiplos PIXes gerados ao criar pedido
+- Bufgix: Múltiplos PIXes gerados ao criar pedido
 
 ## 2.5
 
