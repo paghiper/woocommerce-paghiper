@@ -291,7 +291,7 @@ class WC_Paghiper {
 			$gateway_name = ($is_pix) ? __('PIX PagHiper', 'woo-boleto-paghiper') : __('Boleto PagHiper', 'woo-boleto-paghiper');
 			$gateway_class = ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
 
-			if(!array_key_exists('api_key', $gateway_settings) || empty($gateway_settings['api_key'])) {
+			if(!is_array($gateway_settings) || !array_key_exists('api_key', $gateway_settings) || empty($gateway_settings['api_key'])) {
 				echo sprintf(
 					'<div class="error notice"><p><strong>%1$s: </strong>%2$s <a href="%3$s">%4$s</a></p></div>', 
 					esc_html($gateway_name), 
