@@ -177,6 +177,7 @@ class WC_Paghiper_Base_Gateway {
 				'title'   => $default_label,
 				'type'    => 'checkbox',
 				'label'   => __( 'Ativar/Desativar', 'woo-boleto-paghiper' ),
+				'description' => sprintf( __( 'Você está usando a versão <strong>%s</strong> do plugin Woo Boleto PagHiper.', 'woo-boleto-paghiper' ), WC_Paghiper::get_plugin_version() ),
 				'default' => 'yes'
 			),
 			'title' => array(

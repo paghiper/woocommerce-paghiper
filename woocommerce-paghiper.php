@@ -112,6 +112,14 @@ class WC_Paghiper {
 	}
 
 	/**
+	 * Returns plugin version.
+	 */
+	public static function get_plugin_version() {
+		return self::VERSION;
+	}
+
+
+	/**
 	 * Return an instance of this class.
 	 *
 	 * @return object A single instance of this class.
