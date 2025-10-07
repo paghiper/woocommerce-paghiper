@@ -177,6 +177,11 @@ class WC_Paghiper_Base_Gateway {
 				'title'   => $default_label,
 				'type'    => 'checkbox',
 				'label'   => __( 'Ativar/Desativar', 'woo-boleto-paghiper' ),
+				'description' => sprintf( 
+					__( 'Você está usando a versão <strong>%s</strong> do gateway %s da PagHiper.', 'woo-boleto-paghiper' ), 
+					WC_Paghiper::get_plugin_version(),
+					$default_title 
+			),
 				'default' => 'yes'
 			),
 			'title' => array(
@@ -525,9 +530,6 @@ class WC_Paghiper_Base_Gateway {
 	 */
 	public function process_payment( $order_id, $is_frontend = true ) {
 
-		// Avoid processing transactions during this time.
-		remove_action( 'woocommerce_email_after_order_table', array( $this, 'email_instructions' ), 10, 2 );
-
 		$order = wc_get_order( $order_id );
 		$taxid_keys = ["_{$this->gateway->id}_cpf_cnpj", "_{$this->gateway->id}_payer_name"];
 
@@ -544,20 +546,6 @@ class WC_Paghiper_Base_Gateway {
 		// Generates ticket data.
 		$this->populate_initial_billet_date( $order );
 
-		if ( defined( 'WC_VERSION' ) && version_compare( WC_VERSION, '2.1', '>=' ) ) {
-			if ( $is_frontend ) {
-				WC()->cart->empty_cart();
-			}
-
-			$url = $order->get_checkout_order_received_url();
-		} else {
-			global $woocommerce;
-
-			$woocommerce->cart->empty_cart();
-
-			$url = add_query_arg( 'key', $order->get_order_key(), add_query_arg( 'order', $order_id, get_permalink( woocommerce_get_page_id( 'thanks' ) ) ) );
-		}
-
 		// Gera um boleto e guarda os dados, pra reutilizarmos.
 		require_once WC_Paghiper::get_plugin_path() . 'includes/class-wc-paghiper-transaction.php';
 
@@ -566,11 +554,19 @@ class WC_Paghiper_Base_Gateway {
 
 		if($transaction) {
 
-			// Mark as on-hold (we're awaiting the ticket).
-			$waiting_status = (!empty($this->set_status_when_waiting)) ? $this->set_status_when_waiting : 'on-hold';
-			/* translators: %s: Transaction type. May be PIX or billet, for an example. */
-			$order->update_status( $waiting_status, sprintf(__( 'PagHiper: %s gerado e enviado por e-mail.', 'woo-boleto-paghiper' ), (($this->gateway->id == 'paghiper_pix') ? __('PIX', 'woo-boleto-paghiper') : __('Boleto', 'woo-boleto-paghiper')) ) );
-
+			if ( defined( 'WC_VERSION' ) && version_compare( WC_VERSION, '2.1', '>=' ) ) {
+				if ( $is_frontend ) {
+					WC()->cart->empty_cart();
+				}
+	
+				$url = $order->get_checkout_order_received_url();
+			} else {
+				global $woocommerce;
+	
+				$woocommerce->cart->empty_cart();
+	
+				$url = add_query_arg( 'key', $order->get_order_key(), add_query_arg( 'order', $order_id, get_permalink( woocommerce_get_page_id( 'thanks' ) ) ) );
+			}
 
 			if ( $this->log ) {
 				wc_paghiper_add_log( 
@@ -578,9 +574,6 @@ class WC_Paghiper_Base_Gateway {
 					sprintf( 'Pedido #%s: Redirecionando usuário para a tela com os dados para pagamento.', $order_id) 
 				);
 			}
-
-			// Reattach email instructions to the order e-mails from now on
-			add_action( 'woocommerce_email_after_order_table', array( $this, 'email_instructions' ), 10, 2 );
 
 			// Return thankyou redirect.
 			return [
@@ -775,6 +768,17 @@ class WC_Paghiper_Base_Gateway {
 
 		} else {
 			$html .= apply_filters( 'woo_paghiper_email_instructions', $message );
+		}
+
+		if ( $this->log ) {
+			wc_paghiper_add_log( 
+				$this->log, 
+				sprintf( 'Pedido #%s: Instruções de pagamento enviadas.', 
+					$order->get_id(), 
+					(($this->gateway->id == 'paghiper_pix') ? 'PIX' : 'boleto'), 
+				),
+				['transaction_data' => $data]
+			);
 		}
 
 		echo wp_kses_post($html);

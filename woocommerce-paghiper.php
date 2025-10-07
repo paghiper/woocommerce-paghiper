@@ -5,7 +5,7 @@
  * Description: 			Ofereça a seus clientes pagamento por PIX e boleto bancário com a PagHiper. Fácil, prático e rapido!
  * Author: 					PagHiper Pagamentos
  * Author URI: 				https://www.paghiper.com
- * Version: 				2.5.1
+ * Version: 				2.5.3-beta2
  * Tested up to: 			6.8
  * License:              	GPLv3
  * License URI:          	http://www.gnu.org/licenses/gpl-3.0.html
@@ -35,7 +35,7 @@ class WC_Paghiper {
 	 *
 	 * @var string
 	 */
-	const VERSION = '2.5.1';
+	const VERSION = '2.5.3-beta2';
 
 	/**
 	 * Instance of this class.
@@ -110,6 +110,14 @@ class WC_Paghiper {
 		add_action( 'admin_notices', array( $this, 'print_requirement_notices' ) );
 
 	}
+
+	/**
+	 * Returns plugin version.
+	 */
+	public static function get_plugin_version() {
+		return self::VERSION;
+	}
+
 
 	/**
 	 * Return an instance of this class.
@@ -291,7 +299,7 @@ class WC_Paghiper {
 			$gateway_name = ($is_pix) ? __('PIX PagHiper', 'woo-boleto-paghiper') : __('Boleto PagHiper', 'woo-boleto-paghiper');
 			$gateway_class = ($is_pix) ? 'wc_paghiper_pix_gateway' : 'wc_paghiper_billet_gateway';
 
-			if(!array_key_exists('api_key', $gateway_settings) || empty($gateway_settings['api_key'])) {
+			if(!is_array($gateway_settings) || !array_key_exists('api_key', $gateway_settings) || empty($gateway_settings['api_key']) && $gateway_settings['enabled'] === 'yes') {
 				echo sprintf(
 					'<div class="error notice"><p><strong>%1$s: </strong>%2$s <a href="%3$s">%4$s</a></p></div>', 
 					esc_html($gateway_name), 
