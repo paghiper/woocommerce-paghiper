@@ -5,7 +5,7 @@
  * Description: 			Ofereça a seus clientes pagamento por PIX e boleto bancário com a PagHiper. Fácil, prático e rapido!
  * Author: 					PagHiper Pagamentos
  * Author URI: 				https://www.paghiper.com
- * Version: 				2.5.3-beta2
+ * Version: 				2.5.3-beta3
  * Tested up to: 			6.8
  * License:              	GPLv3
  * License URI:          	http://www.gnu.org/licenses/gpl-3.0.html
@@ -35,7 +35,7 @@ class WC_Paghiper {
 	 *
 	 * @var string
 	 */
-	const VERSION = '2.5.3-beta2';
+	const VERSION = '2.5.3-beta3';
 
 	/**
 	 * Instance of this class.
@@ -398,9 +398,10 @@ class WC_Paghiper {
 							esc_url(admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}")), 
 							sprintf(
 								/* translators: %s: Gateway name */
-								esc_html__("Configurações de integração do %s", 'woo-boleto-paghiper')),
+								esc_html__("Configurações de integração do %s", 'woo-boleto-paghiper'),
 								esc_html($gateway_name)
-							);
+							)
+						);
 					}
 				}
 			}
