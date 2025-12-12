@@ -398,9 +398,10 @@ class WC_Paghiper {
 							esc_url(admin_url("admin.php?page=wc-settings&tab=checkout&section={$gateway_class}")), 
 							sprintf(
 								/* translators: %s: Gateway name */
-								esc_html__("Configurações de integração do %s", 'woo-boleto-paghiper')),
+								esc_html__("Configurações de integração do %s", 'woo-boleto-paghiper'),
 								esc_html($gateway_name)
-							);
+							)
+						);
 					}
 				}
 			}
