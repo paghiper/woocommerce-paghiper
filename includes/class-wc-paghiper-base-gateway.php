@@ -412,7 +412,7 @@ class WC_Paghiper_Base_Gateway {
 
 		}
 
-		$payer_cpf_cnpj = preg_replace('/\D/', '', $payer_cpf_cnpj_value);
+		$payer_cpf_cnpj = preg_replace('/\D/', '', (string) $payer_cpf_cnpj_value);
 
 		$has_payer_fields = $this->has_payer_fields($payer_cpf_cnpj);
 		if(!$has_payer_fields) {
